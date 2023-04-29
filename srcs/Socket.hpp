@@ -16,6 +16,7 @@ class Socket {
 		Socket(const Socket& source);
 		Socket& operator =(const Socket& source);
 
+		int set_socket();
 		void set_listenfd();
 		void set_port(int port);
 		void set_serv_addr();
