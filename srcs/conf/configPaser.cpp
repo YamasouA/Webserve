@@ -27,7 +27,7 @@ const std::string readConfFile(const std::string& file_name)
 	return strs;
 }
 
-std::string Config::get_token_to_eol() {
+std::string configPaser::get_token_to_eol() {
 	std::string line = "";
 	while (idx < buf.length()) {
 		if (buf[idx] == '\015') {
@@ -45,7 +45,15 @@ std::string Config::get_token_to_eol() {
 	return line;
 }
 
-std::string Config::get_token(char delimiter)
+void skip()
+{
+	while (buf[idx] == ' ' || buf[idx] == '\t'
+		|| buf[idx] == '\015' || buf[idx] == '\012') {
+		++idx;
+	}
+}
+
+std::string configPaser::getToken(char delimiter)
 {
 	std::string token = "";
 	while(idx < buf.length()) {
@@ -63,7 +71,7 @@ std::string Config::get_token(char delimiter)
 	return token;
 }
 
-config::parseServe(size_t i) {
+configPaser::parseServe(size_t i) {
 	std::string directive;
 	//std::string value;
 	//size_t i = 0;
@@ -75,10 +83,17 @@ config::parseServe(size_t i) {
 			continue;
 		}
 		skip();
-		value = getToken(';');
+		//value = getToken(';');
 		if (directive == "listen") {
-			serve_confs[i].set_listen(value);
-		} else if (directive == "") {
+			serve_confs[i].set_listen(getToken(";"));
+		} else if (directive == "server_name") {
+			serve_confs[i].set_server_name(getToken(";"))
+		} else if (directive == "root") {
+			serve_confs[i].set_root(getToken(";"));
+		} else if (directive == "location") {
+			serve_confs[i].set_location();
+		} else {
+			std::cerr << "directive Error" << std::endl;
 		}
 		if (buf[idx] == '}') {
 			idx++;

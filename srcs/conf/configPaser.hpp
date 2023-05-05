@@ -1,6 +1,9 @@
 #ifndef CONFIGPASER_HPP
 #define CONFIGPASER_HPP
 
+#include "virtualServer.hpp"
+#include "Location.hpp"
+
 class configPaser {
 	public:
 		explicit configPaser(const std::string& strs);
