@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 
 int main(int argc, char *argv[]) {
 	// 設定ファイルを読み込む
@@ -18,6 +21,10 @@ int main(int argc, char *argv[]) {
 	//ssize_t ret;
 	//char buf[1024];
 
+	struct timespec time_over;
+	time_over.tv_sec = 10;
+	time_over.tv_nsec = 0;
+
 	struct kevent register_event[4], reciver_event[4];
 	int kq = kqueue();
 	EV_SET(register_event, socket->get_listenfd(), EVFILT_READ, EV_ADD | EV_ENABLE , 0, 0, NULL);
@@ -27,16 +34,19 @@ int main(int argc, char *argv[]) {
 	}
 
 	while (1) {
-		int events_num = kevent(kq, NULL, 0, reciver_event, 1, NULL);
-		if (events_num <= 0) {
+		int events_num = kevent(kq, NULL, 0, reciver_event, 1, &time_over);
+		if (events_num == -1) {
 			perror("kevent");
 			std::exit(1);
+		} else if (events_num == 0) {
+			std::cout << "time over" << std::endl;
+			continue;
 		}
 
 		for (int i = 0; i < events_num; ++i) {
 			int event_fd = reciver_event[i].ident;
 			if (reciver_event[i].flags & EV_EOF) {
-				std::cout << "Client has disconnected" << std::endl;
+				std::cout << "Client " << event_fd << " has disconnected" << std::endl;
 				close(event_fd);
 			}
 			else if (event_fd == socket->get_listenfd()) {
@@ -45,6 +55,7 @@ int main(int argc, char *argv[]) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
 				}
+				std::cout << "client fd: " << acceptfd << std::endl;
 				EV_SET(register_event, acceptfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 				if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
 					perror("kevent error");
@@ -52,8 +63,12 @@ int main(int argc, char *argv[]) {
 			} else if (reciver_event[i].filter & EVFILT_READ) {
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
+				fcntl(event_fd, F_SETFL, O_NONBLOCK);
+				//fcntl(0, F_SETFL, O_NONBLOCK);
+				//read(0, buf, 1);
 				recv(event_fd, buf, sizeof(buf), 0);
 				std::cout << buf << std::endl;
+				std::cout << "ok" << std::endl;
 			}
 		}
 	}
