@@ -1,7 +1,7 @@
 CXX = c++
 CXXFLAGS = -g -Werror -Wextra -Wall -std=c++98 -pedantic-errors -MMD -MP
 NAME = server
-SRCS = main.cpp Socket.cpp
+SRCS = main.cpp Socket.cpp Logger.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)

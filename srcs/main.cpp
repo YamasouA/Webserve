@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "Logger.hpp"
 
 
 int main(int argc, char *argv[]) {
@@ -13,6 +14,20 @@ int main(int argc, char *argv[]) {
 	// read_config();
 	(void)argc;
 	(void)argv;
+
+	if (argc != 1 && argc != 2) {
+		std::cout << "usage: ./webserv *(path_to_config_file)" << std::endl;
+		return 1;
+	}
+	std::string config_path = (argc == 1? "conf/default.conf": argv[1]);
+	/*
+	try {
+		//contents = readConfFile();
+		configParser conf = configParser(readConfFile());
+		conf.parse();
+	} catch (const std::exception &e) {
+		
+	}*/
 	std::string default_file = "index.html";
 	Socket *socket = new Socket(8000); //port num is tmp
 	socket->set_socket();
@@ -34,6 +49,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	while (1) {
+		Logger::logging("hello");
 		int events_num = kevent(kq, NULL, 0, reciver_event, 1, &time_over);
 		if (events_num == -1) {
 			perror("kevent");
