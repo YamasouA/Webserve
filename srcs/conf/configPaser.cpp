@@ -71,12 +71,27 @@ std::string configPaser::getToken(char delimiter)
 	return token;
 }
 
+//stringstreamを使わない実装の方が高速なので後でそちらに変更もあり
+static std::vector<std::string> methodsSplit(std::string strs, char delimi)
+{
+	vector<std::string> methods;
+	std::stringstream ss(strs);
+	std::string method;
+
+	while (std::getline(ss, method, delimi)) {
+		if (!method.empty()) {
+			methods.push_back(method);
+		}
+	}
+	return methods;
+}
+
 Location configParser::parseLocation() {
 	Location location;
 	skip();
 	// その他prefixは考慮するとめんどくさそう
 	std::string uri = getToken('{');
-	// 末尾に空白が入るかも(入らない可能性もある) 
+	// 末尾に空白が入るかも(入らない可能性もある)
 	trim(uri);
 	location.set_uri(uri);
 	skip();
@@ -95,18 +110,21 @@ Location configParser::parseLocation() {
 			location.set_root(getToken(';'));
 		} else if (directive == "method") {
 			methods = getToken(';');
-			// ' 'か', 'でsplitしてベクターに変換して返す
 			location.set_methods(split(methods));
+			// ' 'か', 'でsplitしてベクターに変換して返す
 		} else if (directive == "autoindex") {
-			// autoindexはbooleanで持つ？
 			location.set_autoindex(getToken(';')=="on");
+			// autoindexはbooleanで持つ？
 		} else if (directive == "upload_path") {
-			// ワンチャンupload_pathは公式のものじゃないかも
 			location.set_upload_path(get);
+			// ワンチャンupload_pathは公式のものじゃないかも
 		} else if (directive == "max_body_size") {
 			std::stringstream sstream(getToken(';'));
 			size_t result;
 			sstream >> result;
+			if (sstream.fail() && std::numeric_limits<size_t>::max() == result) {
+				std::cerr << "overflow" << std::endl;
+			}
 			// overflowcheck
 			location.set_max_body_size(result);
 		}

@@ -4,7 +4,8 @@
 class Location {
 	public:
 		void set_uri(std::string uri);
-		void set_method(std::string method);
+//		void set_methods(std::string method);
+		void set_methods(std::vector<std::string> methods);
 		void set_root(std::string root);
 		void set_is_autoindex(bool autoindex);
 		void set_upload_path(std::string upload_path);
