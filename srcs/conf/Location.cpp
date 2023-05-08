@@ -77,14 +77,14 @@ std::string Location::get_cgi_path() const {
 //}
 
 std::ostream& operator <<(std::ostream& stream, const Location& obj) {
-			std::vector<std::string> tmp = obj.get_methods();
+			const std::vector<std::string> tmp = obj.get_methods();
 			stream << "uri: " << obj.get_uri() << std::endl
 			<< "methods: ";
-			for (std::vector<std::string>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
+			for (std::vector<std::string>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
 				stream << *it << " ";
 			}
-			std::cout << std::endl;
-			std::cout << "root: " << obj.get_root() << std::endl
+			stream << std::endl;
+			stream << "root: " << obj.get_root() << std::endl
 			<< "is_autoindex: " << obj.get_is_autoindex() << std::endl
 			<< "upload_path: " << obj.get_upload_path() << std::endl
 			<< "index: " << obj.get_index() << std::endl

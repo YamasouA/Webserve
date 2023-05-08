@@ -1,33 +1,39 @@
 #include "configParser.hpp"
 
-configPaser::configPaser(const std::string& strs)
+configParser::configParser(const std::string& strs)
 :buf(strs),
 	idx(0)
 {}
 
-configPaser::configPaser(const configPaser& src)
-{}
+configParser::configParser(const configParser& src)
+{
+	(void)src;
+}
 
-configPaser& configPaser::operator=(const configPaser rhs)
-{}
+configParser& configParser::operator=(const configParser& rhs)
+{
+	if (this == &rhs) {
+		return *this;
+	}
+	return *this;
+}
 
-configPaser::~configPaser()
+configParser::~configParser()
 {}
 
 const std::string readConfFile(const std::string& file_name)
 {
-	std::ifstream ifs(file_name);
+	std::ifstream ifs(file_name.c_str());
 	if (!ifs) {
 		std::cout << "ko" << std::endl;
 	}
 	std::ostringstream oss;
 	oss << ifs.rdbuf();
-	const std::string strs;
-	strs = oss.str();
+	const std::string strs = oss.str();
 	return strs;
 }
 
-std::string configPaser::get_token_to_eol() {
+std::string configParser::get_token_to_eol() {
 	std::string line = "";
 	while (idx < buf.length()) {
 		if (buf[idx] == '\015') {
@@ -45,17 +51,32 @@ std::string configPaser::get_token_to_eol() {
 	return line;
 }
 
-void skip()
+void configParser::skip()
 {
 	while (buf[idx] == ' ' || buf[idx] == '\t'
-		|| buf[idx] == '\015' || buf[idx] == '\012') {
+		|| buf[idx] == '\015' || buf[idx] == '\012') { //|| buf[idx] == ';') {
 		++idx;
 	}
 }
 
-std::string configPaser::getToken(char delimiter)
+void configParser::trim(std::string& str)
+{
+	size_t i = 0;
+//	std::cout << "trim str: " << str << std::endl;
+	while (str[i] == ' ' || str[i] == '\t') {
+		++i;
+		std::cout << i << std::endl;
+	}
+	str.erase(0, i);
+//	std::cout << "trimed str: " << str << std::endl;
+}
+
+std::string configParser::getToken(char delimiter)
 {
 	std::string token = "";
+	while (buf[idx] == delimiter) {
+		++idx;
+	}
 	while(idx < buf.length()) {
 		if (buf[idx] == delimiter) {
 			break;
@@ -63,18 +84,22 @@ std::string configPaser::getToken(char delimiter)
 		token += buf[idx];
 		idx++;
 	}
-	if (idx == buf.length())
-		std::cout << "ko" << std::endl;
+	if (idx == buf.length()) {
+		std::cout << "ko getToken" << std::endl;
 		//throw ;
 	}
+//	std::cout << "token end" << buf[idx] << std::endl;
 	idx++;
+//	std::cout << "token end2" << buf[idx] << std::endl;
+	skip();
+	trim(token);
 	return token;
 }
 
 //stringstreamを使わない実装の方が高速なので後でそちらに変更もあり
-static std::vector<std::string> methodsSplit(std::string strs, char delimi)
+static std::vector<std::string> methodsSplit(const std::string &strs, char delimi)
 {
-	vector<std::string> methods;
+	std::vector<std::string> methods;
 	std::stringstream ss(strs);
 	std::string method;
 
@@ -100,7 +125,7 @@ Location configParser::parseLocation() {
 			idx++;
 			break;
 		}
-		directive = getToken(' ');
+		std::string directive = getToken(' ');
 		if (directive[0] == '#') {
 			get_token_to_eol();
 			skip();
@@ -109,14 +134,14 @@ Location configParser::parseLocation() {
 		if (directive == "root") {
 			location.set_root(getToken(';'));
 		} else if (directive == "method") {
-			methods = getToken(';');
-			location.set_methods(split(methods));
+			const std::string methods = getToken(';');
+			location.set_methods(methodsSplit(methods, ' '));
 			// ' 'か', 'でsplitしてベクターに変換して返す
 		} else if (directive == "autoindex") {
-			location.set_autoindex(getToken(';')=="on");
+			location.set_is_autoindex(getToken(';')=="on");
 			// autoindexはbooleanで持つ？
 		} else if (directive == "upload_path") {
-			location.set_upload_path(get);
+			location.set_upload_path(getToken(';'));
 			// ワンチャンupload_pathは公式のものじゃないかも
 		} else if (directive == "max_body_size") {
 			std::stringstream sstream(getToken(';'));
@@ -132,13 +157,15 @@ Location configParser::parseLocation() {
 	return location;
 }
 
-void configPaser::parseServe(size_t i) {
+void configParser::parseServe(size_t i) {
 	std::string directive;
 	//std::string value;
 	//size_t i = 0;
 	while (idx != buf.size()) {
 		directive = getToken(' ');
+//		std::cout << "directive: " << directive << std::endl;
 		if (directive[0] == '#') {
+			std::cout << directive << std::endl;
 			get_token_to_eol();
 			skip();
 			continue;
@@ -146,14 +173,17 @@ void configPaser::parseServe(size_t i) {
 		skip();
 		//value = getToken(';');
 		if (directive == "listen") {
-			serve_confs[i].set_listen(getToken(";"));
+			serve_confs[i].set_listen(getToken(';'));
 		} else if (directive == "server_name") {
-			serve_confs[i].set_server_name(getToken(";"))
+			serve_confs[i].set_server_name(getToken(';'));
 		} else if (directive == "root") {
-			serve_confs[i].set_root(getToken(";"));
+			serve_confs[i].set_root(getToken(';'));
 		} else if (directive == "location") {
 			serve_confs[i].set_location(parseLocation());
+//		} else if (directive == "") {
+//			continue;
 		} else {
+//			continue;
 			std::cerr << "directive Error" << std::endl;
 		}
 		if (buf[idx] == '}') {
@@ -161,16 +191,25 @@ void configPaser::parseServe(size_t i) {
 			break;
 		}
 	}
-	std::cout << server_confs[i] << std::endl;
+	std::cout << serve_confs[i] << std::endl;
 }
 
-void configPaser::paseConf()
+void configParser::expect(char c)
+{
+	if (buf[idx] != c) {
+		std::cerr << "expected expression" << std::endl;
+		std::exit(1);
+	}
+	++idx;
+}
+
+void configParser::parseConf()
 {
 	std::string directive;
 	//std::string value;
 	size_t i = 0;
 
-	while (idx != buf.size()) {
+	while (idx < buf.size()) {
 		std::string directive = getToken(' ');
 		if (directive != "server") {
 			std::cerr << "Error1" << std::endl;
@@ -178,7 +217,8 @@ void configPaser::paseConf()
 		}
 		skip(); // 空白などの読み飛ばし
 		expect('{'); // 必須文字
-		serve_confs.push_back(new virtualServer());
+		virtualServer virtual_server;
+		serve_confs.push_back(virtual_server);
 		parseServe(i);
 		i++;
 	}
