@@ -26,11 +26,13 @@ class Location {
 		std::string uri;
 		std::string root;
 		std::string index;
-		std::string method;
+		std::vector<std::string> methods;
 		std::string upload_path;
 		std::string cgi_path;
 		bool autoindex;
 		size_t max_body_size;
 };
+
+std::ostream& operator <<(std::ostream& stream, const Location& obj);
 
 #endif

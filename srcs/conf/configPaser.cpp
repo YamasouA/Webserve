@@ -125,11 +125,11 @@ Location configParser::parseLocation() {
 			if (sstream.fail() && std::numeric_limits<size_t>::max() == result) {
 				std::cerr << "overflow" << std::endl;
 			}
-			// overflowcheck
 			location.set_max_body_size(result);
 		}
 		idx++;
 	}
+	return location;
 }
 
 void configPaser::parseServe(size_t i) {
@@ -161,9 +161,10 @@ void configPaser::parseServe(size_t i) {
 			break;
 		}
 	}
+	std::cout << server_confs[i] << std::endl;
 }
 
-configPaser::paseConf()
+void configPaser::paseConf()
 {
 	std::string directive;
 	//std::string value;
