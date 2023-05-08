@@ -71,7 +71,50 @@ std::string configPaser::getToken(char delimiter)
 	return token;
 }
 
-configPaser::parseServe(size_t i) {
+Location configParser::parseLocation() {
+	Location location;
+	skip();
+	// その他prefixは考慮するとめんどくさそう
+	std::string uri = getToken('{');
+	// 末尾に空白が入るかも(入らない可能性もある) 
+	trim(uri);
+	location.set_uri(uri);
+	skip();
+	while (idx != buf.size()) {
+		if (buf[idx] == '}') {
+			idx++;
+			break;
+		}
+		directive = getToken(' ');
+		if (directive[0] == '#') {
+			get_token_to_eol();
+			skip();
+			continue;
+		}
+		if (directive == "root") {
+			location.set_root(getToken(';'));
+		} else if (directive == "method") {
+			methods = getToken(';');
+			// ' 'か', 'でsplitしてベクターに変換して返す
+			location.set_methods(split(methods));
+		} else if (directive == "autoindex") {
+			// autoindexはbooleanで持つ？
+			location.set_autoindex(getToken(';')=="on");
+		} else if (directive == "upload_path") {
+			// ワンチャンupload_pathは公式のものじゃないかも
+			location.set_upload_path(get);
+		} else if (directive == "max_body_size") {
+			std::stringstream sstream(getToken(';'));
+			size_t result;
+			sstream >> result;
+			// overflowcheck
+			location.set_max_body_size(result);
+		}
+		idx++;
+	}
+}
+
+void configPaser::parseServe(size_t i) {
 	std::string directive;
 	//std::string value;
 	//size_t i = 0;
@@ -91,7 +134,7 @@ configPaser::parseServe(size_t i) {
 		} else if (directive == "root") {
 			serve_confs[i].set_root(getToken(";"));
 		} else if (directive == "location") {
-			serve_confs[i].set_location();
+			serve_confs[i].set_location(parseLocation());
 		} else {
 			std::cerr << "directive Error" << std::endl;
 		}
