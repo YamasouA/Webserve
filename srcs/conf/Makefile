@@ -1,7 +1,7 @@
 CXX = c++
 CXXFLAGS = -g -Werror -Wextra -Wall -std=c++98 -pedantic-errors -MMD -MP
 NAME = configparser
-SRCS = main.cpp Location.cpp configParser.cpp virtualServer.cpp Location.cpp
+SRCS = Location.cpp configParser.cpp virtualServer.cpp #main.cpp
 TEST_SRCS = test.cpp
 OBJS = $(SRCS:.cpp=.o)
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)

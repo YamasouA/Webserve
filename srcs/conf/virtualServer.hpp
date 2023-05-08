@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "Location.hpp"
 
 class virtualServer {
 	public:
@@ -12,7 +13,7 @@ class virtualServer {
 		void set_index(std::string index);
 		void set_location(Location location);
 		void set_root(std::string root);
-		std::vector<Location> get_locations();		
+		std::vector<Location> get_locations();
 		void get_listen();
 		void get_server_name();
 		void get_index();
