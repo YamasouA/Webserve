@@ -15,6 +15,18 @@ all: $(NAME)
 test:
 	make TEST=1
 
+i:
+	make TEST=1
+	./$(NAME) invalid_test
+
+v:
+	make TEST=1
+	./$(NAME) valid_test
+
+a:
+	make TEST=1
+	./$(NAME)
+
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

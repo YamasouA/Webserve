@@ -176,6 +176,8 @@ Location configParser::parseLocation() {
 			location.set_max_body_size(result);
 		} else {
 			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
+			// 適切な例外を作成して投げる
+			return location;
 		}
 //		idx++;
 	}

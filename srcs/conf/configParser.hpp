@@ -26,6 +26,17 @@ class configParser {
 		Location parseLocation();
 		std::string getToken(char delimiter);
 		std::string get_token_to_eol();
+		// シンタックスエラー
+		class SyntaxException: public std::exception {
+			public:
+				virtual const char* what() const throw(); // throw() = noexcept
+		};
+		// 設定重複エラー
+		class DupulicateException: public std::exception {
+			public:
+				virtual const char* what() const throw(); // throw() = noexcept
+		};
+		// 
 };
 
 //static std::vector<std::string> methodsSplit(std::string strs, char delimi);
