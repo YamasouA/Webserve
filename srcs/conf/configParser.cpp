@@ -148,7 +148,7 @@ Location configParser::parseLocation() {
 			get_token_to_eol();
 			skip();
 			continue;
-		}
+		} //????????????
 		skip();
 		if (directive == "root") {
 			location.set_root(getToken(';'));
@@ -195,12 +195,12 @@ void configParser::parseServe(size_t i) {
 		}
 		directive = getToken(' ');
 //		std::cout << "directive: " << directive << std::endl;
-		if (directive[0] == '#') {
-			std::cout << directive << std::endl;
-			get_token_to_eol();
-			skip();
-			continue;
-		}
+//		if (directive[0] == '#') {
+//			std::cout << directive << std::endl;
+//			get_token_to_eol();
+//			skip();
+//			continue;
+//		}
 		skip();
 		//value = getToken(';');
 		if (directive == "listen") {
@@ -221,6 +221,7 @@ void configParser::parseServe(size_t i) {
 //	std::cout << buf[idx] << std::endl;
 	expect('}');
 	skip();
+	std::cout << "server: " << std::endl;
 	std::cout << serve_confs[i] << std::endl;
 }
 
