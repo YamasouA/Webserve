@@ -41,10 +41,10 @@ void Location::set_cgi_path(std::string cgi_path)
 	this->cgi_path = cgi_path;
 }
 
-//void Location::set_return(std::string ret)
-//{
-//	this->ret = ret;
-//}
+void Location::set_return(std::string ret)
+{
+	this->ret = ret;
+}
 
 std::string Location::get_uri() const{
 	return uri;
@@ -72,9 +72,9 @@ std::string Location::get_cgi_path() const {
 	return cgi_path;
 }
 
-//std::string Location::get_return() const {
-//	return ret;
-//}
+std::string Location::get_return() const {
+	return ret;
+}
 
 std::ostream& operator <<(std::ostream& stream, const Location& obj) {
 			const std::vector<std::string> tmp = obj.get_methods();

@@ -32,9 +32,9 @@ void virtualServer::set_server_name(std::string server_name){
 void virtualServer::set_location(Location location){
 	locations.push_back(location);
 }
-void virtualServer::set_root(std::string root){
-	this->root = root;
-}
+//void virtualServer::set_root(std::string root){
+//	this->root = root;
+//}
 
 //int virtualServer::get_listen(){
 std::string virtualServer::get_listen() const{
@@ -49,9 +49,9 @@ std::string virtualServer::get_server_name() const{
 std::vector<Location> virtualServer::get_locations() const{
 	return locations;
 }
-std::string virtualServer::get_root() const{
-	return root;
-}
+//std::string virtualServer::get_root() const{
+//	return root;
+//}
 
 std::ostream& operator <<(std::ostream& stream, const virtualServer& obj) {
 		const std::vector<Location> tmp = obj.get_locations();
@@ -62,7 +62,7 @@ std::ostream& operator <<(std::ostream& stream, const virtualServer& obj) {
 		for (std::vector<Location>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
 			stream << "location: " << *it << std::endl;
 		}
-		stream << std::endl
-		<< "root: " << obj.get_root() << std::endl;
+		stream << std::endl;
+//		<< "root: " << obj.get_root() << std::endl;
 		return stream;
 }

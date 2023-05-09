@@ -59,26 +59,41 @@ void configParser::skip()
 	}
 }
 
+//void configParser::trim(std::string& str)
+//{
+//	size_t i = 0;
+////	std::cout << "trim str: " << str << std::endl;
+//	while (str[i] == ' ' || str[i] == '\t') {
+//		++i;
+//		std::cout << i << std::endl;
+//	}
+//	str.erase(0, i);
+////	std::cout << "trimed str: " << str << std::endl;
+//}
+
 void configParser::trim(std::string& str)
 {
-	size_t i = 0;
-//	std::cout << "trim str: " << str << std::endl;
-	while (str[i] == ' ' || str[i] == '\t') {
-		++i;
-		std::cout << i << std::endl;
+	std::string::size_type left = str.find_first_not_of("\t ");
+	if (left != std::string::npos) {
+		std::string::size_type right = str.find_last_not_of("\t ");
+		str = str.substr(left, right - left + 1);
 	}
-	str.erase(0, i);
-//	std::cout << "trimed str: " << str << std::endl;
 }
 
 std::string configParser::getToken(char delimiter)
 {
 	std::string token = "";
-	while (buf[idx] == delimiter) {
-		++idx;
+//	while (buf[idx] == delimiter) {
+//		++idx;
+//	}
+//	skip();
+	if (idx < buf.length() && buf[idx] == '#') {
+		get_token_to_eol();
+		return "";
 	}
 	while(idx < buf.length()) {
 		if (buf[idx] == delimiter) {
+//			idx++;
 			break;
 		}
 		token += buf[idx];
@@ -120,19 +135,27 @@ Location configParser::parseLocation() {
 	trim(uri);
 	location.set_uri(uri);
 	skip();
-	while (idx != buf.size()) {
+	while (idx < buf.size()) {
+		skip();
 		if (buf[idx] == '}') {
-			idx++;
+//			idx++;
 			break;
 		}
+//		std::cout << buf[idx] << std::endl;
 		std::string directive = getToken(' ');
+//		std::cout << "loc directive: " << directive << std::endl;
 		if (directive[0] == '#') {
 			get_token_to_eol();
 			skip();
 			continue;
 		}
+		skip();
 		if (directive == "root") {
 			location.set_root(getToken(';'));
+		} else if (directive == "index") {
+			location.set_index(getToken(';'));
+		} else if (directive == "return") {
+			location.set_return(getToken(';'));
 		} else if (directive == "method") {
 			const std::string methods = getToken(';');
 			location.set_methods(methodsSplit(methods, ' '));
@@ -151,9 +174,13 @@ Location configParser::parseLocation() {
 				std::cerr << "overflow" << std::endl;
 			}
 			location.set_max_body_size(result);
+		} else {
+			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
 		}
-		idx++;
+//		idx++;
 	}
+	expect('}');
+	skip();
 	return location;
 }
 
@@ -161,7 +188,11 @@ void configParser::parseServe(size_t i) {
 	std::string directive;
 	//std::string value;
 	//size_t i = 0;
-	while (idx != buf.size()) {
+	while (idx < buf.size()) {
+		skip();
+		if (buf[idx] == '}') {
+			break;
+		}
 		directive = getToken(' ');
 //		std::cout << "directive: " << directive << std::endl;
 		if (directive[0] == '#') {
@@ -176,21 +207,20 @@ void configParser::parseServe(size_t i) {
 			serve_confs[i].set_listen(getToken(';'));
 		} else if (directive == "server_name") {
 			serve_confs[i].set_server_name(getToken(';'));
-		} else if (directive == "root") {
-			serve_confs[i].set_root(getToken(';'));
+//		} else if (directive == "root") {
+//			serve_confs[i].set_root(getToken(';'));
 		} else if (directive == "location") {
 			serve_confs[i].set_location(parseLocation());
-//		} else if (directive == "") {
-//			continue;
+		} else if (directive == "") {
+			continue;
 		} else {
 //			continue;
-			std::cerr << "directive Error" << std::endl;
-		}
-		if (buf[idx] == '}') {
-			idx++;
-			break;
+			std::cerr << "\033[1;31mdirective Error\033[0m" << directive << std::endl;
 		}
 	}
+//	std::cout << buf[idx] << std::endl;
+	expect('}');
+	skip();
 	std::cout << serve_confs[i] << std::endl;
 }
 
@@ -223,5 +253,3 @@ void configParser::parseConf()
 		i++;
 	}
 }
-
-
