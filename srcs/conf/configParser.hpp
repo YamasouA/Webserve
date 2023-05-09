@@ -3,6 +3,8 @@
 
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
+#include <exception>
 #include "virtualServer.hpp"
 #include "Location.hpp"
 
@@ -18,6 +20,7 @@ class configParser {
 		void trim(std::string& str);
 		void expect(char c);
 	private:
+//		std::map<std::string> directive_map; //neccesary?
 		std::string buf;
 		std::vector<virtualServer> serve_confs;
 		size_t idx;
@@ -36,7 +39,7 @@ class configParser {
 			public:
 				virtual const char* what() const throw(); // throw() = noexcept
 		};
-		// 
+		//
 };
 
 //static std::vector<std::string> methodsSplit(std::string strs, char delimi);

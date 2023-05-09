@@ -80,6 +80,8 @@ void configParser::trim(std::string& str)
 	}
 }
 
+
+//How handle case no semicolon ?
 std::string configParser::getToken(char delimiter)
 {
 	std::string token = "";
@@ -101,11 +103,12 @@ std::string configParser::getToken(char delimiter)
 	}
 	if (idx == buf.length()) {
 		std::cout << "ko getToken" << std::endl;
-		//throw ;
+		throw SyntaxException();
 	}
 //	std::cout << "token end" << buf[idx] << std::endl;
-	idx++;
+//	idx++;
 //	std::cout << "token end2" << buf[idx] << std::endl;
+	expect(delimiter);
 	skip();
 	trim(token);
 	return token;
@@ -133,6 +136,9 @@ Location configParser::parseLocation() {
 	std::string uri = getToken('{');
 	// 末尾に空白が入るかも(入らない可能性もある)
 	trim(uri);
+	if (uri == "") {
+		throw SyntaxException();
+	}
 	location.set_uri(uri);
 	skip();
 	while (idx < buf.size()) {
@@ -144,11 +150,11 @@ Location configParser::parseLocation() {
 //		std::cout << buf[idx] << std::endl;
 		std::string directive = getToken(' ');
 //		std::cout << "loc directive: " << directive << std::endl;
-		if (directive[0] == '#') {
-			get_token_to_eol();
-			skip();
-			continue;
-		} //????????????
+//		if (directive[0] == '#') {
+//			get_token_to_eol();
+//			skip();
+//			continue;
+//		} //????????????
 		skip();
 		if (directive == "root") {
 			location.set_root(getToken(';'));
@@ -175,7 +181,8 @@ Location configParser::parseLocation() {
 			}
 			location.set_max_body_size(result);
 		} else {
-			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
+			throw SyntaxException();
+//			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
 			// 適切な例外を作成して投げる
 			return location;
 		}
@@ -255,4 +262,10 @@ void configParser::parseConf()
 		parseServe(i);
 		i++;
 	}
+}
+
+//引数でerrorメッセージ変えられた方が良さそう(やりかたわすれた)
+const char* configParser::SyntaxException::what(void) const throw() //noexcept c++11~
+{
+	return ("syntax error");
 }

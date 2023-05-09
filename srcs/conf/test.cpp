@@ -13,7 +13,7 @@ void test(const char *dirpath) {
     DIR *dir;
     struct dirent *dp;
 	dir = opendir(dirpath);
-	
+
 	if (dir == NULL) { return; }
 	while ((dp = readdir(dir)) != NULL) {
 		if (dp->d_name[0] == '.') {
@@ -22,9 +22,13 @@ void test(const char *dirpath) {
 		std::cerr << "\033[1;31m"
 			<< "==========" << dp->d_name << "==========" << "\033[0m"
 			<< std::endl;
-		std::string txt = readConfFile(join(dirpath, dp->d_name));
-		configParser confParser(txt);
-		confParser.parseConf();
+		try {
+			std::string txt = readConfFile(join(dirpath, dp->d_name));
+			configParser confParser(txt);
+			confParser.parseConf();
+		} catch (const std::exception& e) {
+			std::cout << e.what() << std::endl;
+		}
 	}
 }
 
