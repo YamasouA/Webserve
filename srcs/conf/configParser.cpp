@@ -259,13 +259,13 @@ void configParser::parseConf()
 	size_t i = 0;
 
 	while (idx < buf.size()) {
-		std::string directive = getToken(' ');
+		std::string directive = getToken('{');
 		if (directive != "server") {
 			std::cerr << "Error1" << std::endl;
 			std::exit(1);
 		}
 		skip(); // 空白などの読み飛ばし
-		expect('{'); // 必須文字
+//		expect('{'); // 必須文字
 		//virtualServer virtual_server = parseServe();
 		//serve_confs.push_back(virtual_server);
 		serve_confs.push_back(parseServe());
