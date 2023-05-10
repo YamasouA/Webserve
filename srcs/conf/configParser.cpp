@@ -223,8 +223,8 @@ virtualServer configParser::parseServe() {
 			v_serv.set_listen(getToken(';'));
 		} else if (directive == "server_name") {
 			v_serv.set_server_name(getToken(';'));
-//		} else if (directive == "root") {
-//			serve_confs[i].set_root(getToken(';'));
+		} else if (directive == "root") {
+			v_serv.set_root(getToken(';'));
 		} else if (directive == "location") {
 			v_serv.set_location(parseLocation());
 		} else if (directive == "") {
