@@ -77,9 +77,9 @@ void configParser::skip()
 
 void configParser::trim(std::string& str)
 {
-	std::string::size_type left = str.find_first_not_of("\t ");
+	std::string::size_type left = str.find_first_not_of("\t \n");
 	if (left != std::string::npos) {
-		std::string::size_type right = str.find_last_not_of("\t ");
+		std::string::size_type right = str.find_last_not_of("\t \n");
 		str = str.substr(left, right - left + 1);
 	}
 }
@@ -106,6 +106,8 @@ std::string configParser::getToken(char delimiter)
 		idx++;
 	}
 	if (idx == buf.length()) {
+		std::cout << "delimiter: " << delimiter << std::endl;
+		std::cout << "token: " << token<< std::endl;
 		std::cout << "ko getToken" << std::endl;
 		throw SyntaxException("syntax error in getToken");
 	}
@@ -146,6 +148,7 @@ Location configParser::parseLocation() {
 	location.set_uri(uri);
 	skip();
 	while (idx < buf.size()) {
+	//std::cout << "=== Location ===" << std::endl;
 		skip();
 		if (buf[idx] == '}') {
 //			idx++;
@@ -205,6 +208,7 @@ virtualServer configParser::parseServe() {
 	//std::string value;
 	//size_t i = 0;
 	while (idx < buf.size()) {
+	//std::cout << "=== server ===" << std::endl;
 		skip();
 		if (buf[idx] == '}') {
 			break;
@@ -265,8 +269,17 @@ void configParser::parseConf()
 	//std::string value;
 	//size_t i = 0;
 
+	directive = getToken('{');
+	if (directive != "http") {
+		std::cout << "Should http" << std::endl;
+		std::exit(1);
+	}
 	while (idx < buf.size()) {
-		std::string directive = getToken('{');
+	//std::cout << "=== parseConf ===" << std::endl;
+		if (buf[idx] == '}') {
+			break;
+		}
+		directive = getToken('{');
 		if (directive != "server") {
 			std::cerr << "Error1" << std::endl;
 			std::exit(1);
