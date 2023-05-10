@@ -32,12 +32,20 @@ class configParser {
 		// シンタックスエラー
 		class SyntaxException: public std::exception {
 			public:
+				explicit SyntaxException(const std::string& what_arg);
+				~SyntaxException() throw();
 				virtual const char* what() const throw(); // throw() = noexcept
+			private:
+				std::string msg;
 		};
 		// 設定重複エラー
 		class DupulicateException: public std::exception {
 			public:
+				explicit DupulicateException(const std::string& what_arg);
+				~DupulicateException() throw();
 				virtual const char* what() const throw(); // throw() = noexcept
+			private:
+				std::string msg;
 		};
 		//
 };
