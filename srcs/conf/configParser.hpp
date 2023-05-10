@@ -19,13 +19,15 @@ class configParser {
 		void skip();
 		void trim(std::string& str);
 		void expect(char c);
+		std::vector<virtualServer> get_serve_confs()const;
 	private:
 //		std::map<std::string> directive_map; //neccesary?
 		std::string buf;
 		std::vector<virtualServer> serve_confs;
 		size_t idx;
 
-		void parseServe(size_t i);
+		//void parseServe(size_t i);
+		virtualServer parseServe();
 		Location parseLocation();
 		std::string getToken(char delimiter);
 		std::string get_token_to_eol();

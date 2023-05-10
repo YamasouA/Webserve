@@ -26,6 +26,9 @@ class Location {
 		size_t get_max_body_size() const;
 		std::string get_cgi_path() const;
 		std::string get_return() const;
+		Location(const Location& src);
+		Location();
+		Location& operator=(const Location& src);
 	private:
 		std::string uri;
 		std::string root;

@@ -7,7 +7,7 @@ configParser::configParser(const std::string& strs)
 
 configParser::configParser(const configParser& src)
 {
-	(void)src;
+	this->serve_confs = src.get_serve_confs();
 }
 
 configParser& configParser::operator=(const configParser& rhs)
@@ -21,6 +21,10 @@ configParser& configParser::operator=(const configParser& rhs)
 configParser::~configParser()
 {}
 
+std::vector<virtualServer> configParser::get_serve_confs() const
+{
+	return serve_confs;
+}
 const std::string readConfFile(const std::string& file_name)
 {
 	std::ifstream ifs(file_name.c_str());
@@ -190,11 +194,14 @@ Location configParser::parseLocation() {
 	}
 	expect('}');
 	skip();
+	//std::cout << location << std::endl;
 	return location;
 }
 
-void configParser::parseServe(size_t i) {
+//void configParser::parseServe(size_t i) {
+virtualServer configParser::parseServe() {
 	std::string directive;
+	virtualServer v_serv;
 	//std::string value;
 	//size_t i = 0;
 	while (idx < buf.size()) {
@@ -213,13 +220,13 @@ void configParser::parseServe(size_t i) {
 		skip();
 		//value = getToken(';');
 		if (directive == "listen") {
-			serve_confs[i].set_listen(getToken(';'));
+			v_serv.set_listen(getToken(';'));
 		} else if (directive == "server_name") {
-			serve_confs[i].set_server_name(getToken(';'));
+			v_serv.set_server_name(getToken(';'));
 //		} else if (directive == "root") {
 //			serve_confs[i].set_root(getToken(';'));
 		} else if (directive == "location") {
-			serve_confs[i].set_location(parseLocation());
+			v_serv.set_location(parseLocation());
 		} else if (directive == "") {
 			continue;
 		} else {
@@ -230,8 +237,10 @@ void configParser::parseServe(size_t i) {
 //	std::cout << buf[idx] << std::endl;
 	expect('}');
 	skip();
-	std::cout << "server: " << std::endl;
-	std::cout << serve_confs[i] << std::endl;
+	//std::cout << v_serv.get_locations()[0] << std::endl;
+	return v_serv;
+	//std::cout << "server: " << i <<  std::endl;
+	//std::cout << serve_confs[i] << std::endl;
 }
 
 void configParser::expect(char c)
@@ -257,9 +266,14 @@ void configParser::parseConf()
 		}
 		skip(); // 空白などの読み飛ばし
 		expect('{'); // 必須文字
-		virtualServer virtual_server;
-		serve_confs.push_back(virtual_server);
-		parseServe(i);
+		//virtualServer virtual_server = parseServe();
+		//serve_confs.push_back(virtual_server);
+		serve_confs.push_back(parseServe());
+		std::cout << "size: " << serve_confs.size() << std::endl;
+		std::cout << "server conf[" << i << "]" << std::endl;
+		std::cout << serve_confs[i] << std::endl;
+		//std::cout << virtual_server << std::endl;
+		//parseServe(i);
 		i++;
 	}
 }

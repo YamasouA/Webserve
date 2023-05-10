@@ -5,7 +5,11 @@ virtualServer::virtualServer()
 
 virtualServer::virtualServer(const virtualServer& src)
 {
-	(void)src;
+	this->listen = src.listen;
+	this->server_name = src.server_name;
+	this->path = src.path;
+	this->locations = src.locations;
+	this->error_page = src.error_page;
 }
 
 virtualServer& virtualServer::operator=(const virtualServer& rhs)
@@ -13,6 +17,11 @@ virtualServer& virtualServer::operator=(const virtualServer& rhs)
 	if (this == &rhs) {
 		return *this;
 	}
+	this->listen = rhs.listen;
+	this->server_name = rhs.server_name;
+	this->path = rhs.path;
+	this->locations = rhs.locations;
+	this->error_page = rhs.error_page;
 	return *this;
 }
 
@@ -58,7 +67,7 @@ std::ostream& operator <<(std::ostream& stream, const virtualServer& obj) {
 		stream << "listen: " << obj.get_listen() << std::endl
 		<< "server_name: " << obj.get_server_name() << std::endl
 //		<< "index: " << obj.get_index() << std::endl
-		<< "locations:" << std::endl;
+		<< "locations:" << tmp.size() << std::endl;
 		for (std::vector<Location>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
 			stream << "location: " << *it << std::endl;
 		}

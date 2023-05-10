@@ -1,5 +1,35 @@
 #include "Location.hpp"
 
+Location::Location() {
+}
+Location::Location(const Location& src) {
+	this->uri = src.uri;
+	this->root = src.root;
+	this->index = src.index;
+	this->ret = src.ret;
+	//this->methods = src.methods;
+	this->upload_path = src.upload_path;
+	this->autoindex = src.autoindex;
+	this->max_body_size = src.max_body_size;
+}
+
+Location& Location::operator=(const Location& src)
+{
+	if (this == &src) {
+		return *this;
+	}
+
+	this->uri = src.uri;
+	this->root = src.root;
+	this->index = src.index;
+	this->ret = src.ret;
+	this->methods = src.methods;
+	this->upload_path = src.upload_path;
+	this->autoindex = src.autoindex;
+	this->max_body_size = src.max_body_size;
+	return *this;
+}
+
 void Location::set_uri(std::string uri)
 {
 	this->uri = uri;
