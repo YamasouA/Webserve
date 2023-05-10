@@ -107,7 +107,7 @@ std::string configParser::getToken(char delimiter)
 	}
 	if (idx == buf.length()) {
 		std::cout << "ko getToken" << std::endl;
-		throw SyntaxException();
+		throw SyntaxException("syntax error in getToken");
 	}
 //	std::cout << "token end" << buf[idx] << std::endl;
 //	idx++;
@@ -141,7 +141,7 @@ Location configParser::parseLocation() {
 	// 末尾に空白が入るかも(入らない可能性もある)
 	trim(uri);
 	if (uri == "") {
-		throw SyntaxException();
+		throw SyntaxException("uri syntax error in parseLocation");
 	}
 	location.set_uri(uri);
 	skip();
@@ -185,7 +185,7 @@ Location configParser::parseLocation() {
 			}
 			location.set_max_body_size(result);
 		} else {
-			throw SyntaxException();
+			throw SyntaxException("directive syntax error in parseLocation");
 //			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
 			// 適切な例外を作成して投げる
 			return location;
@@ -278,8 +278,26 @@ void configParser::parseConf()
 	}
 }
 
-//引数でerrorメッセージ変えられた方が良さそう(やりかたわすれた)
+configParser::SyntaxException::SyntaxException(const std::string& what_arg)
+:msg(what_arg)
+{}
+
+configParser::SyntaxException::~SyntaxException() throw()
+{}
+
+configParser::DupulicateException::DupulicateException(const std::string& what_arg)
+:msg(what_arg)
+{}
+
+configParser::DupulicateException::~DupulicateException() throw()
+{}
+
 const char* configParser::SyntaxException::what(void) const throw() //noexcept c++11~
 {
-	return ("syntax error");
+	return msg.c_str();
+}
+
+const char* configParser::DupulicateException::what(void) const throw() //noexcept c++11~
+{
+	return msg.c_str();
 }
