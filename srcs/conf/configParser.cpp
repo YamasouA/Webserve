@@ -197,7 +197,7 @@ Location configParser::parseLocation() {
 	}
 	expect('}');
 	skip();
-	//std::cout << location << std::endl;
+//	std::cout << location << std::endl;
 	return location;
 }
 
@@ -237,7 +237,9 @@ virtualServer configParser::parseServe() {
 		} else if (directive == "root") {
 			v_serv.set_root(getToken(';'));
 		} else if (directive == "location") {
+			//Location location = parseLocation();
 			v_serv.set_location(parseLocation());
+			//std::cout << "location" << std::endl<<v_serv.get_locations()[0] << std::endl;
 		} else if (directive == "") {
 			continue;
 		} else {
@@ -248,7 +250,6 @@ virtualServer configParser::parseServe() {
 //	std::cout << buf[idx] << std::endl;
 	expect('}');
 	skip();
-	//std::cout << v_serv.get_locations()[0] << std::endl;
 	return v_serv;
 	//std::cout << "server: " << i <<  std::endl;
 	//std::cout << serve_confs[i] << std::endl;

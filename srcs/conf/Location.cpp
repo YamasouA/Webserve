@@ -7,7 +7,7 @@ Location::Location(const Location& src) {
 	this->root = src.root;
 	this->index = src.index;
 	this->ret = src.ret;
-	//this->methods = src.methods;
+	this->methods = src.methods;
 	this->upload_path = src.upload_path;
 	this->autoindex = src.autoindex;
 	this->max_body_size = src.max_body_size;
@@ -39,6 +39,10 @@ void Location::set_uri(std::string uri)
 void Location::set_methods(std::vector<std::string> methods)
 {
 	this->methods = methods;
+	for (std::vector<std::string>::iterator it = this->methods.begin();
+		it != this->methods.end(); it++) {
+		std::cout << *it << std::endl;
+	}
 }
 
 void Location::set_root(std::string root)
