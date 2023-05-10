@@ -114,7 +114,7 @@ std::ostream& operator <<(std::ostream& stream, const Location& obj) {
 				stream << *it << " ";
 			}
 			stream << std::endl;
-			stream << "root: " << obj.get_root() << std::endl
+			stream << "location root: " << obj.get_root() << std::endl
 			<< "is_autoindex: " << obj.get_is_autoindex() << std::endl
 			<< "upload_path: " << obj.get_upload_path() << std::endl
 			<< "index: " << obj.get_index() << std::endl
