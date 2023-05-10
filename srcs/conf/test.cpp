@@ -26,6 +26,11 @@ void test(const char *dirpath) {
 			std::string txt = readConfFile(join(dirpath, dp->d_name));
 			configParser confParser(txt);
 			confParser.parseConf();
+			std::vector<virtualServer> conf_server = confParser.get_serve_confs();
+			for (std::vector<virtualServer>::iterator it = conf_server.begin();
+				it != conf_server.end(); it++) {
+				std::cout << *it << std::endl;
+			}
 		} catch (const std::exception& e) {
 			std::cout << e.what() << std::endl;
 		}

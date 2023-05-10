@@ -220,7 +220,14 @@ virtualServer configParser::parseServe() {
 		skip();
 		//value = getToken(';');
 		if (directive == "listen") {
-			v_serv.set_listen(getToken(';'));
+			//v_serv.set_listen(getToken(';'));
+			std::stringstream sstream(getToken(';'));
+			int result;
+			sstream >> result;
+			if (sstream.fail() && std::numeric_limits<int>::max() == result) {
+				std::cerr << "overflow" << std::endl;
+			}
+			v_serv.set_listen(result);
 		} else if (directive == "server_name") {
 			v_serv.set_server_name(getToken(';'));
 //		} else if (directive == "root") {
@@ -256,7 +263,7 @@ void configParser::parseConf()
 {
 	std::string directive;
 	//std::string value;
-	size_t i = 0;
+	//size_t i = 0;
 
 	while (idx < buf.size()) {
 		std::string directive = getToken(' ');
@@ -269,12 +276,12 @@ void configParser::parseConf()
 		//virtualServer virtual_server = parseServe();
 		//serve_confs.push_back(virtual_server);
 		serve_confs.push_back(parseServe());
-		std::cout << "size: " << serve_confs.size() << std::endl;
-		std::cout << "server conf[" << i << "]" << std::endl;
-		std::cout << serve_confs[i] << std::endl;
+		//std::cout << "size: " << serve_confs.size() << std::endl;
+		//std::cout << "server conf[" << i << "]" << std::endl;
+		//std::cout << serve_confs[i] << std::endl;
 		//std::cout << virtual_server << std::endl;
 		//parseServe(i);
-		i++;
+	//	i++;
 	}
 }
 

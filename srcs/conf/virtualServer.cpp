@@ -28,7 +28,8 @@ virtualServer& virtualServer::operator=(const virtualServer& rhs)
 virtualServer::~virtualServer()
 {}
 
-void virtualServer::set_listen(std::string listen){
+//void virtualServer::set_listen(std::string listen){
+void virtualServer::set_listen(int listen){
 	this->listen = listen;
 }
 void virtualServer::set_server_name(std::string server_name){
@@ -45,8 +46,8 @@ void virtualServer::set_location(Location location){
 //	this->root = root;
 //}
 
-//int virtualServer::get_listen(){
-std::string virtualServer::get_listen() const{
+int virtualServer::get_listen() const{
+//std::string virtualServer::get_listen() const{
 	return listen;
 }
 std::string virtualServer::get_server_name() const{
