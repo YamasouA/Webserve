@@ -127,7 +127,9 @@ std::string httpParser::getToken_to_eol() {
 void httpParser::parseReqLine()
 {
     method = getToken(' ');
+    skipSpace();
     uri = getToken(' ');
+    skipSpace();
     version = buf.substr(idx, 8);
     idx += 8;
     if (version != "HTTP/1.1") { //tmp fix version
@@ -143,7 +145,7 @@ void httpParser::parseReqLine()
     }
 }
 
-bool checkHeaderEnd()
+bool httpParser::checkHeaderEnd()
 {
     if (buf[idx] == '\015') {
         ++idx;
