@@ -28,6 +28,17 @@ std::map<int, virtualServer> initialize_fd(configParser conf, Kqueue kqueue) {
 	}
 	return fd_config_map;
 }
+
+void readRequest(int event_fd) {
+	char buf[1024];
+	memset(buf, 0, sizeof(buf));
+	fcntl(event_fd, F_SETFL, O_NONBLOCK);
+	recv(event_fd, buf, sizeof(buf), 0);
+	std::cout << "buf: " << std::endl;
+	std::cout << buf << std::endl;
+	
+}
+
 int main(int argc, char *argv[]) {
 	// 設定ファイルを読み込む
 	// read_config();
@@ -110,14 +121,15 @@ int main(int argc, char *argv[]) {
 				}
 				*/
 			} else if (reciver_event[i].filter & EVFILT_READ) {
-				char buf[1024];
-				memset(buf, 0, sizeof(buf));
-				fcntl(event_fd, F_SETFL, O_NONBLOCK);
+				//char buf[1024];
+				//memset(buf, 0, sizeof(buf));
+				//fcntl(event_fd, F_SETFL, O_NONBLOCK);
 				//fcntl(0, F_SETFL, O_NONBLOCK);
 				//read(0, buf, 1);
-				recv(event_fd, buf, sizeof(buf), 0);
-				std::cout << buf << std::endl;
-				std::cout << "ok" << std::endl;
+				//recv(event_fd, buf, sizeof(buf), 0);
+				readRequest(event_fd);
+				//std::cout << buf << std::endl;
+				//std::cout << "ok" << std::endl;
 			}
 		}
 	}
