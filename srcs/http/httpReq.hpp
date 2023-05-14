@@ -1,7 +1,7 @@
 #ifndef HTTPREQ_HPP
 #define HTTPREQ_HPP
 
-class httpReq {
+class httpReq { //httpReqHeaders is better?
     public:
         httpReq();
         httpReq(const httpReq& src);
