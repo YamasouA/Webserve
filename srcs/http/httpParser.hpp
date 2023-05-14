@@ -7,6 +7,17 @@ class httpParser {
         httpParser(const httpParser& src);
         httpParser& operator=(const httpParser& rhs);
         ~httpParser();
+
+
+        void setMethod(const std::string&);
+        void setUri(const std::string&);
+        void setVersion(const std::string&);
+        void setContentBody(const std::string&);
+
+        std::string getMethod() const;
+        std::string getUri() const;
+        std::string getVersion() const;
+        std::string getContetBody() const;
     private:
         std::string method;
         std::string uri;

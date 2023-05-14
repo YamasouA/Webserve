@@ -8,9 +8,9 @@ class httpReq {
         httpReq& operator=(const httpReq& rhs);
         ~httpReq();
 
-        void setName(std::string);
+        void setName(const std::string&);
 //        void setName_len(std::string);
-        void setValue(std::string);
+        void setValue(const std::string&);
 //        void setValue_len(std::string);
         std::string getName() const;
 //        size_t getName_len() const;
