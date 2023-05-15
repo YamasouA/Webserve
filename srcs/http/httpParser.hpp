@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <ostream>
 #include "httpReq.hpp"
 
 class httpParser {
@@ -23,6 +24,7 @@ class httpParser {
         std::string getUri() const;
         std::string getVersion() const;
         std::string getContetBody() const;
+        std::vector<httpReq> getHeaderInfo() const;
 		void parseRequest();
     private:
         std::string buf;
@@ -61,5 +63,7 @@ class httpParser {
 				std::string msg;
 		};
 };
+
+std::ostream& operator<<(std::ostream& stream, const httpParser& obj);
 
 #endif

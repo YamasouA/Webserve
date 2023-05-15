@@ -1,10 +1,16 @@
 #include "httpParser.hpp"
 
 httpParser::httpParser(const std::string& request_msg)
-:buf(request_msg)
+:buf(request_msg),
+    idx(0)
 {}
 
 httpParser::httpParser(const httpParser& src)
+:method(src.getMethod()),
+    uri(src.getUri()),
+    version(src.getVersion()),
+    header_info(src.getHeaderInfo()),
+    content_body(src.getContetBody())
 {
     (void)src;
 }
@@ -14,6 +20,11 @@ httpParser& httpParser::operator=(const httpParser& rhs)
     if (this == &rhs) {
         return *this;
     }
+    this->method = rhs.getMethod();
+    this->uri = rhs.getUri();
+    this->version = rhs.getVersion();
+    this->header_info = rhs.getHeaderInfo();
+    this->content_body = rhs.getContetBody();
     return *this;
 }
 
@@ -60,6 +71,10 @@ std::string httpParser::getContetBody() const
     return this->content_body;
 }
 
+std::vector<httpReq> httpParser::getHeaderInfo() const
+{
+    return this->header_info;
+}
 
 void httpParser::skipSpace()
 {
@@ -142,7 +157,7 @@ void httpParser::parseReqLine()
     version = buf.substr(idx, 8);
     idx += 8;
     if (version != "HTTP/1.1") { //tmp fix version
-        std::cerr << "vesion error" << std::endl;
+        std::cerr << "version error" << std::endl;
     }
     if (buf[idx] == '\015') {
         ++idx;
@@ -171,6 +186,7 @@ bool httpParser::checkHeaderEnd()
 void httpParser::parseRequest()
 {
    parseReqLine();
+   std::cout << "req line ok" << std::endl;
     while (idx < buf.size()) {
         if (checkHeaderEnd()) {
             break;
@@ -186,6 +202,19 @@ void httpParser::parseRequest()
     content_body = getToken_to_eof();
 }
 
+std::ostream& operator<<(std::ostream& stream, const httpParser& obj) {
+    const std::vector<httpReq> tmp = obj.getHeaderInfo();
+    stream << "method: " << obj.getMethod() << std::endl
+    << "uri: " << obj.getUri() << std::endl
+    << "version" << obj.getVersion() << std::endl << std::endl;
+    for (std::vector<httpReq>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+        stream << "header field: " << (*it).getName() << std::endl
+        << "value: " << (*it).getValue() << std::endl;
+    }
+    stream << std::endl
+    << "body: " << obj.getContetBody() << std::endl;
+    return stream;
+}
 
 httpParser::SyntaxException::SyntaxException(const std::string& what_arg)
 :msg(what_arg)
