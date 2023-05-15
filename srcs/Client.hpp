@@ -2,6 +2,8 @@
 #define CLIENT_HPP
 
 #include "conf/virtualServer.hpp"
+#include "http/HttpRes.hpp"
+#include "http/httpReq.hpp"
 
 class Client {
 	private:

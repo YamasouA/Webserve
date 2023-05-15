@@ -34,7 +34,7 @@ void assign_server(configParser& conf, Client& client) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	for (std::vector<virtualServer>::iterator it = server_confs.begin();
 		it != server_confs.end(); it++) {
-		if (client.get_httpReq()->get_hostname() == it->get_hostname()
+		if (client.get_httpReq()->get_hostname() == it->get_server_name()
 			&& client.get_fd() == it->get_listen()) {
 			client.set_server(*it);
 		}
@@ -53,7 +53,10 @@ void read_request(int fd, Client& client, configParser& conf) {
 
 	}
 	*/
-	client.get_httpReq(buf)->parserRequest();
+	//client.get_httpReq(buf)->parserRequest();
+	httpParser httpparser(buf);
+	httpparser->parseRequest();
+	client.set_httpReq(httpParser);
 	assign_server(conf, client);
 }
 

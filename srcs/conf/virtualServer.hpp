@@ -26,6 +26,7 @@ class virtualServer {
 //		std::string get_index();
 //		std::string get_location() const;
 		std::string get_root() const;
+		//std::string get_server_name() const;
 	private:
 		int listen;
 //		std::string listen;

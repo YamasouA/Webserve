@@ -8,10 +8,11 @@
 #include "../conf/virtualServer.hpp"
 #include "httpReq.hpp"
 #include "../Client.hpp"
+
 class HttpRes {
 	private:
-		std::string body;
 		std::string head;
+		std::string body;
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
 		httpReq httpReq;

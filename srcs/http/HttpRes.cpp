@@ -7,6 +7,7 @@ HttpRes::HttpRes(const Client& source) {
 
 HttpRes::~HttpRes() {
 }
+
 Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Location> locations) {
 	Location location;
 	size_t max_len = 0;
@@ -27,7 +28,7 @@ Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Loc
 	return location;
 }
 
-bool HttpRes::isAllowMethod(Location target, std::string method) {
+bool HttpRes::isAllowMethod(std::string method) {
 	std::vector<std::string> allow_method = target->get_methods();
 	for (std::vector<std::string>::iterator it = allow_method.begin();
 		it != allow_method.end(); it++) {
@@ -60,13 +61,14 @@ void HttpRes::read_file() {
 	oss << ifs.rdbuf();
 	const std::string strs = oss.str();
 	set_body(strs);
+	std::cout << body << std::endl;
 }
 
 void HttpRes::createResponse() {
 	// 一つもマッチしない場合は？
-	Locatinos target = longestMatchLocation(httpreq.get_location(), vServer.get_locations());
-	std::string method = httpReq.get_method();
-	if (isAllowMethod(target, method)) {
+	target = longestMatchLocation(httpreq.get_location(), vServer.get_locations());
+	std::string method = httpReq.getMethod();
+	if (isAllowMethod(method)) {
 		if (method == "GET") {
 			read_file();
 		}
