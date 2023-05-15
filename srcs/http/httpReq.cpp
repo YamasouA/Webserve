@@ -4,15 +4,17 @@ httpReq::httpReq()
 {}
 
 httpReq::httpReq(const httpReq& src)
-{
-    (void)src;
-}
+:name(src.getName()),
+    value(src.getValue())
+{}
 
 httpReq& httpReq::operator=(const httpReq& rhs)
 {
     if (this == &rhs) {
         return *this;
     }
+    this->name = rhs.getName();
+    this->value = rhs.getValue();
     return *this;
 }
 

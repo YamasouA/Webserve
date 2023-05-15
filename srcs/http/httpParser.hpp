@@ -3,7 +3,7 @@
 
 class httpParser {
     public:
-        httpParser();
+        httpParser(const std::string& request_msg);
         httpParser(const httpParser& src);
         httpParser& operator=(const httpParser& rhs);
         ~httpParser();
@@ -19,6 +19,9 @@ class httpParser {
         std::string getVersion() const;
         std::string getContetBody() const;
     private:
+        std::string buf;
+        size_t idx;
+
         std::string method;
         std::string uri;
         std::string version;
