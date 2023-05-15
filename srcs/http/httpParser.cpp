@@ -124,6 +124,15 @@ std::string httpParser::getToken_to_eol() {
 	return line;
 }
 
+std::string httpParser::getToken_to_eof() {
+	std::string body = "";
+	while (idx < buf.length()) {
+		body += buf[idx];
+		idx++;
+	}
+	return body;
+}
+
 void httpParser::parseReqLine()
 {
     method = getToken(' ');
@@ -169,8 +178,23 @@ void httpParser::parseRequest()
         httpReq header_field;
         header_field.setName(getToken(':'));
         skipSpace(); //
-        header_field.setValue(trim(getToken_to_eol()));
+		std::string s = getToken_to_eol();
+		trim(s);
+        header_field.setValue(s);
         header_info.push_back(header_field);
     }
     content_body = getToken_to_eof();
+}
+
+
+httpParser::SyntaxException::SyntaxException(const std::string& what_arg)
+:msg(what_arg)
+{}
+
+httpParser::SyntaxException::~SyntaxException() throw()
+{}
+
+const char* httpParser::SyntaxException::what(void) const throw() //noexcept c++11~
+{
+	return msg.c_str();
 }

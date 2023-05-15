@@ -1,6 +1,11 @@
 #ifndef HTTPPARSER_HPP
 #define HTTPPARSER_HPP
 
+#include <string>
+#include <vector>
+#include <iostream>
+#include "httpReq.hpp"
+
 class httpParser {
     public:
         httpParser(const std::string& request_msg);
@@ -18,6 +23,7 @@ class httpParser {
         std::string getUri() const;
         std::string getVersion() const;
         std::string getContetBody() const;
+		void parseRequest();
     private:
         std::string buf;
         size_t idx;
@@ -26,6 +32,15 @@ class httpParser {
         std::string uri;
         std::string version;
         std::vector<httpReq> header_info;
+
+		void trim(std::string& str);
+		void skipSpace();
+		void expect(char c);
+		std::string getToken(char delimiter);
+		std::string getToken_to_eol();
+		void parseReqLine();
+		bool checkHeaderEnd();
+		std::string getToken_to_eof();
 //        std::string method;
 //        std::string uri;
 //        std::string version;
@@ -37,6 +52,14 @@ class httpParser {
 //        std::string content_type;
 //        size_t content_length;
         std::string content_body;
+		class SyntaxException: public std::exception {
+			public:
+				explicit SyntaxException(const std::string& what_arg);
+				~SyntaxException() throw();
+				virtual const char* what() const throw(); // throw() = noexcept
+			private:
+				std::string msg;
+		};
 };
 
 #endif

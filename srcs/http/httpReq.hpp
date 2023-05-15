@@ -1,6 +1,8 @@
 #ifndef HTTPREQ_HPP
 #define HTTPREQ_HPP
 
+#include <string>
+
 class httpReq { //httpReqHeaders is better?
     public:
         httpReq();
@@ -8,9 +10,9 @@ class httpReq { //httpReqHeaders is better?
         httpReq& operator=(const httpReq& rhs);
         ~httpReq();
 
-        void setName(const std::string&);
+        void setName(const std::string& token);
 //        void setName_len(std::string);
-        void setValue(const std::string&);
+        void setValue(const std::string& token);
 //        void setValue_len(std::string);
         std::string getName() const;
 //        size_t getName_len() const;
