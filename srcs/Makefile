@@ -10,10 +10,6 @@ HTTP_DIR = http/
 HTTP_FILES = HttpRes.cpp httpReq.cpp httpParser.cpp
 HTTP_SRCS = $(addprefix $(HTTP_DIR), $(HTTP_FILES))
 
-HTTP_DIR = http/
-HTTP_FILES = httpParser.cpp httpReq.cpp test.cpp HttpRes.cpp
-HTTP_SRCS = $(addprefix $(HTTP_DIR), $(HTTP_FILES))
-
 OBJS = $(SRCS:.cpp=.o)
 CONF_OBJS = $(CONF_SRCS:.cpp=.o)
 HTTP_OBJS = $(HTTP_SRCS:.cpp=.o)

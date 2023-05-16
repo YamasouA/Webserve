@@ -21,9 +21,15 @@ class httpReq { //httpReqHeaders is better?
         std::string getValue() const;
 //        size_t getValue_len() const;
     private:
-        std::string name;
+        std::string method;
+        std::string uri;
+        std::string version;
+        std::map<std::string, std::string> header_fields;
+        std::string content_body;
+
+//        std::string name;
 //        size_t name_len; //neccesary?
-        std::string value;
+//        std::string value;
 //        size_t value_len;
 };
 

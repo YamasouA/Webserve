@@ -34,7 +34,8 @@ class httpParser {
         std::string method;
         std::string uri;
         std::string version;
-        std::vector<httpReq> header_info;
+        std::map<std::string, std::string> header_fields;
+        std::string content_body;
 
 		void trim(std::string& str);
 		void skipSpace();
@@ -54,7 +55,6 @@ class httpParser {
 //        std::string upgrade_insecure_req;
 //        std::string content_type;
 //        size_t content_length;
-        std::string content_body;
 		class SyntaxException: public std::exception {
 			public:
 				explicit SyntaxException(const std::string& what_arg);

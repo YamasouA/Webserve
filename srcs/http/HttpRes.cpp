@@ -13,7 +13,6 @@ HttpRes::~HttpRes() {
 Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Location> locations) {
 	Location location;
 	size_t max_len = 0;
-    size_t i = 0;
 	for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); it++) {
         std::string location_path = it->get_uri();
 		// locationの方が長い場合はマッチしない

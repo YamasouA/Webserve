@@ -54,6 +54,11 @@ void httpParser::setContentBody(const std::string& token)
     this->content_body = token;
 }
 
+void httpParser::setHeaderField(const std::string& name, const std::string value)
+{
+    this->header_fields.insert(std::make_pair(name, value));
+}
+
 std::string httpParser::getMethod() const
 {
     return this->method;
@@ -74,10 +79,14 @@ std::string httpParser::getContetBody() const
     return this->content_body;
 }
 
-std::vector<httpReq> httpParser::getHeaderInfo() const
+std::map<std::string, std::string> httpParser::getHeaderFields() const
 {
-    return this->header_info;
+    return this->header_fields;
 }
+//std::vector<httpReq> httpParser::getHeaderInfo() const
+//{
+//    return this->header_info;
+//}
 
 void httpParser::skipSpace()
 {
@@ -194,23 +203,26 @@ void httpParser::parseRequest()
         if (checkHeaderEnd()) {
             break;
         }
-        httpReq header_field;
-        header_field.setName(getToken(':'));
+//        httpReq header_field;
+        std::string field_name = getToken(':');
+//        header_field.setName(getToken(':'));
         skipSpace(); //
-		std::string s = getToken_to_eol();
-		trim(s);
-        header_field.setValue(s);
-        header_info.push_back(header_field);
+		std::string field_value = getToken_to_eol();
+		trim(field_value);
+//        header_field.setValue(s);
+        set_headerField(field_name, field_value);
+//        header_info.push_back(header_field);
     }
     content_body = getToken_to_eof();
 }
 
 std::ostream& operator<<(std::ostream& stream, const httpParser& obj) {
-    const std::vector<httpReq> tmp = obj.getHeaderInfo();
+//    const std::vector<httpReq> tmp = obj.getHeaderInfo();
+    const std::map<std::string, std::string> tmp = obj.getHeaderFields();
     stream << "method: " << obj.getMethod() << std::endl
     << "uri: " << obj.getUri() << std::endl
     << "version" << obj.getVersion() << std::endl << std::endl;
-    for (std::vector<httpReq>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
+    for (std::map<std::string, std::string>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
         stream << "header field: " << (*it).getName() << std::endl
         << "value: " << (*it).getValue() << std::endl;
     }
