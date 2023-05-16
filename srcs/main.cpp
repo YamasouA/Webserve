@@ -10,6 +10,7 @@
 #include "Kqueue.hpp"
 #include "Client.hpp"
 #include "conf/configParser.hpp"
+#include "http/httpParser.hpp"
 #include <map>
 #include <utility>
 
@@ -36,6 +37,7 @@ void assign_server(configParser& conf, Client& client) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	for (std::vector<virtualServer>::iterator it = server_confs.begin();
 		it != server_confs.end(); it++) {
+
         std::vector<httpReq> tmp = client.get_parsedReq().getHeaderInfo();
         std::string host_name;
 		for (std::vector<httpReq>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++it) {
@@ -50,6 +52,7 @@ void assign_server(configParser& conf, Client& client) {
         if (host_name == it->get_server_name()) {
 //			&& client.get_fd() == it->get_listen()) {
 			client.set_vServer(*it);
+
 		}
 	}
 }
@@ -69,6 +72,7 @@ void read_request(int fd, Client& client, configParser& conf) {
 	}
 	*/
 	//client.get_httpReq(buf)->parserRequest();
+
     std::cout << "req: " << buf << std::endl;
     httpParser httpparser(buf);
     httpparser.parseRequest();
@@ -77,6 +81,7 @@ void read_request(int fd, Client& client, configParser& conf) {
     assign_server(conf, client);
     HttpRes respons(client);
     respons.createResponse();
+
 }
 
 int main(int argc, char *argv[]) {
