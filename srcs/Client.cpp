@@ -9,7 +9,7 @@ Client::Client()
 {}
 
 Client::Client(const Client& source)
-:parsed_req(source.get_parsedReq()),
+:httpreq(source.get_httpReq()),
     httpres(source.get_httpResp()),
     vServer(source.get_vServer()),
     fd(source.get_fd())
@@ -21,7 +21,7 @@ Client& Client::operator=(const Client& rhs)
     if (this == &rhs) {
         return *this;
     }
-    parsed_req = rhs.get_parsedReq();
+    httpreq = rhs.get_httpReq();
     httpres = rhs.get_httpResp();
     vServer = rhs.get_vServer();
     fd = rhs.get_fd();
@@ -31,9 +31,10 @@ Client& Client::operator=(const Client& rhs)
 Client::~Client()
 {}
 
-void Client::set_parsedReq(httpParser parsed_req)
+//void Client::set_parsedReq(httpParser parsed_req)
+void Client::set_httpReq(httpReq httpreq)
 {
-    this->parsed_req = parsed_req;
+    this->httpreq = httpreq;
 }
 
 void Client::set_fd(int fd) {
@@ -55,9 +56,10 @@ int Client::get_fd() const{
 //	return httpReq;
 //}
 
-httpParser Client::get_parsedReq() const
+//httpParser Client::get_parsedReq() const
+httpReq Client::get_httpReq() const
 {
-    return parsed_req;
+    return httpreq;
 }
 
 HttpRes Client::get_httpRes() const {

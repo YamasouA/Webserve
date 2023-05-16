@@ -8,7 +8,6 @@
 #include "../conf/Location.hpp"
 #include "../conf/virtualServer.hpp"
 #include "httpReq.hpp"
-#include "httpParser.hpp"
 
 class Client;
 
@@ -19,7 +18,7 @@ class HttpRes {
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
 //		httpReq httpReq;
-		httpParser httpparser;
+		httpReq httpreq;
 		virtualServer vServer;
 		Location target;
 	public:

@@ -2,8 +2,8 @@
 #include "../Client.hpp"
 
 HttpRes::HttpRes(const Client& source) {
-	this->httpparser = source.get_parsedReq();
-//	this->httpReq = source.get_httpReq();
+	//this->httpreq = source.get_parsedReq();
+	this->httpreq = source.get_httpReq();
 	this->vServer = source.get_vServer();
 }
 
@@ -76,8 +76,8 @@ void HttpRes::read_file() {
 
 void HttpRes::createResponse() {
 	// 一つもマッチしない場合は？
-	target = longestMatchLocation(httpparser.getUri(), vServer.get_locations());
-	std::string method = httpparser.getMethod();
+	target = longestMatchLocation(httpreq.getUri(), vServer.get_locations());
+	std::string method = httpreq.getMethod();
 	if (isAllowMethod(method)) {
 		if (method == "GET") {
 			read_file();

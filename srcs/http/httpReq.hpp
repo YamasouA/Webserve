@@ -1,36 +1,71 @@
-#ifndef HTTPREQ_HPP
-#define HTTPREQ_HPP
+#ifndef HTTPPARSER_HPP
+#define HTTPPARSER_HPP
 
 #include <string>
+#include <vector>
+#include <map>
+#include <iostream>
+#include <ostream>
 
-class Client;
-
-class httpReq { //httpReqHeaders is better?
+class httpReq {
     public:
         httpReq();
+        httpReq(const std::string& request_msg);
         httpReq(const httpReq& src);
         httpReq& operator=(const httpReq& rhs);
         ~httpReq();
 
-        void setName(const std::string& token);
-//        void setName_len(std::string);
-        void setValue(const std::string& token);
-//        void setValue_len(std::string);
-        std::string getName() const;
-//        size_t getName_len() const;
-        std::string getValue() const;
-//        size_t getValue_len() const;
+
+        void setMethod(const std::string&);
+        void setUri(const std::string&);
+        void setVersion(const std::string&);
+        void setContentBody(const std::string&);
+		void setHeaderField(const std::string& name, const std::string value);
+
+        std::string getMethod() const;
+        std::string getUri() const;
+        std::string getVersion() const;
+        std::string getContetBody() const;
+        std::map<std::string, std::string> getHeaderFields() const;
+		void parseRequest();
     private:
+        std::string buf;
+        size_t idx;
+
         std::string method;
         std::string uri;
         std::string version;
         std::map<std::string, std::string> header_fields;
         std::string content_body;
 
-//        std::string name;
-//        size_t name_len; //neccesary?
-//        std::string value;
-//        size_t value_len;
+		void trim(std::string& str);
+		void skipSpace();
+		void expect(char c);
+		std::string getToken(char delimiter);
+		std::string getToken_to_eol();
+		void parseReqLine();
+		bool checkHeaderEnd();
+		std::string getToken_to_eof();
+//        std::string method;
+//        std::string uri;
+//        std::string version;
+//        std::string user_agent;
+//        std::string accept_language;
+//        std::string accept_encoding;
+//        std::string connection;
+//        std::string upgrade_insecure_req;
+//        std::string content_type;
+//        size_t content_length;
+		class SyntaxException: public std::exception {
+			public:
+				explicit SyntaxException(const std::string& what_arg);
+				~SyntaxException() throw();
+				virtual const char* what() const throw(); // throw() = noexcept
+			private:
+				std::string msg;
+		};
 };
+
+std::ostream& operator<<(std::ostream& stream, const httpReq& obj);
 
 #endif

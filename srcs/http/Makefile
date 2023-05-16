@@ -1,7 +1,7 @@
 CXX = c++
 CXXFLAGS = -g -Werror -Wextra -Wall -std=c++98 -pedantic-errors -MMD -MP
 NAME = server
-SRCS = httpParser.cpp httpReq.cpp test.cpp HttpRes.cpp
+SRCS = httpReq.cpp test.cpp HttpRes.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 CONF_OBJS = $(CONF_SRCS:.cpp=.o)

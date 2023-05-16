@@ -10,7 +10,8 @@
 #include "Kqueue.hpp"
 #include "Client.hpp"
 #include "conf/configParser.hpp"
-#include "http/httpParser.hpp"
+//#include "http/httpParser.hpp"
+#include "http/httpReq.hpp"
 #include <map>
 #include <utility>
 
@@ -38,12 +39,12 @@ void assign_server(configParser& conf, Client& client) {
 	for (std::vector<virtualServer>::iterator it = server_confs.begin();
 		it != server_confs.end(); it++) {
 
-        std::vector<httpReq> tmp = client.get_parsedReq().getHeaderInfo();
+        std::map<std::string, std::string> tmp = client.get_httpReq().getHeaderFields();
         std::string host_name;
-		for (std::vector<httpReq>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++it) {
+		for (std::map<std::string, std::string>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++it) {
 //            std::cout << "field name: " << (*req_it).getName() << std::endl;
-            if ((*req_it).getName() == "Host") {
-                host_name = (*req_it).getValue();
+            if ((*req_it).first == "Host") {
+                host_name = (*req_it).second;
                 break;
             }
         }
@@ -74,9 +75,10 @@ void read_request(int fd, Client& client, configParser& conf) {
 	//client.get_httpReq(buf)->parserRequest();
 
     std::cout << "req: " << buf << std::endl;
-    httpParser httpparser(buf);
-    httpparser.parseRequest();
-    client.set_parsedReq(httpparser);
+    //httpParser httpparser(buf);
+    httpReq httpreq(buf);
+    httpreq.parseRequest();
+    client.set_httpReq(httpreq);
 //	client.set_httpReq(httpparser.get);
     assign_server(conf, client);
     HttpRes respons(client);

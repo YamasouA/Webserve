@@ -1,4 +1,4 @@
-#include "httpParser.hpp"
+#include "httpReq.hpp"
 #include <sstream>
 #include <fstream>
 
@@ -15,7 +15,7 @@ static const std::string readConfFile(const std::string& file_name)
 }
 
 int main() {
-	httpParser httpParser(readConfFile("test.http"));
+	httpReq httpParser(readConfFile("test.http"));
 	httpParser.parseRequest();
 
 	//std::cout << httpParser << std::endl;
