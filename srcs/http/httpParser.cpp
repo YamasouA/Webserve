@@ -1,5 +1,8 @@
 #include "httpParser.hpp"
 
+httpParser::httpParser()
+{}
+
 httpParser::httpParser(const std::string& request_msg)
 :buf(request_msg),
     idx(0)

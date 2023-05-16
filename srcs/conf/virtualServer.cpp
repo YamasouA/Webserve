@@ -67,9 +67,6 @@ std::string virtualServer::get_root() const{
 	return root;
 }
 
-std::string virtualServer::get_server_name() const{
-	return server_name;
-}
 
 std::ostream& operator <<(std::ostream& stream, const virtualServer& obj) {
 		const std::vector<Location> tmp = obj.get_locations();

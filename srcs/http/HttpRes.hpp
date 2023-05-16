@@ -3,11 +3,14 @@
 
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include "../conf/Location.hpp"
 #include "../conf/virtualServer.hpp"
 #include "httpReq.hpp"
-#include "../Client.hpp"
+#include "httpParser.hpp"
+
+class Client;
 
 class HttpRes {
 	private:
@@ -15,13 +18,17 @@ class HttpRes {
 		std::string body;
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
-		httpReq httpReq;
+//		httpReq httpReq;
+		httpParser httpparser;
 		virtualServer vServer;
 		Location target;
 	public:
 		HttpRes(const Client& source);
 		~HttpRes();
-		void longestMatchLocation();
+		Location longestMatchLocation(std::string request_path, std::vector<Location> locations);
+        bool isAllowMethod(std::string method);
+        std::string join_path();
+        void set_body(std::string strs);
 		void read_file();
 		void createResponse();
 };

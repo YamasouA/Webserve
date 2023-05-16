@@ -4,8 +4,11 @@ NAME = server
 SRCS = main.cpp Socket.cpp Logger.cpp Kqueue.cpp Client.cpp
 
 CONF_DIR = conf/
-CONF_FILES = Location.cpp configParser.cpp virtualServer.cpp 
+CONF_FILES = Location.cpp configParser.cpp virtualServer.cpp
 CONF_SRCS = $(addprefix $(CONF_DIR), $(CONF_FILES))
+HTTP_DIR = http/
+HTTP_FILES = HttpRes.cpp httpReq.cpp httpParser.cpp
+HTTP_SRCS = $(addprefix $(HTTP_DIR), $(HTTP_FILES))
 
 HTTP_DIR = http/
 HTTP_FILES = httpParser.cpp httpReq.cpp test.cpp HttpRes.cpp
