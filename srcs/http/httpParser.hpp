@@ -9,6 +9,7 @@
 
 class httpParser {
     public:
+        httpParser();
         httpParser(const std::string& request_msg);
         httpParser(const httpParser& src);
         httpParser& operator=(const httpParser& rhs);

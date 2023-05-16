@@ -11,9 +11,10 @@
 #include "Client.hpp"
 #include "conf/configParser.hpp"
 #include <map>
+#include <utility>
 
 //std::map<int, virtualServer> initialize_fd(configParser conf, Kqueue kqueue) {
-void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer> fd_config_map) {
+void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer>& fd_config_map) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	//std::map<int, virtualServer> fd_config_map;
 	for (std::vector<virtualServer>::iterator it = server_confs.begin(); it != server_confs.end(); it++) {
@@ -31,12 +32,24 @@ void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer
 }
 
 void assign_server(configParser& conf, Client& client) {
+//    std::cout << "ok" << std::endl;
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	for (std::vector<virtualServer>::iterator it = server_confs.begin();
 		it != server_confs.end(); it++) {
-		if (client.get_httpReq()->get_hostname() == it->get_server_name()
-			&& client.get_fd() == it->get_listen()) {
-			client.set_server(*it);
+        std::vector<httpReq> tmp = client.get_parsedReq().getHeaderInfo();
+        std::string host_name;
+		for (std::vector<httpReq>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++it) {
+//            std::cout << "field name: " << (*req_it).getName() << std::endl;
+            if ((*req_it).getName() == "Host") {
+                host_name = (*req_it).getValue();
+                break;
+            }
+        }
+//		if (client.get_httpReq().get_hostname() == it->get_server_name()
+        std::cout << "server name: " << it->get_server_name() << std::endl;
+        if (host_name == it->get_server_name()) {
+//			&& client.get_fd() == it->get_listen()) {
+			client.set_vServer(*it);
 		}
 	}
 }
@@ -46,7 +59,9 @@ void read_request(int fd, Client& client, configParser& conf) {
 
 	memset(buf, 0, sizeof(buf));
 	fcntl(fd, F_SETFL, O_NONBLOCK);
-	recv(fd, buf, sizeof(buf), 0);
+	if (recv(fd, buf, sizeof(buf), 0) < 0) {
+        return ;
+    }
 	/*
 	if (buf ==) {
 		std::cout << "ERROR" << std::endl;
@@ -54,10 +69,14 @@ void read_request(int fd, Client& client, configParser& conf) {
 	}
 	*/
 	//client.get_httpReq(buf)->parserRequest();
-	httpParser httpparser(buf);
-	httpparser->parseRequest();
-	client.set_httpReq(httpParser);
-	assign_server(conf, client);
+    std::cout << "req: " << buf << std::endl;
+    httpParser httpparser(buf);
+    httpparser.parseRequest();
+    client.set_parsedReq(httpparser);
+//	client.set_httpReq(httpparser.get);
+    assign_server(conf, client);
+    HttpRes respons(client);
+    respons.createResponse();
 }
 
 int main(int argc, char *argv[]) {
@@ -83,7 +102,7 @@ int main(int argc, char *argv[]) {
 		//fd_config_map = initialize_fd(conf, kqueue);
 		initialize_fd(conf, kqueue, fd_config_map);
 	//} catch (const std::exception &e) {
-		
+
 	//}
 	//std::string default_file = "index.html";
 	//Socket *socket = new Socket(8000); //port num is tmp
@@ -107,7 +126,7 @@ int main(int argc, char *argv[]) {
 		std::exit(1);
 	}
 	*/
-	
+
 	while (1) {
 		Logger::logging("hello");
 		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
@@ -128,6 +147,7 @@ int main(int argc, char *argv[]) {
 				std::cout << "Client " << event_fd << " has disconnected" << std::endl;
 				close(event_fd);
 			}
+
 			//else if (event_fd == socket->get_listenfd()) {
 			else if (fd_config_map.count(event_fd) == 1) {
 				//acceptfd = accept(socket->get_listenfd(), NULL, NULL);
@@ -140,7 +160,7 @@ int main(int argc, char *argv[]) {
 				std::cout << "client fd: " << acceptfd << std::endl;
 				kqueue.set_register_event(acceptfd);
 				client.set_fd(acceptfd);
-				fd_client_map(std::make_pair(acceptfd, client));
+				fd_client_map.insert(std::make_pair(acceptfd, client));
 				/*
 				EV_SET(register_event, acceptfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 				if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
@@ -150,14 +170,14 @@ int main(int argc, char *argv[]) {
 			} else if (reciver_event[i].filter & EVFILT_READ) {
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
-				fcntl(event_fd, F_SETFL, O_NONBLOCK);
+//				fcntl(event_fd, F_SETFL, O_NONBLOCK);
 				//fcntl(0, F_SETFL, O_NONBLOCK);
 				//read(0, buf, 1);
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
-				read_request(event_fd, fd_client_map.at(event_fd), conf);
-				std::cout << buf << std::endl;
-				std::cout << "ok" << std::endl;
+				read_request(event_fd, fd_client_map[acceptfd], conf);
+//				std::cout << buf << std::endl;
+//				std::cout << "ok" << std::endl;
 			}
 		}
 	}

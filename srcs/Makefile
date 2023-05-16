@@ -3,12 +3,17 @@ CXXFLAGS = -g -Werror -Wextra -Wall -std=c++98 -pedantic-errors -MMD -MP
 NAME = server
 SRCS = main.cpp Socket.cpp Logger.cpp Kqueue.cpp Client.cpp
 CONF_DIR = conf/
-CONF_FILES = Location.cpp configParser.cpp virtualServer.cpp 
+CONF_FILES = Location.cpp configParser.cpp virtualServer.cpp
 CONF_SRCS = $(addprefix $(CONF_DIR), $(CONF_FILES))
+HTTP_DIR = http/
+HTTP_FILES = HttpRes.cpp httpReq.cpp httpParser.cpp
+HTTP_SRCS = $(addprefix $(HTTP_DIR), $(HTTP_FILES))
 
 OBJS = $(SRCS:.cpp=.o)
 CONF_OBJS = $(CONF_SRCS:.cpp=.o)
+HTTP_OBJS = $(HTTP_SRCS:.cpp=.o)
 OBJS += $(CONF_OBJS)
+OBJS += $(HTTP_OBJS)
 
 all: $(NAME)
 
