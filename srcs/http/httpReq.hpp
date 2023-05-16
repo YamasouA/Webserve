@@ -3,6 +3,8 @@
 
 #include <string>
 
+class Client;
+
 class httpReq { //httpReqHeaders is better?
     public:
         httpReq();

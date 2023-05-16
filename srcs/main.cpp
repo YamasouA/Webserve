@@ -10,6 +10,7 @@
 #include "Kqueue.hpp"
 #include "Client.hpp"
 #include "conf/configParser.hpp"
+#include "http/httpParser.hpp"
 #include <map>
 
 //std::map<int, virtualServer> initialize_fd(configParser conf, Kqueue kqueue) {
@@ -34,7 +35,15 @@ void assign_server(configParser& conf, Client& client) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	for (std::vector<virtualServer>::iterator it = server_confs.begin();
 		it != server_confs.end(); it++) {
-		if (client.get_httpReq()->get_hostname() == it->get_server_name()
+		//if (client.get_httpReq().get_hostname() == it->get_server_name()
+		httpReq reqheader = client.get_httpReq().getHeaderInfo();
+		std::string hostname;
+		for (std::vector<httpReq>::iterator it2 = reqheader.begin(); it2 != reqheader.end(); it2++) {
+			if (it2->getName() == "hostname") {
+				hostname = it2->getValue();
+			}
+		}
+		if (client.get_httpReq().get_hostname() == it->get_server_name()
 			&& client.get_fd() == it->get_listen()) {
 			client.set_server(*it);
 		}
@@ -55,8 +64,8 @@ void read_request(int fd, Client& client, configParser& conf) {
 	*/
 	//client.get_httpReq(buf)->parserRequest();
 	httpParser httpparser(buf);
-	httpparser->parseRequest();
-	client.set_httpReq(httpParser);
+	httpparser.parseRequest();
+	client.set_httpReq(httpparser);
 	assign_server(conf, client);
 }
 
@@ -140,7 +149,7 @@ int main(int argc, char *argv[]) {
 				std::cout << "client fd: " << acceptfd << std::endl;
 				kqueue.set_register_event(acceptfd);
 				client.set_fd(acceptfd);
-				fd_client_map(std::make_pair(acceptfd, client));
+				fd_client_map.insert(std::make_pair(acceptfd, client));
 				/*
 				EV_SET(register_event, acceptfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
 				if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {

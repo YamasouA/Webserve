@@ -16,8 +16,7 @@ static const std::string readConfFile(const std::string& file_name)
 
 int main() {
 	httpParser httpParser(readConfFile("test.http"));
-    std::cout << "ok" << std::endl;
 	httpParser.parseRequest();
 
-	std::cout << httpParser << std::endl;
+	//std::cout << httpParser << std::endl;
 }

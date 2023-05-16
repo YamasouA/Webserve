@@ -2,13 +2,13 @@
 #define CLIENT_HPP
 
 #include "conf/virtualServer.hpp"
-#include "http/HttpRes.hpp"
-#include "http/httpReq.hpp"
+#include "./http/HttpRes.hpp"
+#include "./http/httpReq.hpp"
 
 class Client {
 	private:
 		httpReq httpreq;
-		httpRes httpres;
+		HttpRes httpres;
 		virtualServer vServer;
 		int fd;
 	public:
@@ -18,12 +18,12 @@ class Client {
 		Client& operator =(const Client& source);
 
 		void set_fd(int fd);
-		void set_httpReq(const httpRes& source);
-		void set_httpRes(const httpReq& source);
+		void set_httpReq(const httpReq& source);
+		void set_httpRes(const HttpRes& source);
 		void set_server(const virtualServer& source);
 		int get_fd();
 		httpReq get_httpReq();
-		httpRes get_httpRes();
+		HttpRes get_httpRes();
 		virtualServer get_vServer();
 };
 
