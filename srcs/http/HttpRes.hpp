@@ -18,7 +18,7 @@ class Client;
 
 class HttpRes {
 	private:
-		std::string head;
+		std::string header;
 		std::string body;
 
 		int status_code;
@@ -32,10 +32,13 @@ class HttpRes {
 		void write_file();
 		void delete_file();
 		void read_file();
-		void createResponseBody();
+		void createResponseHeader(struct stat sb);
+		//void createResponseBody();
 		std::string getStatusString();
 		void createControlData();
-        void createDate();
+        void createDate(time_t now, std::string fieldName);
+		void createContentLength();
+        //void createDate();
 	public:
 		HttpRes(const Client& source);
 		~HttpRes();

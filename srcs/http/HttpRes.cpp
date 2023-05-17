@@ -116,34 +116,47 @@ std::string HttpRes::getStatusString() {
 
 void HttpRes::createControlData() {
 	//body += httpreq.getVersion();
-	body += "HTTP1.1 ";
+	header += "HTTP1.1 ";
 	std::stringstream ss;
 	std::string code;
 	std::cout << "status_code: " << status_code << std::endl;
 	ss << status_code;
 	std::cout << "code: " << code << std::endl;
-	body += ss.str();
-	body += " ";
-	body += getStatusString();
+	header += ss.str();
+	header += " ";
+	header += getStatusString();
 }
 
-void HttpRes::createDate()
+//void HttpRes::createDate()
+void HttpRes::createDate(time_t now, std::string fieldName)
 {
     char buf[1000];
-    time_t now = time(0);
+    //time_t now = time(0);
     struct tm tm = *gmtime(&now);
     std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S ", &tm);
-    body += "Date: ";
+    //body += "Date: ";
+	header += fieldName + ": ";
     std::string date(buf);
-    body += date + "GMT\n";
+    header += date + "GMT\n";
 }
 
+void HttpRes::createContentLength() {
+	std::stringstream ss;
+	std::string code;
+	ss << body.length();
+	std::cout << "code: " << code << std::endl;
+	header += "Content-Length: ";
+	header += ss.str();
+}
 
-void HttpRes::createResponseBody() {
+void HttpRes::createResponseHeader(struct stat sb) {
 	createControlData();
-    createDate();
+    //createDate();
+    createDate(time(0), "Date");
+	createDate(sb.st_mtime, "Last-Modified");
+	createContentLength();
 //    createServerName();
-	std::cout << body << std::endl;
+	std::cout << header<< std::endl;
 }
 
 void HttpRes::createResponse() {
@@ -159,6 +172,7 @@ void HttpRes::createResponse() {
 	if (stat(file_name.c_str(), &sb) == -1) {
 		std::cout << "Error(stat)" << std::endl;
 	}
+	std::cout << "time: " << ctime(&sb.st_mtime) << std::endl;
 	if (S_ISREG(sb.st_mode)) {
 		if (isAllowMethod(method)) {
 			if (method == "GET") {
@@ -168,7 +182,7 @@ void HttpRes::createResponse() {
 			} else if (method == "DELETE") {
 				delete_file();
 			}
-			createResponseBody();
+			createResponseHeader(sb);
 		}
 	} else if (S_ISDIR(sb.st_mode)) {
 	}
