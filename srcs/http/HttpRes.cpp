@@ -97,7 +97,7 @@ void HttpRes::delete_file() {
 	// cのremoveなら使っても大丈夫??
 	// c++だと新しくてダメっぽい
 	if (remove(file_name.c_str())) {
-		
+
 	}
 }
 /*
@@ -107,11 +107,11 @@ std::string HttpRes::get_path(std::string str) {
 std::string HttpRes::getStatusString() {
 	switch (status_code) {
 		case 200:
-			return "OK";
+			return "OK\n";
 		case 404:
-			return "Not Found";
+			return "Not Found\n";
 	}
-	return "Error(statusString)";
+	return "Error(statusString)\n";
 }
 
 void HttpRes::createControlData() {
@@ -127,8 +127,22 @@ void HttpRes::createControlData() {
 	body += getStatusString();
 }
 
+void HttpRes::createDate()
+{
+    char buf[1000];
+    time_t now = time(0);
+    struct tm tm = *gmtime(&now);
+    std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S ", &tm);
+    body += "Date: ";
+    std::string date(buf);
+    body += date + "GMT\n";
+}
+
+
 void HttpRes::createResponseBody() {
 	createControlData();
+    createDate();
+//    createServerName();
 	std::cout << body << std::endl;
 }
 

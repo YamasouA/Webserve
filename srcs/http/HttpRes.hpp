@@ -6,6 +6,7 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <ctime>
 #include "../conf/Location.hpp"
 #include "../conf/virtualServer.hpp"
 #include "httpReq.hpp"
@@ -34,6 +35,7 @@ class HttpRes {
 		void createResponseBody();
 		std::string getStatusString();
 		void createControlData();
+        void createDate();
 	public:
 		HttpRes(const Client& source);
 		~HttpRes();
