@@ -34,15 +34,14 @@ void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer
 }
 
 void assign_server(configParser& conf, Client& client) {
-//    std::cout << "ok" << std::endl;
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	for (std::vector<virtualServer>::iterator it = server_confs.begin();
 		it != server_confs.end(); it++) {
 
         std::map<std::string, std::string> tmp = client.get_httpReq().getHeaderFields();
         std::string host_name;
-		for (std::map<std::string, std::string>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++it) {
-//            std::cout << "field name: " << (*req_it).getName() << std::endl;
+		for (std::map<std::string, std::string>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++req_it) {
+//            std::cout << "field name: " << (*req_it).first << std::endl;
             if ((*req_it).first == "Host") {
                 host_name = (*req_it).second;
                 break;
