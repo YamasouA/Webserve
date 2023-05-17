@@ -9,6 +9,9 @@
 #include "../conf/Location.hpp"
 #include "../conf/virtualServer.hpp"
 #include "httpReq.hpp"
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 class Client;
 

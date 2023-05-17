@@ -111,13 +111,21 @@ void HttpRes::createResponse() {
 	//target = longestMatchLocation(request_path, vServer.get_locations());
 	std::cout << "target: " << target << std::endl;
 	std::string method = httpreq.getMethod();
-	if (isAllowMethod(method)) {
-		if (method == "GET") {
-			read_file();
-		} else if (method == "POST") {
-			write_file();
-		} else if (method == "DELETE") {
-			delete_file();
+	struct stat sb;
+	std::string file_name = join_path();
+	if (stat(file_name.c_str(), &sb) == -1) {
+		std::cout << "Error(stat)" << std::endl;
+	}
+	if (S_ISREG(sb.st_mode)) {
+		if (isAllowMethod(method)) {
+			if (method == "GET") {
+				read_file();
+			} else if (method == "POST") {
+				write_file();
+			} else if (method == "DELETE") {
+				delete_file();
+			}
 		}
+	} else if (S_ISDIR(sb.st_mode)) {
 	}
 }
