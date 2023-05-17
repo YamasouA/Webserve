@@ -13,7 +13,7 @@ httpReq::httpReq(const httpReq& src)
     uri(src.getUri()),
     version(src.getVersion()),
     header_fields(src.getHeaderFields()),
-    content_body(src.getContetBody())
+    content_body(src.getContentBody())
 {
     (void)src;
 }
@@ -27,7 +27,7 @@ httpReq& httpReq::operator=(const httpReq& rhs)
     this->uri = rhs.getUri();
     this->version = rhs.getVersion();
     this->header_fields = rhs.getHeaderFields();
-    this->content_body = rhs.getContetBody();
+    this->content_body = rhs.getContentBody();
     return *this;
 }
 
@@ -74,7 +74,7 @@ std::string httpReq::getVersion() const
     return this->version;
 }
 
-std::string httpReq::getContetBody() const
+std::string httpReq::getContentBody() const
 {
     return this->content_body;
 }
@@ -227,7 +227,7 @@ std::ostream& operator<<(std::ostream& stream, const httpReq& obj) {
         << "value: " << (*it).second << std::endl;
     }
     stream << std::endl
-    << "body: " << obj.getContetBody() << std::endl;
+    << "body: " << obj.getContentBody() << std::endl;
     return stream;
 }
 
