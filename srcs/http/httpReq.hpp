@@ -25,7 +25,7 @@ class httpReq {
         std::string getMethod() const;
         std::string getUri() const;
         std::string getVersion() const;
-        std::string getContetBody() const;
+        std::string getContentBody() const;
         std::map<std::string, std::string> getHeaderFields() const;
 		void parseRequest();
     private:
