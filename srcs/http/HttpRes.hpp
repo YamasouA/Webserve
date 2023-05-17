@@ -19,7 +19,9 @@ class HttpRes {
 	private:
 		std::string head;
 		std::string body;
+
 		int status_code;
+		std::string status_string;
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
 //		httpReq httpReq;
@@ -28,6 +30,10 @@ class HttpRes {
 		Location target;
 		void write_file();
 		void delete_file();
+		void read_file();
+		void createResponseBody();
+		std::string getStatusString();
+		void createControlData();
 	public:
 		HttpRes(const Client& source);
 		~HttpRes();
@@ -35,7 +41,6 @@ class HttpRes {
         bool isAllowMethod(std::string method);
         std::string join_path();
         void set_body(std::string strs);
-		void read_file();
 		void createResponse();
 };
 

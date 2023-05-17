@@ -73,6 +73,7 @@ void HttpRes::read_file() {
 	}
 	std::ostringstream oss;
 	oss << ifs.rdbuf();
+	status_code = 200;
 	const std::string strs = oss.str();
 	set_body(strs);
 	std::cout << body << std::endl;
@@ -103,6 +104,34 @@ void HttpRes::delete_file() {
 std::string HttpRes::get_path(std::string str) {
 }*/
 
+std::string HttpRes::getStatusString() {
+	switch (status_code) {
+		case 200:
+			return "OK";
+		case 404:
+			return "Not Found";
+	}
+	return "Error(statusString)";
+}
+
+void HttpRes::createControlData() {
+	//body += httpreq.getVersion();
+	body += "HTTP1.1 ";
+	std::stringstream ss;
+	std::string code;
+	std::cout << "status_code: " << status_code << std::endl;
+	ss << status_code;
+	std::cout << "code: " << code << std::endl;
+	body += ss.str();
+	body += " ";
+	body += getStatusString();
+}
+
+void HttpRes::createResponseBody() {
+	createControlData();
+	std::cout << body << std::endl;
+}
+
 void HttpRes::createResponse() {
 	std::cout << httpreq << std::endl;
 	// 一つもマッチしない場合は？
@@ -125,6 +154,7 @@ void HttpRes::createResponse() {
 			} else if (method == "DELETE") {
 				delete_file();
 			}
+			createResponseBody();
 		}
 	} else if (S_ISDIR(sb.st_mode)) {
 	}
