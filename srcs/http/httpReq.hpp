@@ -28,6 +28,8 @@ class httpReq {
         std::string getContentBody() const;
         std::map<std::string, std::string> getHeaderFields() const;
 		void parseRequest();
+		std::string getFieldName();
+		bool isSpace(char c);
     private:
         std::string buf;
         size_t idx;

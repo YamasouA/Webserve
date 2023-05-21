@@ -112,6 +112,34 @@ void httpReq::expect(char c)
     ++idx;
 }
 
+bool httpReq::isSpace(char c) {
+	if (c == '\f' || c == '\n' || c == ' '
+		|| c == '\r' || c == '\t' || c == '\v') {
+		return true;
+	}
+	return false;
+}
+
+std::string httpReq::getFieldName() {
+	std::string token = "";
+	while(idx < buf.length()) {
+		if (buf[idx] == ':') {
+			break;
+		} else if (isSpace(buf[idx])) {
+			// フィールドネームはコロンとの間に空白を含んではいけない
+			std::cout << "Error (getFieldName)" << std::endl;
+			throw SyntaxException("syntax error in getToken");
+		}
+		token += buf[idx];
+		idx++;
+	}
+	if (idx == buf.length()) {
+		std::cout << "Error (getFileName)" << std::endl;
+		throw SyntaxException("syntax error in getToken");
+	}
+	return token;
+}
+
 std::string httpReq::getToken(char delimiter)
 {
 	std::string token = "";
