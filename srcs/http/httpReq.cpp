@@ -104,6 +104,14 @@ void httpReq::trim(std::string& str)
 	}
 }
 
+bool httpReq::isSpace(char c) {
+	if (c == '\f' || c == '\n' || c == ' '
+		|| c == '\r' || c == '\t' || c == '\v') {
+		return true;
+	}
+	return false;
+}
+
 void httpReq::expect(char c)
 {
     if (buf[idx] != c) {
@@ -129,7 +137,10 @@ std::string httpReq::getToken(char delimiter)
 		throw SyntaxException("syntax error in getToken");
 	}
 	expect(delimiter);
-	trim(token);
+    if (token.find(' ') != std::string::npos) {
+        std::cerr << "status 400" << std::endl;
+    }
+//	trim(token);
 	return token;
 }
 
@@ -163,9 +174,15 @@ std::string httpReq::getToken_to_eof() {
 void httpReq::parseReqLine()
 {
     method = getToken(' ');
-    skipSpace();
+    if (isSpace(buf[idx])) {
+        std::cerr << "status 400" << std::endl;
+    }
+//    skipSpace();
     uri = getToken(' ');
-    skipSpace();
+    if (isSpace(buf[idx])) {
+        std::cerr << "status 400" << std::endl;
+    }
+//    skipSpace();
     version = buf.substr(idx, 8);
     idx += 8;
     if (version != "HTTP/1.1") { //tmp fix version
