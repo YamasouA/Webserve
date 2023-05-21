@@ -233,6 +233,15 @@ bool httpReq::hasObsFold(std::string str) {
 	return false;
 }
 
+static bool isVCHAR(std::string str) {
+    for (std::string::const_iterator it = str.cbegin(); it != str.cend(); ++it) {
+        if (*it <= 32 && 127 <= *it) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void httpReq::checkFieldsValue() {
 	for (std::map<string, string>::iterator it = header_fields.begin();
 		it != header_fields.end(); it++) {
@@ -240,8 +249,22 @@ void httpReq::checkFieldsValue() {
 			parse_error = true;
 			return;
 		}
+        if (!(isVCHAR(it->second))) {
+            parse_error = true;
+            return;
+        }
 	}
 }
+
+//void httpReq::checkURI() {
+//    std::string valid_symbol("-.~:@!$'()");
+//    for (std::string::const_iterator it = uri.cbegin(); it != uri.cend(); ++it) {
+//        if (!(std::isalnum(*it)) && valid_symbol.find(*it) == std::string::npos) {
+//            parse_error = true;
+//            return;
+//        }
+//    }
+//}
 
 void httpReq::parseRequest()
 {
