@@ -13,7 +13,8 @@ httpReq::httpReq(const httpReq& src)
     uri(src.getUri()),
     version(src.getVersion()),
     header_fields(src.getHeaderFields()),
-    content_body(src.getContentBody())
+    content_body(src.getContentBody()),
+	parse_error(false)
 {
     (void)src;
 }
@@ -212,6 +213,36 @@ bool httpReq::checkHeaderEnd()
     }
 }
 
+std::string httpReq::toLower(std::string str) {
+	std::string s="";
+	for (size_t i = 0; i < str.length(); i++) {
+		s += std::tolower(str[i]);
+	}
+	return s;
+}
+
+bool httpReq::hasObsFold(std::string str) {
+	for (size_t i = 0; i < str.length(); i++) {
+		// OWS CRLF RWS
+		if (str[i] == '\015' && str[i + 1] && str[i + 1] == '\012') {
+			if (str[i + 2] && isSpace(str[i + 2])) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void httpReq::checkFieldsValue() {
+	for (std::map<string, string>::iterator it = header_fields.begin();
+		it != header_fields.end(); it++) {
+		if (hasObsFold(it->second)) {
+			parse_error = true;
+			return;
+		}
+	}
+}
+
 void httpReq::parseRequest()
 {
    parseReqLine();
@@ -227,7 +258,7 @@ void httpReq::parseRequest()
 		std::string field_value = getToken_to_eol();
 		trim(field_value);
 //        header_field.setValue(s);
-        setHeaderField(field_name, field_value);
+        setHeaderField(toLower(field_name), field_value);
 //        header_info.push_back(header_field);
     }
     content_body = getToken_to_eof();

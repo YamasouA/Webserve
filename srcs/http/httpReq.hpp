@@ -29,9 +29,11 @@ class httpReq {
         std::map<std::string, std::string> getHeaderFields() const;
 		void parseRequest();
         bool isSpace(char c);
+		std::string toLower(std::string str);
     private:
         std::string buf;
         size_t idx;
+		bool parse_error;
 
         std::string method;
         std::string uri;
