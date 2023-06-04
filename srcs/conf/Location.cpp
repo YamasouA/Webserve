@@ -11,6 +11,7 @@ Location::Location(const Location& src) {
 	this->upload_path = src.upload_path;
 	this->autoindex = src.autoindex;
 	this->max_body_size = src.max_body_size;
+	this->locations = src.locations;
 }
 
 Location& Location::operator=(const Location& src)
@@ -27,6 +28,7 @@ Location& Location::operator=(const Location& src)
 	this->upload_path = src.upload_path;
 	this->autoindex = src.autoindex;
 	this->max_body_size = src.max_body_size;
+	this->locations = src.locations;
 	return *this;
 }
 
@@ -80,6 +82,10 @@ void Location::set_return(std::string ret)
 	this->ret = ret;
 }
 
+void Location::set_location(Location location){
+	locations.push_back(location);
+}
+
 std::string Location::get_uri() const{
 	return uri;
 }
@@ -110,6 +116,10 @@ std::string Location::get_return() const {
 	return ret;
 }
 
+std::vector<Location> Location::get_locations() const{
+	return locations;
+}
+
 std::ostream& operator <<(std::ostream& stream, const Location& obj) {
 			const std::vector<std::string> tmp = obj.get_methods();
 			stream << "uri: " << obj.get_uri() << std::endl
@@ -124,6 +134,11 @@ std::ostream& operator <<(std::ostream& stream, const Location& obj) {
 			<< "index: " << obj.get_index() << std::endl
 			<< "max_body_size: " << obj.get_max_body_size() << std::endl
 			<< "cgi_path: " << obj.get_cgi_path() << std::endl
-			<< "return: " << obj.get_cgi_path() << std::endl;
+			<< "return: " << obj.get_cgi_path() << std::endl
+			<< "locations: ";
+			const std::vector<Location> tmp2 = obj.get_locations();
+			for (std::vector<Location>::const_iterator it = tmp2.begin(); it != tmp2.end(); ++it) {
+				stream << *it << " ";
+			}
 			return stream;
 }

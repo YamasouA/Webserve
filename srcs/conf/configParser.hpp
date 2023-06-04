@@ -7,6 +7,7 @@
 #include <exception>
 #include "virtualServer.hpp"
 #include "Location.hpp"
+#include <map>
 
 class configParser {
 	public:
@@ -28,9 +29,12 @@ class configParser {
 
 		//void parseServe(size_t i);
 		virtualServer parseServe();
+		void setUriToMap(std::string prefix, Location location);
+		void uriToMap(virtualServer vServer);
 		Location parseLocation();
 		std::string getToken(char delimiter);
 		std::string get_token_to_eol();
+		std::map<std::string, Location> uri2location;
 		// シンタックスエラー
 		class SyntaxException: public std::exception {
 			public:
