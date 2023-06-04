@@ -189,10 +189,25 @@ void httpReq::checkUri() {
 
 void httpReq::parse_scheme() {
 	if (uri.compare(0, 5, "https") == 0) {
+        uri = uri.substr(6);
+//        scheme = HTTPS;
 	} else if (uri.compare(0, 4, "http") == 0) {
-	} else if () {
+        uri = uri.substr(5);
+//        scheme = HTTP;
 	} else {
+        std::cerr << "invalid scheme" << std::endl;
 	}
+}
+
+void parse_host_port() {
+    // :/が見つかるまでをhostとして切り取る :が見つかった場合はportの処理も行う
+    // hostの長さが0で無いかのチェックとport番号が有効かのチェックを行う
+    // host以降の始めが/だった場合uri(request-target)として切り取る checkuri呼べば良さそう?
+    // host以降の始めが/ではなかった場合invalid format
+}
+
+void parse_authority_and_path() {
+    parse_host_port(); //関数に分けなくても良い?
 }
 
 void httpReq::parse_url_parse() {
