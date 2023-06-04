@@ -173,12 +173,18 @@ std::string httpReq::getToken_to_eof() {
 }
 
 void httpReq::checkUri() {
-	std::string::size_type pos = uri.find_first_not_of("?");
-	if (pos == std::string::npos) {
+	std::string::size_type query_pos = uri.find("?");
+    std::string::size_type fragment_pos = uri.find("#");
+	if (query_pos == std::string::npos) {
 		return;
 	}
-	args = uri.substr(pos+1);
-	uri = uri.substr(0, pos);
+    if (fragment_pos == std::string::npos) {
+	    args = uri.substr(pos+1);
+    } else {
+        args = uri.substr(pos + 1, fragment_pos);
+//        fragment = uri.substr(fragment_pos + 1);
+    }
+    uri = uri.substr(0, pos);
 }
 
 void httpReq::parseReqLine()
