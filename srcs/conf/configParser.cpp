@@ -187,7 +187,10 @@ Location configParser::parseLocation() {
 				std::cerr << "overflow" << std::endl;
 			}
 			location.set_max_body_size(result);
-		} else {
+		} else if (directive == "location") {
+			std::cout << "location-location" << std::endl;
+			location.set_location(parseLocation());
+		}else {
 			throw SyntaxException("directive syntax error in parseLocation");
 //			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
 			// 適切な例外を作成して投げる
@@ -199,6 +202,28 @@ Location configParser::parseLocation() {
 	skip();
 //	std::cout << location << std::endl;
 	return location;
+}
+
+void configParser::setUriToMap(std::string prefix, Location location) {
+	std::string locationRoot = location.get_root();;
+	std::string locationUri = location.get_uri();
+	std::string path = prefix + locationRoot + locationUri;
+	std::vector<Location> locations = location.get_locations();
+	for (std::vector<Location>::iterator it = locations.begin();
+		it != locations.end(); it++) {
+		setUriToMap(path, *it);
+	}
+	uri2location[path] = location;
+}
+
+void configParser::uriToMap(virtualServer vServer) {
+	std::vector<Location> locations = vServer.get_locations();
+	std::string serverRoot = vServer.get_root();
+
+	for (std::vector<Location>::iterator it = locations.begin();
+		it != locations.end(); it++) {
+		setUriToMap("", *it);
+	}
 }
 
 //void configParser::parseServe(size_t i) {
@@ -250,6 +275,7 @@ virtualServer configParser::parseServe() {
 //	std::cout << buf[idx] << std::endl;
 	expect('}');
 	skip();
+	uriToMap(v_serv);
 	return v_serv;
 	//std::cout << "server: " << i <<  std::endl;
 	//std::cout << serve_confs[i] << std::endl;
@@ -296,6 +322,13 @@ void configParser::parseConf()
 		//std::cout << virtual_server << std::endl;
 		//parseServe(i);
 	//	i++;
+	}
+	std::cout << "================ show ====================" << std::endl;
+	for (std::map<std::string, Location>::iterator it = uri2location.begin();
+		it != uri2location.end(); it++) {
+		std::cout << "==============" << std::endl;
+		std::cout << "uri: " << it->first << std::endl;
+		std::cout << it->second << std::endl;
 	}
 }
 

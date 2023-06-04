@@ -17,6 +17,8 @@ class Location {
 		void set_max_body_size(size_t max_body_size);
 		void set_cgi_path(std::string cgi_path);
 		void set_return(std::string ret);
+		void set_location(Location location);
+		std::vector<Location> get_locations() const;
 		std::string get_uri() const;
 		std::vector<std::string> get_methods() const;
 		std::string get_root() const;
@@ -39,6 +41,7 @@ class Location {
 		std::string cgi_path;
 		bool autoindex;
 		size_t max_body_size;
+		std::vector<Location> locations;
 };
 
 std::ostream& operator <<(std::ostream& stream, const Location& obj);
