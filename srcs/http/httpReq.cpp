@@ -172,6 +172,15 @@ std::string httpReq::getToken_to_eof() {
 	return body;
 }
 
+void httpReq::checkUri() {
+	std::string::size_type pos = uri.find_first_not_of("?");
+	if (pos == std::string::npos) {
+		return;
+	}
+	args = uri.substr(pos+1);
+	uri = uri.substr(0, pos);
+}
+
 void httpReq::parseReqLine()
 {
     method = getToken(' ');
@@ -180,6 +189,7 @@ void httpReq::parseReqLine()
     }
 //    skipSpace();
     uri = getToken(' ');
+	checkUri();
     if (isSpace(buf[idx])) {
         std::cerr << "status 400" << std::endl;
     }

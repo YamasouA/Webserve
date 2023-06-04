@@ -37,6 +37,7 @@ class httpReq {
 
         std::string method;
         std::string uri;
+        std::string args;
         std::string version;
         std::map<std::string, std::string> header_fields;
         std::string content_body;
