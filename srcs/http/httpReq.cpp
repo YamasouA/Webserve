@@ -187,6 +187,21 @@ void httpReq::checkUri() {
     uri = uri.substr(0, pos);
 }
 
+void httpReq::parse_scheme() {
+	if (uri.compare(0, 5, "https") == 0) {
+	} else if (uri.compare(0, 4, "http") == 0) {
+	} else if () {
+	} else {
+	}
+}
+
+void httpReq::parse_url_parse() {
+	parse_scheme();
+	expect('/');
+	expect('/');
+	parse_authority_and_path();
+}
+
 void httpReq::parseReqLine()
 {
     method = getToken(' ');
@@ -196,6 +211,9 @@ void httpReq::parseReqLine()
 //    skipSpace();
     uri = getToken(' ');
 	checkUri();
+	if (req.uri.length() != 0 && uri[0] != '/') {
+		uri = url_parse();
+	}
     if (isSpace(buf[idx])) {
         std::cerr << "status 400" << std::endl;
     }
