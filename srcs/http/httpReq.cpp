@@ -200,6 +200,36 @@ void httpReq::parse_scheme() {
 }
 
 void parse_host_port() {
+    std::string host;
+    for (size_t i = 0; uri[i]; ++i) {
+        host += uri[i];
+        if (uri[i] == ':' || uri[i] == '/') {
+            break;
+        }
+    }
+    if (host.length <= 0) {
+        std::cerr << "invalid host" << std::endl;
+    }
+    if (uri[i] == ':') {
+        path_pos = uri.find('/');
+        i = path_pos;
+        if (port_pos != std::string:npos) {
+            port_str = uri.substr(i + 1, path_pos);
+            std::stringstream ss(port_str);
+            int port_num;
+            ss >> port_num;
+        }
+        if (port_num < 0 && 65535 < port_num) {
+            std::cerr << "invalid port" << std::endl;
+        }
+    }
+    if (uri[i] != '/') {
+        std::cerr << "path not found" << std::endl;
+    }
+    //path handle ...
+
+
+
     // :/が見つかるまでをhostとして切り取る :が見つかった場合はportの処理も行う
     // hostの長さが0で無いかのチェックとport番号が有効かのチェックを行う
     // host以降の始めが/だった場合uri(request-target)として切り取る checkuri呼べば良さそう?
