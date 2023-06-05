@@ -227,7 +227,8 @@ void parse_host_port() {
         std::cerr << "path not found" << std::endl;
     }
     //path handle ...
-
+	uri = uri.substr(i);
+	checkUri();
 
 
     // :/が見つかるまでをhostとして切り取る :が見つかった場合はportの処理も行う
@@ -240,11 +241,27 @@ void parse_authority_and_path() {
     parse_host_port(); //関数に分けなくても良い?
 }
 
-void httpReq::parse_url_parse() {
+void httpReq::absurl_parse() {
 	parse_scheme();
 	expect('/');
 	expect('/');
 	parse_authority_and_path();
+}
+
+void httpReq::fix_up() {
+	if (header_fields.count("host") != 1) {
+		std::cerr << "status " << std::endl;
+	}
+	/*
+	if (header_fields.count("connection") != 1) {
+		std::cerr << "status " << std::endl;
+	}*/
+	if (!(method == "GET" || method == "DELETE" || method == "POST")) {
+		std::cerr << "status " << std::endl;
+	}
+	if (uri.length != 0 && uri[0] != '/') {
+		absurl_parse();
+	}
 }
 
 void httpReq::parseReqLine()
