@@ -6,6 +6,7 @@
 #include <map>
 #include <iostream>
 #include <ostream>
+#include <sstream>
 
 class httpReq {
     public:
@@ -33,7 +34,6 @@ class httpReq {
     private:
         std::string buf;
         size_t idx;
-		bool parse_error;
 
         std::string method;
         std::string uri;
@@ -41,6 +41,7 @@ class httpReq {
         std::string version;
         std::map<std::string, std::string> header_fields;
         std::string content_body;
+		bool parse_error;
 
 		void trim(std::string& str);
 		void skipSpace();
@@ -50,6 +51,14 @@ class httpReq {
 		void parseReqLine();
 		bool checkHeaderEnd();
 		std::string getToken_to_eof();
+		void checkUri();
+		void parse_scheme();
+		void parse_host_port();
+		void checkFieldsValue();
+		bool hasObsFold(std::string str);
+		void fix_up();
+		void absurl_parse();
+		void parse_authority_and_path();
 //        std::string method;
 //        std::string uri;
 //        std::string version;

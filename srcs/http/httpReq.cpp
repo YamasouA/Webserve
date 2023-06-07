@@ -179,12 +179,12 @@ void httpReq::checkUri() {
 		return;
 	}
     if (fragment_pos == std::string::npos) {
-	    args = uri.substr(pos+1);
+	    args = uri.substr(query_pos+1);
     } else {
-        args = uri.substr(pos + 1, fragment_pos);
+        args = uri.substr(query_pos + 1, fragment_pos);
 //        fragment = uri.substr(fragment_pos + 1);
     }
-    uri = uri.substr(0, pos);
+    uri = uri.substr(0, query_pos);
 }
 
 void httpReq::parse_scheme() {
@@ -199,28 +199,33 @@ void httpReq::parse_scheme() {
 	}
 }
 
-void parse_host_port() {
+void httpReq::parse_host_port() {
     std::string host;
-    for (size_t i = 0; uri[i]; ++i) {
+	size_t i = 0;
+	size_t path_pos;
+	std::string port_str;
+
+    for (; uri[i]; ++i) {
         host += uri[i];
         if (uri[i] == ':' || uri[i] == '/') {
             break;
         }
     }
-    if (host.length <= 0) {
+    if (host.length() <= 0) {
         std::cerr << "invalid host" << std::endl;
     }
     if (uri[i] == ':') {
         path_pos = uri.find('/');
         i = path_pos;
-        if (port_pos != std::string:npos) {
+        //if (port_pos != std::string::npos) {
+        if (path_pos != std::string::npos) {
             port_str = uri.substr(i + 1, path_pos);
             std::stringstream ss(port_str);
             int port_num;
             ss >> port_num;
-        }
-        if (port_num < 0 && 65535 < port_num) {
-            std::cerr << "invalid port" << std::endl;
+			if (port_num < 0 || 65535 < port_num) {
+        	    std::cerr << "invalid port" << std::endl;
+        	}
         }
     }
     if (uri[i] != '/') {
@@ -237,8 +242,8 @@ void parse_host_port() {
     // host以降の始めが/ではなかった場合invalid format
 }
 
-void parse_authority_and_path() {
-    parse_host_port(); //関数に分けなくても良い?
+void httpReq::parse_authority_and_path() {
+	parse_host_port(); //関数に分けなくても良い?
 }
 
 void httpReq::absurl_parse() {
@@ -259,7 +264,7 @@ void httpReq::fix_up() {
 	if (!(method == "GET" || method == "DELETE" || method == "POST")) {
 		std::cerr << "status " << std::endl;
 	}
-	if (uri.length != 0 && uri[0] != '/') {
+	if (uri.length() != 0 && uri[0] != '/') {
 		absurl_parse();
 	}
 }
@@ -273,8 +278,8 @@ void httpReq::parseReqLine()
 //    skipSpace();
     uri = getToken(' ');
 	checkUri();
-	if (req.uri.length() != 0 && uri[0] != '/') {
-		uri = url_parse();
+	if (uri.length() != 0 && uri[0] != '/') {
+		absurl_parse();
 	}
     if (isSpace(buf[idx])) {
         std::cerr << "status 400" << std::endl;
@@ -339,7 +344,7 @@ static bool isVCHAR(std::string str) {
 }
 
 void httpReq::checkFieldsValue() {
-	for (std::map<string, string>::iterator it = header_fields.begin();
+	for (std::map<std::string, std::string>::iterator it = header_fields.begin();
 		it != header_fields.end(); it++) {
 		if (hasObsFold(it->second)) {
 			parse_error = true;
