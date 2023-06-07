@@ -23,6 +23,7 @@ class HttpRes {
 
 		int status_code;
 		std::string status_string;
+		size_t content_length_n;
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
 //		httpReq httpReq;

@@ -149,6 +149,80 @@ void HttpRes::createContentLength() {
 	header += ss.str();
 }
 
+void HttpRes::set_content_type() {
+	std::string ext;
+	std::string::size_type dot_pos = uri.find('.');
+
+	// .のみのケースに対応できるか？
+	if (dot_pos != std::string::npos) {
+		ext = uri.substr(dot_pos + 1);
+		if (ext.length() == 0) {
+			std::cerr << "Error dot" << std::endl;
+		}
+	}
+	for (size_t i = 0; i < ext.length(); i++) {
+		if (ext[i] >= 'A' && ext[i] <= 'Z') {
+			type += std::tolower(ext[i]);
+		}
+	}
+	// content-typeが受けられるか
+	if (type) {
+	}
+
+	// マッチしなかったらデフォルトの値をセットする
+	content_type_len = target.default_type;
+}
+
+void HttpRes::static_handler() {
+	if (method != "GET" && method != "HEAD") {
+		// なんてエラー返そう？
+		return ;
+	}
+
+	if (uri[uri.length() - 1] == '/') {
+		// なんて返す？
+		return ;
+	}
+
+	//rc = ngx_http_discard_body(r);
+
+	// map_uri_to_path();
+
+	int fd;
+	std::string file_name = join_path();
+	fd = open(file_name);
+	// open エラー
+	if (fd == -1) {
+		if ( errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+		} else if (errno == EACCES) {
+		} else {
+		}
+		return ;
+	}
+
+	struct stat sb;
+	// stat がエラーだったとき
+	if (stat(file_name.c_str(), &sb) == -1) {
+		std::cout << "Error(stat)" << std::endl;
+	}
+	// ディレクトリだった時
+	if (S_ISDIR(sb.st_mode)) {
+		Location config = target.uri2location(uri);
+		if (location.headers["alias"].count() == 0 && location.headers["root"] == 0) {
+		}
+		location = uri;
+	}
+	// 通常ファイル
+	if (!S_ISREG(sb.st_mode)) {
+		// なんのエラー?
+		return ;
+	}
+	status_code = 200;
+	content_length_n = sb.st_size;
+	last_modified_time = sb.st_mtime;
+	set_content_type();
+}
+
 void HttpRes::createResponseHeader(struct stat sb) {
 	createControlData();
     //createDate();
