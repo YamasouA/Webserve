@@ -23,9 +23,21 @@ class HttpRes {
 
 		int status_code;
 		std::string status_string;
+		size_t content_length_n;
+		std::string media_type;
+		static const std::string default_type = "text/html";
+		
+		// 対応可能なMedia-Typeを持つ
+		std::map<std::string, std::string> types = 
+			{
+				{"html", "text/html"},
+				{"json", "application/json"},
+			};
+
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
 //		httpReq httpReq;
+
 		httpReq httpreq;
 		virtualServer vServer;
 		Location target;
@@ -38,6 +50,7 @@ class HttpRes {
 		void createControlData();
         void createDate(time_t now, std::string fieldName);
 		void createContentLength();
+		void set_content_type();
         //void createDate();
 	public:
 		HttpRes(const Client& source);
