@@ -180,19 +180,23 @@ void HttpRes::set_content_type() {
 }
 
 void HttpRes::static_handler() {
-	if (method != "GET" && method != "HEAD") {
+	if (method != "GET" && method != "HEAD" && method != "POST") {
+        std::cerr << "not allow method(405)" << std::endl;
 		// なんてエラー返そう？
 		return ;
 	}
 
 	if (uri[uri.length() - 1] == '/') {
-		// なんて返す？
+        //move next handler
+		// なんて返す？ (declined)
 		return ;
 	}
 
 	//rc = ngx_http_discard_body(r);
 
 	// map_uri_to_path();
+
+    //disable symlink ?
 
 	int fd;
 	std::string file_name = join_path();
@@ -218,15 +222,29 @@ void HttpRes::static_handler() {
 		}
 		location = uri;
 	}
+    if (!S_ISREG(sb.st_mode) && method == "POST") {
+        //status 405
+        std::cerr << "NOT ALLOW METHOD" << std::endl;
+        return ;
+    }
 	// 通常ファイル
 	if (!S_ISREG(sb.st_mode)) {
 		// なんのエラー?
+        std::cerr << "NOT FOUND(404)" << std::endl;
+        //status 404
 		return ;
 	}
+    //discoard request body here ?
 	status_code = 200;
 	content_length_n = sb.st_size;
 	last_modified_time = sb.st_mtime;
 	set_content_type();
+    set_etag(); //necessary?
+
+    sendHeader();
+
+    init_res_body();
+    output_filter();
 }
 
 void HttpRes::createResponseHeader(struct stat sb) {
