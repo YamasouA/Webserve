@@ -151,6 +151,8 @@ void HttpRes::createContentLength() {
 
 void HttpRes::set_content_type() {
 	std::string ext;
+	std::string type;
+	std::string uri = httpreq.getUri();
 	std::string::size_type dot_pos = uri.find('.');
 
 	// .のみのケースに対応できるか？
@@ -163,14 +165,18 @@ void HttpRes::set_content_type() {
 	for (size_t i = 0; i < ext.length(); i++) {
 		if (ext[i] >= 'A' && ext[i] <= 'Z') {
 			type += std::tolower(ext[i]);
+		} else {
+			type += ext[i];
 		}
 	}
+
 	// content-typeが受けられるか
-	if (type) {
+	if (types.count(type) != 0) {
+		media_type = types[type];
 	}
 
 	// マッチしなかったらデフォルトの値をセットする
-	content_type_len = target.default_type;
+	media_type = default_type;
 }
 
 void HttpRes::static_handler() {
