@@ -189,11 +189,27 @@ void HttpRes::header_filter() {
 
 	// status_lineの作成
 	if (status_line == NULL) {
-		if (status_code < MOVED_PERMANENTLY) {
-		} else if (status_code < BAD_REQUEST) {
-		}else if (status_code < INTERNAL_SERVER_ERROR) {
-		} else {
-		}
+
+		if (status_code >= INTERNAL_SERVER_ERROR) {
+		} else if (status_code >= BAD_REQUEST) {
+            const std::vector<std::string> status_success[30] = {NULL, "400 Bad Request",};
+
+        else if (status_code >= MOVED_PERMANENTLY) {
+            const std::vector<std::string> status_success[9] = {NULL, "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", NULL, NULL, "307 Temporary Redirect", "308 Permanent Redirect"};
+            if (status_code == NOT_MODIFIED) {
+                header_only = 1;
+            }
+            status_line = "HTTP/1.1 " + status_redirect[status_code - MOVED_PERMANENTLY];
+		} else if (status_code >= OK) {
+            const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", NULL, "204 No Content", NULL, "206 Partial Content"};
+            if (status_code == NO_CONTENT) {
+                header_only = 1;
+                content_type = NULL;
+                last_modified = NULL;
+                content_length = NULL;
+            }
+            status_line = "HTTP/1.1 " + status_success[status_code - OK];
+        }
 	}
 }
 
