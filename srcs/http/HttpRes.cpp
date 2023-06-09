@@ -179,6 +179,24 @@ void HttpRes::set_content_type() {
 	media_type = default_type;
 }
 
+void HttpRes::header_filter() {
+	// ステータスがOKでないならlast_modifiedは消す
+	if (last_modified_time != -1) {
+		if (status_code != HTTP_OK) {
+			last_modified_time = -1;
+		}
+	}
+
+	// status_lineの作成
+	if (status_line == NULL) {
+		if (status_code < MOVED_PERMANENTLY) {
+		} else if (status_code < BAD_REQUEST) {
+		}else if (status_code < INTERNAL_SERVER_ERROR) {
+		} else {
+		}
+	}
+}
+
 void HttpRes::static_handler() {
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
@@ -194,7 +212,17 @@ void HttpRes::static_handler() {
 
 	//rc = ngx_http_discard_body(r);
 
-	// map_uri_to_path();
+// locaiton /hoge {
+//		root fuga/
+//			location /wow {
+//				root hello;
+//			}
+	//}
+	hoge -> hoge/fuga
+	hoge/fuga-> fuga/hoge/hello/wow
+
+
+	map_uri_to_path();
 
     //disable symlink ?
 
@@ -239,7 +267,7 @@ void HttpRes::static_handler() {
 	content_length_n = sb.st_size;
 	last_modified_time = sb.st_mtime;
 	set_content_type();
-    set_etag(); //necessary?
+    //set_etag(); //necessary?
 
     sendHeader();
 
