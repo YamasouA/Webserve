@@ -210,13 +210,14 @@ void configParser::setUriToMap(std::string prefix, std::string prefix_root, Loca
 	//std::string path = prefix + locationRoot + locationUri;
 	std::string path = prefix + locationUri;
 	std::vector<Location> locations = location.get_locations();
-	// rootは最も深いものを使う
+	// rootはこの時点でLocationに入れる
 	std::string root = (locationRoot != "") ? locationRoot: prefix_root;
 	for (std::vector<Location>::iterator it = locations.begin();
 		it != locations.end(); it++) {
 		setUriToMap(path, root, *it);
 	}
 	//path = root + path;
+	location.set_root(root);
 	uri2location[path] = location;
 }
 
