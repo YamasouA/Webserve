@@ -204,15 +204,19 @@ Location configParser::parseLocation() {
 	return location;
 }
 
-void configParser::setUriToMap(std::string prefix, Location location) {
+void configParser::setUriToMap(std::string prefix, std::string prefix_root, Location location) {
 	std::string locationRoot = location.get_root();;
 	std::string locationUri = location.get_uri();
-	std::string path = prefix + locationRoot + locationUri;
+	//std::string path = prefix + locationRoot + locationUri;
+	std::string path = prefix + locationUri;
 	std::vector<Location> locations = location.get_locations();
+	// rootは最も深いものを使う
+	std::string root = (locationRoot != "") ? locationRoot: prefix_root;
 	for (std::vector<Location>::iterator it = locations.begin();
 		it != locations.end(); it++) {
-		setUriToMap(path, *it);
+		setUriToMap(path, root, *it);
 	}
+	//path = root + path;
 	uri2location[path] = location;
 }
 
@@ -222,7 +226,7 @@ void configParser::uriToMap(virtualServer vServer) {
 
 	for (std::vector<Location>::iterator it = locations.begin();
 		it != locations.end(); it++) {
-		setUriToMap("", *it);
+		setUriToMap("", "", *it);
 	}
 }
 
@@ -330,6 +334,7 @@ void configParser::parseConf()
 		std::cout << "uri: " << it->first << std::endl;
 		std::cout << it->second << std::endl;
 	}
+	std::cout << "================ end show ====================" << std::endl;
 }
 
 configParser::SyntaxException::SyntaxException(const std::string& what_arg)
