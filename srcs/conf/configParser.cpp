@@ -25,6 +25,39 @@ std::vector<virtualServer> configParser::get_serve_confs() const
 {
 	return serve_confs;
 }
+
+Location configParser::get_uri2location(std::string uri) const
+{
+	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+	if (loc != uri2location.end()) {
+		return loc->second;
+	}
+	/*
+	if (uri2location.count(uri) == 1)
+		return uri2location[uri];
+	*/
+	std::string path = uri;
+	while (1) {
+		std::string::size_type i = path.find('/');
+		if (i == std::string::npos)
+			break;
+		path = path.substr(0, i);
+
+		std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+		if (loc != uri2location.end()) {
+			return loc->second;
+		}
+		/*
+		if (uri2location.count(path) == 1)
+			return uri2location[path];
+		*/
+	}
+
+	// 何もマッチしなかった場合の挙動イズなに？
+	return loc->second;
+}
+
+
 const std::string readConfFile(const std::string& file_name)
 {
 	std::ifstream ifs(file_name.c_str());

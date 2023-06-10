@@ -21,6 +21,7 @@ class configParser {
 		void trim(std::string& str);
 		void expect(char c);
 		std::vector<virtualServer> get_serve_confs()const;
+		Location get_uri2location(std::string uri) const;
 	private:
 //		std::map<std::string> directive_map; //neccesary?
 		std::string buf;
