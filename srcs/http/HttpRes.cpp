@@ -172,11 +172,11 @@ void HttpRes::set_content_type() {
 
 	// content-typeが受けられるか
 	if (types.count(type) != 0) {
-		media_type = types[type];
+		content_type = types[type];
 	}
 
 	// マッチしなかったらデフォルトの値をセットする
-	media_type = default_type;
+	content_type = default_type;
 }
 
 void HttpRes::header_filter() {
@@ -193,7 +193,7 @@ void HttpRes::header_filter() {
 		if (status_code >= INTERNAL_SERVER_ERROR) {
 		} else if (status_code >= BAD_REQUEST) {
             const std::vector<std::string> status_success[30] = {NULL, "400 Bad Request",};
-
+		}
         else if (status_code >= MOVED_PERMANENTLY) {
             const std::vector<std::string> status_success[9] = {NULL, "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", NULL, NULL, "307 Temporary Redirect", "308 Permanent Redirect"};
             if (status_code == NOT_MODIFIED) {
@@ -209,8 +209,60 @@ void HttpRes::header_filter() {
                 content_length = NULL;
             }
             status_line = "HTTP/1.1 " + status_success[status_code - OK];
-        }
+        } else {
+			status_line = NULL;
+		}
 	}
+
+	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
+	//Location loc = httpreq.get_uri2location(uri);
+
+	buf += status_line;
+	buf += "\r\n";
+	// ServerNameも設定できるぽいけど挙動よくわからん
+	buf += "Server: " + kServerName;
+	
+	// Cacheとかは考慮しないのでdateの処理は飛ばす
+
+	if (content_type != "") {
+		buf += "Content-Type: " + content_type;
+
+		if (charset != "") {
+			buf += "; charset=" + charset;
+
+			// content_type に charsetを加える
+		}
+		buf += "\r\n";
+	}
+
+	// content_length_n と content_lengthの関係がよくわからん
+	if (last_modified_time != -1) {
+		//buf += "Last-Modified: " + http_time();
+		buf += "\r\n";
+	}
+
+	// Locationの処理いろいろやってそう
+
+	// chunkedは無視
+
+	// keep-alive系は問答無用でcloseする？
+	buf += "Connection: close";
+	buf += "\r\n";
+
+	// 残りのヘッダー
+	std::map<std::string, std::string> headers = httpreq.getHeaderFields();
+	std::map<std::string, std::string>::iterator it= headers().begin();
+	for (; it != it.end(); it++) {
+		buf += it->first;
+		buf += ": ";
+		buf += it->second;
+		buf += "\r\n";
+	}
+	buf += "\r\n";
+	header_size = buf.size();
+
+	// 
+	write_filter();
 }
 
 void HttpRes::static_handler() {
@@ -227,16 +279,6 @@ void HttpRes::static_handler() {
 	}
 
 	//rc = ngx_http_discard_body(r);
-
-// locaiton /hoge {
-//		root fuga/
-//			location /wow {
-//				root hello;
-//			}
-	//}
-	hoge -> hoge/fuga
-	hoge/fuga-> fuga/hoge/hello/wow
-
 
 	map_uri_to_path();
 
@@ -271,7 +313,7 @@ void HttpRes::static_handler() {
         std::cerr << "NOT ALLOW METHOD" << std::endl;
         return ;
     }
-	// 通常ファイル
+	// 通常ファイルではない
 	if (!S_ISREG(sb.st_mode)) {
 		// なんのエラー?
         std::cerr << "NOT FOUND(404)" << std::endl;
@@ -288,6 +330,7 @@ void HttpRes::static_handler() {
     sendHeader();
 
     init_res_body();
+	
     output_filter();
 }
 
