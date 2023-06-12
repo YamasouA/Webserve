@@ -25,6 +25,39 @@ std::vector<virtualServer> configParser::get_serve_confs() const
 {
 	return serve_confs;
 }
+
+Location configParser::get_uri2location(std::string uri) const
+{
+	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+	if (loc != uri2location.end()) {
+		return loc->second;
+	}
+	/*
+	if (uri2location.count(uri) == 1)
+		return uri2location[uri];
+	*/
+	std::string path = uri;
+	while (1) {
+		std::string::size_type i = path.find('/');
+		if (i == std::string::npos)
+			break;
+		path = path.substr(0, i);
+
+		std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+		if (loc != uri2location.end()) {
+			return loc->second;
+		}
+		/*
+		if (uri2location.count(path) == 1)
+			return uri2location[path];
+		*/
+	}
+
+	// 何もマッチしなかった場合の挙動イズなに？
+	return loc->second;
+}
+
+
 const std::string readConfFile(const std::string& file_name)
 {
 	std::ifstream ifs(file_name.c_str());
@@ -204,15 +237,20 @@ Location configParser::parseLocation() {
 	return location;
 }
 
-void configParser::setUriToMap(std::string prefix, Location location) {
+void configParser::setUriToMap(std::string prefix, std::string prefix_root, Location location) {
 	std::string locationRoot = location.get_root();;
 	std::string locationUri = location.get_uri();
-	std::string path = prefix + locationRoot + locationUri;
+	//std::string path = prefix + locationRoot + locationUri;
+	std::string path = prefix + locationUri;
 	std::vector<Location> locations = location.get_locations();
+	// rootはこの時点でLocationに入れる
+	std::string root = (locationRoot != "") ? locationRoot: prefix_root;
 	for (std::vector<Location>::iterator it = locations.begin();
 		it != locations.end(); it++) {
-		setUriToMap(path, *it);
+		setUriToMap(path, root, *it);
 	}
+	//path = root + path;
+	location.set_root(root);
 	uri2location[path] = location;
 }
 
@@ -222,7 +260,7 @@ void configParser::uriToMap(virtualServer vServer) {
 
 	for (std::vector<Location>::iterator it = locations.begin();
 		it != locations.end(); it++) {
-		setUriToMap("", *it);
+		setUriToMap("", "", *it);
 	}
 }
 
@@ -330,6 +368,7 @@ void configParser::parseConf()
 		std::cout << "uri: " << it->first << std::endl;
 		std::cout << it->second << std::endl;
 	}
+	std::cout << "================ end show ====================" << std::endl;
 }
 
 configParser::SyntaxException::SyntaxException(const std::string& what_arg)

@@ -50,6 +50,7 @@ class Client;
 
 class HttpRes {
 	private:
+		std::string kServerName = "WebServe";
 		std::string header;
 		std::string body;
 
@@ -57,9 +58,10 @@ class HttpRes {
 		std::string status_string;
 		std::string status_line;
 		size_t content_length_n;
-		std::string media_type;
+		std::string content_type;
 		static const std::string default_type = "text/html";
 		struct timespec last_modified_time 
+		std::string buf;
 		
 		// 対応可能なMedia-Typeを持つ
 		std::map<std::string, std::string> types = 
@@ -67,7 +69,6 @@ class HttpRes {
 				{"html", "text/html"},
 				{"json", "application/json"},
 			};
-
 		// request, vserverはclientのをそのまま使うからデータの持ち方どうしよう
 		// 親のクライアントへの参照を持つのはあり
 //		httpReq httpReq;
