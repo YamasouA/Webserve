@@ -12,6 +12,7 @@
 #include "httpReq.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include "../Kqueue.hpp"
 
 enum Status {
@@ -66,6 +67,9 @@ class HttpRes {
 		bool is_posted;
 		std::string location;
 		bool header_only;
+        time_t last_modified;
+        std::string charset;
+        size_t header_size;
 
 		// 対応可能なMedia-Typeを持つ
 		//static const std::map<std::string, std::string> types;// = {{"html", "text/html"},{"json", "application/json"}};
@@ -92,6 +96,8 @@ class HttpRes {
 		void post_event();
 		void ev_queue_insert();
 		void header_filter();
+        void static_handler();
+        void sendHeader();
         //void createDate();
 	public:
 		HttpRes(const Client& source, Kqueue kq);

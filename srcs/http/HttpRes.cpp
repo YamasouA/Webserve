@@ -342,6 +342,10 @@ void HttpRes::header_filter() {
 	//write_filter();
 }
 
+void HttpRes::sendHeader() {
+
+}
+
 void HttpRes::static_handler() {
 	std::string uri = httpreq.getUri();
 	std::string method = httpreq.getMethod();
@@ -365,7 +369,7 @@ void HttpRes::static_handler() {
 
 	int fd;
 	std::string file_name = join_path();
-	fd = open(file_name);
+	fd = open(file_name.c_str(), O_RDONLY);
 	// open エラー
 	if (fd == -1) {
 		if ( errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
@@ -409,9 +413,9 @@ void HttpRes::static_handler() {
 
     sendHeader();
 
-    init_res_body();
+//    init_res_body();
 
-    output_filter();
+//    output_filter();
 }
 
 void HttpRes::createResponseHeader(struct stat sb) {
