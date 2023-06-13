@@ -184,6 +184,8 @@ int main(int argc, char *argv[]) {
 				read_request(event_fd, fd_client_map[acceptfd], conf, kqueue);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
+			} else if (reciver_event[i].filter & EVFILT_WRITE) {
+				std::cout << "hoge" << std::endl;		
 			}
 		}
 	}

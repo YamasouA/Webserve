@@ -1,11 +1,25 @@
 #include "HttpRes.hpp"
 #include "../Client.hpp"
 
+static const std::string kServerName = "WebServe";
+static const std::string default_type = "text/html";
+//static const std::map<std::string, std::string> types = {{"html", "text/html"},{"json", "application/json"}};
+
+std::string getContentType(std::string type) {
+	if (type == "html")
+		return "text/html";
+	else if (type == "json")
+		return "application/json";
+
+	return "";
+}
+
 HttpRes::HttpRes(const Client& source, Kqueue kq) {
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
 	this->vServer = source.get_vServer();
     this->connection = kq;
+	this->fd = source.get_fd();
 }
 
 HttpRes::~HttpRes() {
@@ -172,16 +186,18 @@ void HttpRes::set_content_type() {
 	}
 
 	// content-typeが受けられるか
+	/*
 	if (types.count(type) != 0) {
 		content_type = types[type];
-	}
+	}*/
+	content_type = getContentType(type);
 
 	// マッチしなかったらデフォルトの値をセットする
 	content_type = default_type;
 }
 
-void ev_queue_insert() {
-
+void HttpRes::ev_queue_insert() {
+	connection.set_event(fd, EVFILT_WRITE);
 }
 
 void HttpRes::post_event() {
@@ -194,26 +210,26 @@ void HttpRes::post_event() {
 void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
 	if (last_modified_time != -1) {
-		if (status_code != HTTP_OK) {
+		if (status_code != OK) {
 			last_modified_time = -1;
 		}
 	}
 
 	// status_lineの作成
-	if (status_line == NULL) {
+	if (status_line == "") {
 
 		if (status_code >= INTERNAL_SERVER_ERROR) {
 		} else if (status_code >= BAD_REQUEST) {
-            const std::vector<std::string> status_success[30] = {NULL, "400 Bad Request",};
+            const std::vector<std::string> status_success[30] = {"", "400 Bad Request",};
 		}
         else if (status_code >= MOVED_PERMANENTLY) {
-            const std::vector<std::string> status_success[9] = {NULL, "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", NULL, NULL, "307 Temporary Redirect", "308 Permanent Redirect"};
+            const std::vector<std::string> status_success[9] = {"", "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", "", "", "307 Temporary Redirect", "308 Permanent Redirect"};
             if (status_code == NOT_MODIFIED) {
                 header_only = 1;
             }
             status_line = "HTTP/1.1 " + status_redirect[status_code - MOVED_PERMANENTLY];
 		} else if (status_code >= OK) {
-            const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", NULL, "204 No Content", NULL, "206 Partial Content"};
+            const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
             if (status_code == NO_CONTENT) {
                 header_only = 1;
                 content_type = NULL;
@@ -222,7 +238,7 @@ void HttpRes::header_filter() {
             }
             status_line = "HTTP/1.1 " + status_success[status_code - OK];
         } else {
-			status_line = NULL;
+			status_line = "";
 		}
 	}
 
