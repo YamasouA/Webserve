@@ -27,7 +27,7 @@ void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer
 		Socket *socket = new Socket(it->get_listen());
 		//Socket *socket = new Socket(8000);
 		socket->set_socket();
-		kqueue.set_event(socket->get_listenfd());
+		kqueue.set_event(socket->get_listenfd(), EVFILT_READ);
 		fd_config_map[socket->get_listenfd()] = *it;
 	}
 	//return fd_config_map;
@@ -57,7 +57,7 @@ void assign_server(configParser& conf, Client& client) {
 	}
 }
 
-void read_request(int fd, Client& client, configParser& conf) {
+void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
 	char buf[1024];
 
 	memset(buf, 0, sizeof(buf));
@@ -80,7 +80,7 @@ void read_request(int fd, Client& client, configParser& conf) {
     client.set_httpReq(httpreq);
 //	client.set_httpReq(httpparser.get);
     assign_server(conf, client);
-    HttpRes respons(client);
+    HttpRes respons(client, kq);
     respons.createResponse();
 
 }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 					continue;
 				}
 				std::cout << "client fd: " << acceptfd << std::endl;
-				kqueue.set_register_event(acceptfd);
+				kqueue.set_event(acceptfd, EVFILT_READ);
 				client.set_fd(acceptfd);
 				fd_client_map.insert(std::make_pair(acceptfd, client));
 				/*
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
 				//read(0, buf, 1);
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
-				read_request(event_fd, fd_client_map[acceptfd], conf);
+				read_request(event_fd, fd_client_map[acceptfd], conf, kqueue);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
 			}

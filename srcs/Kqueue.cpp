@@ -13,17 +13,17 @@ Kqueue::Kqueue() {
 
 Kqueue::~Kqueue() {}
 
-void Kqueue::set_event(int fd) {
-	EV_SET(register_event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
-		std::cout << "Error kevent" << std::endl;
-		exit(1);
-		// new throw;
-	}
-}
+//void Kqueue::set_event(int fd) {
+//	EV_SET(register_event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+//	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
+//		std::cout << "Error kevent" << std::endl;
+//		exit(1);
+//		// new throw;
+//	}
+//}
 
-void Kqueue::set_register_event(int fd) {
-	EV_SET(register_event, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+void Kqueue::set_event(int fd, short ev_filter) {
+	EV_SET(register_event, fd, ev_filter, EV_ADD, 0, 0, NULL);
 	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
 		perror("kevent error");
 	}

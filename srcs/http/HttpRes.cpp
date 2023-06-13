@@ -1,10 +1,11 @@
 #include "HttpRes.hpp"
 #include "../Client.hpp"
 
-HttpRes::HttpRes(const Client& source) {
+HttpRes::HttpRes(const Client& source, Kqueue kq) {
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
 	this->vServer = source.get_vServer();
+    this->connection = kq;
 }
 
 HttpRes::~HttpRes() {
@@ -179,6 +180,17 @@ void HttpRes::set_content_type() {
 	content_type = default_type;
 }
 
+void ev_queue_insert() {
+
+}
+
+void HttpRes::post_event() {
+    if (!is_posted) {
+        is_posted = 1;
+        ev_queue_insert();
+    }
+}
+
 void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
 	if (last_modified_time != -1) {
@@ -221,7 +233,7 @@ void HttpRes::header_filter() {
 	buf += "\r\n";
 	// ServerNameも設定できるぽいけど挙動よくわからん
 	buf += "Server: " + kServerName;
-	
+
 	// Cacheとかは考慮しないのでdateの処理は飛ばす
 
 	if (content_type != "") {
@@ -261,8 +273,9 @@ void HttpRes::header_filter() {
 	buf += "\r\n";
 	header_size = buf.size();
 
-	// 
-	write_filter();
+	//
+    post_event();
+	//write_filter();
 }
 
 void HttpRes::static_handler() {
@@ -330,7 +343,7 @@ void HttpRes::static_handler() {
     sendHeader();
 
     init_res_body();
-	
+
     output_filter();
 }
 

@@ -12,6 +12,7 @@
 #include "httpReq.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "Kqueue.hpp"
 
 enum class Status {
 	OK = 200;
@@ -60,11 +61,11 @@ class HttpRes {
 		size_t content_length_n;
 		std::string content_type;
 		static const std::string default_type = "text/html";
-		struct timespec last_modified_time 
+		struct timespec last_modified_time
 		std::string buf;
-		
+
 		// 対応可能なMedia-Typeを持つ
-		std::map<std::string, std::string> types = 
+		std::map<std::string, std::string> types =
 			{
 				{"html", "text/html"},
 				{"json", "application/json"},
@@ -75,6 +76,8 @@ class HttpRes {
 
 		httpReq httpreq;
 		virtualServer vServer;
+        Kqueue connection;
+
 		Location target;
 		void write_file();
 		void delete_file();
@@ -88,7 +91,7 @@ class HttpRes {
 		void set_content_type();
         //void createDate();
 	public:
-		HttpRes(const Client& source);
+		HttpRes(const Client& source, Kqueue kq);
 		~HttpRes();
 		Location longestMatchLocation(std::string request_path, std::vector<Location> locations);
         bool isAllowMethod(std::string method);
