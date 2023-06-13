@@ -62,7 +62,8 @@ class HttpRes {
 		size_t content_length_n;
 		std::string content_type;
 		static const std::string default_type;
-		struct timespec last_modified_time;
+		time_t last_modified_time;
+//		struct timespec last_modified_time;
 		std::string buf;
 		bool is_posted;
 		std::string location;

@@ -1,8 +1,8 @@
 #include "HttpRes.hpp"
 #include "../Client.hpp"
 
-static const std::string kServerName = "WebServe";
-static const std::string default_type = "text/html";
+const std::string HttpRes::kServerName = "WebServe";
+const std::string HttpRes::default_type = "text/html";
 //static const std::map<std::string, std::string> types = {{"html", "text/html"},{"json", "application/json"}};
 
 std::string getContentType(std::string type) {
@@ -386,7 +386,7 @@ void HttpRes::static_handler() {
 	}
 	// ディレクトリだった時
 	if (S_ISDIR(sb.st_mode)) {
-		Location config = target.uri2location(uri);
+//		Location config = target.uri2location(uri);
 		/*
 		if (config.getAlias() == "" && config.get_root() == "") {
 		}*/
