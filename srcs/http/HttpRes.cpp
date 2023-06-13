@@ -207,6 +207,70 @@ void HttpRes::post_event() {
     }
 }
 
+std::map<int, std::string> create_status_msg(){
+    std::map<int, std::string> m;
+    m[200] = "OK";
+    m[201] = "Created";
+    m[202] = "Accepted";
+    m[203] = "";
+    m[204] = "No Content";
+    m[205] = "";
+    m[206] = "Partial Content";
+    m[301] = "Moved Permanently";
+    m[302] ="Moved Temporarily";
+    [303] = "See Other";
+    m[304] = "Not Modified";
+    ngx_null_string,  /* "305 Use Proxy" */
+    ngx_null_string,  /* "306 unused" */
+    m[307] = Temporary Redirect";
+    m[308]("308 Permanent Redirect";
+
+    m[400]("400 Bad Request";
+    m[401]("401 Unauthorized";
+    m[402]("402 Payment Required";
+    m[403]("403 Forbidden";
+    m[404]("404 Not Found";
+    m[405]("405 Not Allowed";
+    m[]("406 Not Acceptable";
+    ngx_null_string,  /* "407 Proxy Authentication Required" */
+    m[]("408 Request Time-out";
+    m[]("409 Conflict";
+    m[]("410 Gone";
+    m[]("411 Length Required";
+    m[]("412 Precondition Failed";
+    m[]("413 Request Entity Too Large" ;
+    m[]("414 Request-URI Too Large";
+    m[]("415 Unsupported Media Type";
+    m[]("416 Requested Range Not Satisfiable";
+    ngx_null_string,  /* "417 Expectation Failed" */
+    ngx_null_string,  /* "418 unused" */
+    ngx_null_string,  /* "419 unused" */
+    ngx_null_string,  /* "420 unused" */
+    m[]("421 Misdirected Request";
+    ngx_null_string,  /* "422 Unprocessable Entity" */
+    ngx_null_string,  /* "423 Locked" */
+    ngx_null_string,  /* "424 Failed Dependency" */
+    ngx_null_string,  /* "425 unused" */
+    ngx_null_string,  /* "426 Upgrade Required" */
+    ngx_null_string,  /* "427 unused" */
+    ngx_null_string,  /* "428 Precondition Required" */
+    m[]("429 Too Many Requests";
+
+    m[]("500 Internal Server Error";
+    m[]("501 Not Implemented";
+    m[]("502 Bad Gateway";
+    m[]("503 Service Temporarily Unavailable";
+    m[]("504 Gateway Time-out";
+    m[]("505 HTTP Version Not Supported";
+    ngx_null_string,        /* "506 Variant Also Negotiates" */
+    m[]("507 Insufficient Storage";
+
+    /* ngx_null_string, */  /* "508 unused" */
+    /* ngx_null_string, */  /* "509 unused" */
+    /* ngx_null_string, */  /* "510 Not Extended" */
+
+}
+
 void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
 	if (last_modified_time != -1) {
@@ -229,6 +293,7 @@ void HttpRes::header_filter() {
             }
             status_line = "HTTP/1.1 " + status_redirect[status_code - MOVED_PERMANENTLY];
 		} else if (status_code >= OK) {
+//            const char status_success[8][20] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
             const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
             if (status_code == NO_CONTENT) {
                 header_only = 1;
