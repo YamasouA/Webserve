@@ -217,62 +217,44 @@ std::map<int, std::string> create_status_msg(){
     m[205] = "";
     m[206] = "Partial Content";
     m[301] = "Moved Permanently";
-    m[302] ="Moved Temporarily";
-    [303] = "See Other";
+    m[302] = "Moved Temporarily";
+    m[303] = "See Other";
     m[304] = "Not Modified";
-    ngx_null_string,  /* "305 Use Proxy" */
-    ngx_null_string,  /* "306 unused" */
-    m[307] = Temporary Redirect";
-    m[308]("308 Permanent Redirect";
+    m[307] = "Temporary Redirect";
+    m[308] = "Permanent Redirect";
 
-    m[400]("400 Bad Request";
-    m[401]("401 Unauthorized";
-    m[402]("402 Payment Required";
-    m[403]("403 Forbidden";
-    m[404]("404 Not Found";
-    m[405]("405 Not Allowed";
-    m[]("406 Not Acceptable";
-    ngx_null_string,  /* "407 Proxy Authentication Required" */
-    m[]("408 Request Time-out";
-    m[]("409 Conflict";
-    m[]("410 Gone";
-    m[]("411 Length Required";
-    m[]("412 Precondition Failed";
-    m[]("413 Request Entity Too Large" ;
-    m[]("414 Request-URI Too Large";
-    m[]("415 Unsupported Media Type";
-    m[]("416 Requested Range Not Satisfiable";
-    ngx_null_string,  /* "417 Expectation Failed" */
-    ngx_null_string,  /* "418 unused" */
-    ngx_null_string,  /* "419 unused" */
-    ngx_null_string,  /* "420 unused" */
-    m[]("421 Misdirected Request";
-    ngx_null_string,  /* "422 Unprocessable Entity" */
-    ngx_null_string,  /* "423 Locked" */
-    ngx_null_string,  /* "424 Failed Dependency" */
-    ngx_null_string,  /* "425 unused" */
-    ngx_null_string,  /* "426 Upgrade Required" */
-    ngx_null_string,  /* "427 unused" */
-    ngx_null_string,  /* "428 Precondition Required" */
-    m[]("429 Too Many Requests";
+    m[400] = "Bad Request";
+    m[401] = "Unauthorized";
+    m[402] = "Payment Required";
+    m[403] = "Forbidden";
+    m[404] = "Not Found";
+    m[405] = "Not Allowed";
+    m[406] = "Not Acceptable";
+    m[408] = "Request Time-out";
+    m[409] = "Conflict";
+    m[410] = "Gone";
+    m[411] = "Length Required";
+    m[412] = "Precondition Failed";
+    m[413] = "Request Entity Too Large" ;
+    m[414] = "Request-URI Too Large";
+    m[415] = "Unsupported Media Type";
+    m[416] = "Requested Range Not Satisfiable";
+    m[421] = "Misdirected Request";
+    m[429] = "Too Many Requests";
 
-    m[]("500 Internal Server Error";
-    m[]("501 Not Implemented";
-    m[]("502 Bad Gateway";
-    m[]("503 Service Temporarily Unavailable";
-    m[]("504 Gateway Time-out";
-    m[]("505 HTTP Version Not Supported";
-    ngx_null_string,        /* "506 Variant Also Negotiates" */
-    m[]("507 Insufficient Storage";
-
-    /* ngx_null_string, */  /* "508 unused" */
-    /* ngx_null_string, */  /* "509 unused" */
-    /* ngx_null_string, */  /* "510 Not Extended" */
-
+    m[500] = "Internal Server Error";
+    m[501] = "Not Implemented";
+    m[502] = "Bad Gateway";
+    m[503] = "Service Temporarily Unavailable";
+    m[504] = "Gateway Time-out";
+    m[505] = "HTTP Version Not Supported";
+    m[507] = "Insufficient Storage";
+	return m;
 }
 
 void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
+	std::map<int, std::string> status_msg = create_status_msg();
 	if (last_modified_time != -1) {
 		if (status_code != OK) {
 			last_modified_time = -1;
@@ -282,30 +264,31 @@ void HttpRes::header_filter() {
 	// status_lineの作成
 	if (status_line == "") {
 
-		if (status_code >= INTERNAL_SERVER_ERROR) {
-		} else if (status_code >= BAD_REQUEST) {
-            const std::vector<std::string> status_success[30] = {"", "400 Bad Request",};
-		}
-        else if (status_code >= MOVED_PERMANENTLY) {
-            const std::vector<std::string> status_success[9] = {"", "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", "", "", "307 Temporary Redirect", "308 Permanent Redirect"};
+		//if (status_code >= INTERNAL_SERVER_ERROR) {
+		//} else if (status_code >= BAD_REQUEST) {
+        //    //const std::vector<std::string> status_success[30] = {"", "400 Bad Request",};
+		//}
+        //else if (status_code >= MOVED_PERMANENTLY) {
+        //    //const std::vector<std::string> status_success[9] = {"", "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", "", "", "307 Temporary Redirect", "308 Permanent Redirect"};
+        //    if (status_code == NOT_MODIFIED) {
+        //        header_only = 1;
+        //    }
+        //    status_line = "HTTP/1.1 " + status_redirect[status_code - MOVED_PERMANENTLY];
+		//} else if (status_code >= OK) {
+//            const char status_success[8][20] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
+            //const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
             if (status_code == NOT_MODIFIED) {
                 header_only = 1;
             }
-            status_line = "HTTP/1.1 " + status_redirect[status_code - MOVED_PERMANENTLY];
-		} else if (status_code >= OK) {
-//            const char status_success[8][20] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
-            const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
             if (status_code == NO_CONTENT) {
                 header_only = 1;
-                content_type = NULL;
+                content_type = "";
                 last_modified = NULL;
-                content_length = NULL;
             }
-            status_line = "HTTP/1.1 " + status_success[status_code - OK];
+            status_line = "HTTP/1.1 " + status_msg[status_code];
         } else {
 			status_line = "";
 		}
-	}
 
 	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
 	//Location loc = httpreq.get_uri2location(uri);
@@ -344,8 +327,8 @@ void HttpRes::header_filter() {
 
 	// 残りのヘッダー
 	std::map<std::string, std::string> headers = httpreq.getHeaderFields();
-	std::map<std::string, std::string>::iterator it= headers().begin();
-	for (; it != it.end(); it++) {
+	std::map<std::string, std::string>::iterator it= headers.begin();
+	for (; it != headers.end(); it++) {
 		buf += it->first;
 		buf += ": ";
 		buf += it->second;
@@ -360,6 +343,8 @@ void HttpRes::header_filter() {
 }
 
 void HttpRes::static_handler() {
+	std::string uri = httpreq.getUri();
+	std::string method = httpreq.getMethod();
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
 		// なんてエラー返そう？
@@ -374,7 +359,7 @@ void HttpRes::static_handler() {
 
 	//rc = ngx_http_discard_body(r);
 
-	map_uri_to_path();
+	//map_uri_to_path();
 
     //disable symlink ?
 
@@ -398,8 +383,9 @@ void HttpRes::static_handler() {
 	// ディレクトリだった時
 	if (S_ISDIR(sb.st_mode)) {
 		Location config = target.uri2location(uri);
-		if (location.headers["alias"].count() == 0 && location.headers["root"] == 0) {
-		}
+		/*
+		if (config.getAlias() == "" && config.get_root() == "") {
+		}*/
 		location = uri;
 	}
     if (!S_ISREG(sb.st_mode) && method == "POST") {

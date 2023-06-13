@@ -64,6 +64,8 @@ class HttpRes {
 		struct timespec last_modified_time;
 		std::string buf;
 		bool is_posted;
+		std::string location;
+		bool header_only;
 
 		// 対応可能なMedia-Typeを持つ
 		//static const std::map<std::string, std::string> types;// = {{"html", "text/html"},{"json", "application/json"}};
