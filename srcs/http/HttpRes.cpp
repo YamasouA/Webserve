@@ -43,21 +43,28 @@ Location HttpRes::get_uri2location(std::string uri) const
 		return uri2location[uri];
 	*/
 	std::string path = uri;
+    size_t j = 0;
 	while (1) {
-		std::string::size_type i = path.find('/');
+        std::cout << j << std::endl;
+        j++;
+		std::string::size_type i = path.rfind('/');
 		if (i == std::string::npos)
+            std::cout << "okend" << std::endl;
 			break;
 		path = path.substr(0, i);
+        }
 
-		std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+		loc = uri2location.find(path);
+//		std::map<std::string, Location>::const_iterator loc = uri2location.find(path);
 		if (loc != uri2location.end()) {
+            std::cout << "ok1" << std::endl;
 			return loc->second;
 		}
-		/*
-		if (uri2location.count(path) == 1)
-			return uri2location[path];
-		*/
-	}
+
+//		if (uri2location.count(path) == 1)
+//			return uri2location[path];
+
+//	}
 
 	// 何もマッチしなかった場合の挙動イズなに？
 	return loc->second;
@@ -331,7 +338,6 @@ void HttpRes::header_filter() {
 
 	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
 	//Location loc = httpreq.get_uri2location(uri);
-	//Location loc = get_uri2location(uri);
 
 	buf += status_line;
 	buf += "\r\n";
@@ -390,6 +396,8 @@ void HttpRes::sendHeader() {
 
 void HttpRes::static_handler() {
 	std::string uri = httpreq.getUri();
+	Location loc = get_uri2location(uri);
+    std::cout << "macth loc: " << loc << std::endl;
 	std::string method = httpreq.getMethod();
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
