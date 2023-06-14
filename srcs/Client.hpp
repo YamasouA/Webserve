@@ -2,7 +2,7 @@
 #define CLIENT_HPP
 
 #include "conf/virtualServer.hpp"
-
+#include "conf/Location.hpp"
 #include "http/httpReq.hpp"
 #include "http/HttpRes.hpp"
 //#include "http/httpParser.hpp" //necessary?
@@ -17,6 +17,7 @@ class Client {
 
 		virtualServer vServer;
 		int fd;
+		std::map<std::string, Location> uritolocation;
 	public:
 		Client();
 		~Client();
@@ -30,12 +31,14 @@ class Client {
         void set_httpReq(httpReq httpreq);
 		void set_httpRes(HttpRes* source);
 		void set_vServer(const virtualServer& source);
+		void set_uritolocation(const std::map<std::string, Location> map);
 		int get_fd() const;
 		//httpParser get_parsedReq() const;
 		httpReq get_httpReq() const;
 		HttpRes get_httpRes() const;
         HttpRes* get_httpResp() const;
 		virtualServer get_vServer() const;
+		std::map<std::string, Location> get_uritolocation() const;
 
 };
 

@@ -26,6 +26,7 @@ std::vector<virtualServer> configParser::get_serve_confs() const
 	return serve_confs;
 }
 
+
 Location configParser::get_uri2location(std::string uri) const
 {
 	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
@@ -262,6 +263,7 @@ void configParser::uriToMap(virtualServer vServer) {
 		it != locations.end(); it++) {
 		setUriToMap("", "", *it);
 	}
+	vServer.set_uri2location(uri2location);
 }
 
 //void configParser::parseServe(size_t i) {

@@ -28,13 +28,14 @@ HttpRes::~HttpRes() {
 
 Location HttpRes::get_uri2location(std::string uri) const
 {
-    std::vector<Location> locs = vServer.get_locations();
-    std::map<std::string, Location> uri2loc;
-    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
-        uri2loc[it->get_uri()] = *it;
-    }
-	std::map<std::string, Location>::const_iterator loc = uri2loc.find(uri);
-	if (loc != uri2loc.end()) {
+//    std::vector<Location> locs = vServer.get_locations();
+//    std::map<std::string, Location> uri2loc;
+//    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
+//        uri2loc[it->get_uri()] = *it;
+//    }
+	std::map<std::string, Location> uri2location = vServer.get_uri2location();
+	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+	if (loc != uri2location.end()) {
 		return loc->second;
 	}
 	/*
@@ -49,7 +50,7 @@ Location HttpRes::get_uri2location(std::string uri) const
 		path = path.substr(0, i);
 
 		std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
-		if (loc != uri2loc.end()) {
+		if (loc != uri2location.end()) {
 			return loc->second;
 		}
 		/*
@@ -329,7 +330,8 @@ void HttpRes::header_filter() {
 		}
 
 	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
-	Location loc = httpreq.get_uri2location(uri);
+	//Location loc = httpreq.get_uri2location(uri);
+	//Location loc = get_uri2location(uri);
 
 	buf += status_line;
 	buf += "\r\n";

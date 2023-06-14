@@ -2,6 +2,7 @@
 #define VIRTUALSERVER_HPP
 
 #include <vector>
+#include <map>
 #include <string>
 #include "Location.hpp"
 
@@ -27,6 +28,8 @@ class virtualServer {
 //		std::string get_location() const;
 		std::string get_root() const;
 		//std::string get_server_name() const;
+		std::map<std::string, Location> get_uri2location() const;
+		void set_uri2location(std::map<std::string, Location> uri2location);
 	private:
 		int listen;
 //		std::string listen;
@@ -35,6 +38,7 @@ class virtualServer {
 		std::vector<Location> locations;
 		std::string path;
 		std::string error_page;
+		std::map<std::string, Location> uri2location;
 };
 
 std::ostream& operator <<(std::ostream& stream, const virtualServer& obj);

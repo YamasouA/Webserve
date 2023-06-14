@@ -10,6 +10,7 @@ virtualServer::virtualServer(const virtualServer& src)
 	this->path = src.path;
 	this->locations = src.locations;
 	this->error_page = src.error_page;
+	this->uri2location = src.uri2location;
 }
 
 virtualServer& virtualServer::operator=(const virtualServer& rhs)
@@ -22,6 +23,7 @@ virtualServer& virtualServer::operator=(const virtualServer& rhs)
 	this->path = rhs.path;
 	this->locations = rhs.locations;
 	this->error_page = rhs.error_page;
+	this->uri2location = rhs.uri2location;
 	return *this;
 }
 
@@ -31,6 +33,10 @@ virtualServer::~virtualServer()
 //void virtualServer::set_listen(std::string listen){
 void virtualServer::set_listen(int listen){
 	this->listen = listen;
+}
+
+void virtualServer::set_uri2location(std::map<std::string, Location> uri2location){
+	this->uri2location = uri2location;
 }
 
 void virtualServer::set_server_name(std::string server_name){
@@ -46,6 +52,10 @@ void virtualServer::set_location(Location location){
 
 void virtualServer::set_root(std::string root){
 	this->root = root;
+}
+
+std::map<std::string, Location> virtualServer::get_uri2location() const {
+	return uri2location;
 }
 
 int virtualServer::get_listen() const{
