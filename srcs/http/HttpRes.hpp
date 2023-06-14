@@ -99,6 +99,7 @@ class HttpRes {
 		void header_filter();
         void static_handler();
         void sendHeader();
+        Location get_uri2location(std::string uri) const;
         //void createDate();
 	public:
 		HttpRes(const Client& source, Kqueue kq);
@@ -108,6 +109,7 @@ class HttpRes {
         std::string join_path();
         void set_body(std::string strs);
 		void createResponse();
+        void runHandlers();
 };
 
 #endif

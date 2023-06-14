@@ -25,6 +25,43 @@ HttpRes::HttpRes(const Client& source, Kqueue kq) {
 HttpRes::~HttpRes() {
 }
 
+
+Location HttpRes::get_uri2location(std::string uri) const
+{
+    std::vector<Location> locs = vServer.get_locations();
+    std::map<std::string, Location> uri2loc;
+    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
+        uri2loc[it->get_uri()] = *it;
+    }
+	std::map<std::string, Location>::const_iterator loc = uri2loc.find(uri);
+	if (loc != uri2loc.end()) {
+		return loc->second;
+	}
+	/*
+	if (uri2location.count(uri) == 1)
+		return uri2location[uri];
+	*/
+	std::string path = uri;
+	while (1) {
+		std::string::size_type i = path.find('/');
+		if (i == std::string::npos)
+			break;
+		path = path.substr(0, i);
+
+		std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+		if (loc != uri2loc.end()) {
+			return loc->second;
+		}
+		/*
+		if (uri2location.count(path) == 1)
+			return uri2location[path];
+		*/
+	}
+
+	// 何もマッチしなかった場合の挙動イズなに？
+	return loc->second;
+}
+
 Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Location> locations) {
 	Location location;
 	size_t max_len = 0;
@@ -59,10 +96,11 @@ bool HttpRes::isAllowMethod(std::string method) {
 }
 
 std::string HttpRes::join_path() {
+    std::cout << "join_path" << std::endl;
 	std::string path_root = target.get_root();
-//    std::cout << "root: " << path_root << std::endl;
+    std::cout << "root: " << path_root << std::endl;
 	std::string file_path  = target.get_uri();
-//    std::cout << "uri: " << file_path << std::endl;
+    std::cout << "uri: " << file_path << std::endl;
 	if (file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
 		file_path = "index.html"; //  "/index" is better?
 	}
@@ -291,7 +329,7 @@ void HttpRes::header_filter() {
 		}
 
 	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
-	//Location loc = httpreq.get_uri2location(uri);
+	Location loc = httpreq.get_uri2location(uri);
 
 	buf += status_line;
 	buf += "\r\n";
@@ -343,7 +381,9 @@ void HttpRes::header_filter() {
 }
 
 void HttpRes::sendHeader() {
-
+    // check alredy sent
+    // handle err_status?
+    return header_filter();
 }
 
 void HttpRes::static_handler() {
@@ -369,9 +409,11 @@ void HttpRes::static_handler() {
 
 	int fd;
 	std::string file_name = join_path();
+    std::cout << "file_name: " << file_name << std::endl;
 	fd = open(file_name.c_str(), O_RDONLY);
 	// open エラー
 	if (fd == -1) {
+        std::cerr << "open error" << std::endl;
 		if ( errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
 		} else if (errno == EACCES) {
 		} else {
@@ -416,6 +458,18 @@ void HttpRes::static_handler() {
 //    init_res_body();
 
 //    output_filter();
+}
+
+void HttpRes::runHandlers() {
+//    std::cout << "req_uri" << httpreq.getUri() << std::endl;
+//    std::vector<Location> locs = vServer.get_locations();
+//    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
+//        std::cout << "loc: " << *it << std::endl;
+//    }
+//    std::cout << "locations" << vServer.get_locations() << std::endl;
+//	target = longestMatchLocation(httpreq.getUri(), vServer.get_locations());
+//    std::cout << "target: " << target << std::endl;
+    static_handler();
 }
 
 void HttpRes::createResponseHeader(struct stat sb) {

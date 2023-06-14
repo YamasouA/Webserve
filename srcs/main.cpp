@@ -41,8 +41,8 @@ void assign_server(configParser& conf, Client& client) {
         std::map<std::string, std::string> tmp = client.get_httpReq().getHeaderFields();
         std::string host_name;
 		for (std::map<std::string, std::string>::iterator req_it = tmp.begin(); req_it != tmp.end(); ++req_it) {
-//            std::cout << "field name: " << (*req_it).first << std::endl;
-            if ((*req_it).first == "Host") {
+            std::cout << "field name: " << (*req_it).first << std::endl;
+            if ((*req_it).first == "host") {
                 host_name = (*req_it).second;
                 break;
             }
@@ -50,6 +50,7 @@ void assign_server(configParser& conf, Client& client) {
 //		if (client.get_httpReq().get_hostname() == it->get_server_name()
         std::cout << "server name: " << it->get_server_name() << std::endl;
         if (host_name == it->get_server_name()) {
+            std::cout << "okok" << std::endl;
 //			&& client.get_fd() == it->get_listen()) {
 			client.set_vServer(*it);
 
@@ -81,7 +82,8 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
 //	client.set_httpReq(httpparser.get);
     assign_server(conf, client);
     HttpRes respons(client, kq);
-    respons.createResponse();
+    respons.runHandlers();
+//    respons.createResponse();
 
 }
 
@@ -185,7 +187,7 @@ int main(int argc, char *argv[]) {
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
 			} else if (reciver_event[i].filter & EVFILT_WRITE) {
-				std::cout << "hoge" << std::endl;		
+				std::cout << "hoge" << std::endl;
 			}
 		}
 	}
