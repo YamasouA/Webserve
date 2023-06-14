@@ -28,6 +28,7 @@ HttpRes::~HttpRes() {
 
 Location HttpRes::get_uri2location(std::string uri) const
 {
+	std::cout << "===== get_uri2location() =====" << std::endl;
 //    std::vector<Location> locs = vServer.get_locations();
 //    std::map<std::string, Location> uri2loc;
 //    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
@@ -35,6 +36,12 @@ Location HttpRes::get_uri2location(std::string uri) const
 //    }
 	std::map<std::string, Location> uri2location = vServer.get_uri2location();
 	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
+	std::cout << "uri: " << uri << std::endl;
+	std::cout << "size: " << uri2location.size() << std::endl;
+	for (std::map<std::string, Location>::iterator it = uri2location.begin();
+		it != uri2location.end(); it++) {
+		std::cout << "uri: " << it->second.get_uri() << std::endl;
+	}
 	if (loc != uri2location.end()) {
 		return loc->second;
 	}
@@ -43,15 +50,21 @@ Location HttpRes::get_uri2location(std::string uri) const
 		return uri2location[uri];
 	*/
 	std::string path = uri;
-    size_t j = 0;
 	while (1) {
-        std::cout << j << std::endl;
-        j++;
 		std::string::size_type i = path.rfind('/');
-		if (i == std::string::npos)
+		std::cout << "i: " << i << std::endl;
+		std::cout << "a" << std::endl;
+		if (i == std::string::npos) {
+			std::cout << "a" << std::endl;
             std::cout << "okend" << std::endl;
 			break;
+		}
+		std::cout << "b" << std::endl;
+		std::cout << "path(bef): " << path << std::endl;
+		if (i == 0)
+			break;
 		path = path.substr(0, i);
+		//std::cout << "path: " << path << std::endl;
         }
 
 		loc = uri2location.find(path);
@@ -66,6 +79,7 @@ Location HttpRes::get_uri2location(std::string uri) const
 
 //	}
 
+	std::cout << "break" << std::endl;
 	// 何もマッチしなかった場合の挙動イズなに？
 	return loc->second;
 }

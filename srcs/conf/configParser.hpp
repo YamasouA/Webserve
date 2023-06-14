@@ -31,7 +31,7 @@ class configParser {
 		//void parseServe(size_t i);
 		virtualServer parseServe();
 		void setUriToMap(std::string prefix, std::string prefix_root, Location location);
-		void uriToMap(virtualServer vServer);
+		void uriToMap(virtualServer& vServer);
 		Location parseLocation();
 		std::string getToken(char delimiter);
 		std::string get_token_to_eol();

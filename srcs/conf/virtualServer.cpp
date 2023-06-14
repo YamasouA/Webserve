@@ -88,6 +88,13 @@ std::ostream& operator <<(std::ostream& stream, const virtualServer& obj) {
 		for (std::vector<Location>::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
 			stream << "location: " << *it << std::endl;
 		}
+		stream << "===== uri2location phase =====" << std::endl;
+		const std::map<std::string, Location> tmp2 = obj.get_uri2location();
+		for (std::map<std::string, Location>::const_iterator it = tmp2.begin();
+			it != tmp2.end(); it++) {
+			stream << "uri: " << it->first << std::endl;
+			stream << "location: " << it->second << std::endl;
+		}
 		stream << std::endl;
 		return stream;
 }
