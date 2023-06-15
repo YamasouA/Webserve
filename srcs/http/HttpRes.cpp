@@ -14,12 +14,23 @@ std::string getContentType(std::string type) {
 	return "";
 }
 
-HttpRes::HttpRes(const Client& source, Kqueue kq) {
+HttpRes::HttpRes() {
+
+}
+
+HttpRes::HttpRes(const Client& source, Kqueue kq)
+:is_posted(0)
+{
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
 	this->vServer = source.get_vServer();
     this->connection = kq;
 	this->fd = source.get_fd();
+}
+
+HttpRes::HttpRes(const HttpRes& src) {
+    this->buf = src.buf;
+    this->header_size = src.header_size;
 }
 
 HttpRes::~HttpRes() {
@@ -43,6 +54,7 @@ Location HttpRes::get_uri2location(std::string uri) const
 		std::cout << "uri: " << it->second.get_uri() << std::endl;
 	}
 	if (loc != uri2location.end()) {
+        std::cout << "match all" << std::endl;
 		return loc->second;
 	}
 	/*
@@ -52,21 +64,23 @@ Location HttpRes::get_uri2location(std::string uri) const
 	std::string path = uri;
 	while (1) {
 		std::string::size_type i = path.rfind('/');
-		std::cout << "i: " << i << std::endl;
-		std::cout << "a" << std::endl;
+//		std::cout << "i: " << i << std::endl;
+//		std::cout << "a" << std::endl;
 		if (i == std::string::npos) {
 			std::cout << "a" << std::endl;
             std::cout << "okend" << std::endl;
 			break;
 		}
-		std::cout << "b" << std::endl;
+//		std::cout << "b" << std::endl;
 		std::cout << "path(bef): " << path << std::endl;
-		if (i == 0)
-			break;
-		path = path.substr(0, i);
-		//std::cout << "path: " << path << std::endl;
+		if (i == 0) {
+			path = path.substr(0, 1);
+        } else {
+		    path = path.substr(0, i);
         }
-
+		//std::cout << "path: " << path << std::endl;
+//        }
+        std::cout << "substr path: " << path << std::endl;
 		loc = uri2location.find(path);
 //		std::map<std::string, Location>::const_iterator loc = uri2location.find(path);
 		if (loc != uri2location.end()) {
@@ -77,7 +91,7 @@ Location HttpRes::get_uri2location(std::string uri) const
 //		if (uri2location.count(path) == 1)
 //			return uri2location[path];
 
-//	}
+	}
 
 	std::cout << "break" << std::endl;
 	// 何もマッチしなかった場合の挙動イズなに？
@@ -124,8 +138,10 @@ std::string HttpRes::join_path() {
 	std::string file_path  = target.get_uri();
     std::cout << "uri: " << file_path << std::endl;
 	if (file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
-		file_path = "index.html"; //  "/index" is better?
+		file_path = "/index.html"; //  "/index" is better?
 	}
+    std::cout << "not auto index" << std::endl;
+    std::cout << file_path << std::endl;
 	return path_root + file_path;
 }
 
@@ -258,6 +274,7 @@ void HttpRes::set_content_type() {
 
 void HttpRes::ev_queue_insert() {
 	connection.set_event(fd, EVFILT_WRITE);
+    std::cout << "sed event" << std::endl;
 }
 
 void HttpRes::post_event() {
@@ -265,6 +282,7 @@ void HttpRes::post_event() {
         is_posted = 1;
         ev_queue_insert();
     }
+    std::cout << "posted event" << std::endl;
 }
 
 std::map<int, std::string> create_status_msg(){
@@ -358,6 +376,7 @@ void HttpRes::header_filter() {
 	// ServerNameも設定できるぽいけど挙動よくわからん
 	buf += "Server: " + kServerName;
 
+	buf += "\r\n";
 	// Cacheとかは考慮しないのでdateの処理は飛ばす
 
 	if (content_type != "") {
@@ -410,8 +429,8 @@ void HttpRes::sendHeader() {
 
 void HttpRes::static_handler() {
 	std::string uri = httpreq.getUri();
-	Location loc = get_uri2location(uri);
-    std::cout << "macth loc: " << loc << std::endl;
+	target = get_uri2location(uri);
+    std::cout << "macth loc: " << target << std::endl;
 	std::string method = httpreq.getMethod();
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
@@ -476,7 +495,7 @@ void HttpRes::static_handler() {
 	last_modified_time = sb.st_mtime;
 	set_content_type();
     //set_etag(); //necessary?
-
+    std::cout << "just before sendHeader" << std::endl;
     sendHeader();
 
 //    init_res_body();

@@ -64,13 +64,13 @@ class HttpRes {
 		static const std::string default_type;
 		time_t last_modified_time;
 //		struct timespec last_modified_time;
-		std::string buf;
+//		std::string buf;
 		bool is_posted;
 		std::string location;
 		bool header_only;
         time_t last_modified;
         std::string charset;
-        size_t header_size;
+//        size_t header_size;
 
 		// 対応可能なMedia-Typeを持つ
 		//static const std::map<std::string, std::string> types;// = {{"html", "text/html"},{"json", "application/json"}};
@@ -102,6 +102,8 @@ class HttpRes {
         Location get_uri2location(std::string uri) const;
         //void createDate();
 	public:
+        HttpRes();
+        HttpRes(const HttpRes& src);
 		HttpRes(const Client& source, Kqueue kq);
 		~HttpRes();
 		Location longestMatchLocation(std::string request_path, std::vector<Location> locations);
@@ -110,6 +112,8 @@ class HttpRes {
         void set_body(std::string strs);
 		void createResponse();
         void runHandlers();
+		std::string buf;
+        size_t header_size;
 };
 
 #endif

@@ -29,6 +29,13 @@ void Kqueue::set_event(int fd, short ev_filter) {
 	}
 }
 
+void Kqueue::disable_event(int fd, short ev_filter) {
+	EV_SET(register_event, fd, ev_filter, EV_DISABLE, 0, 0, NULL);
+	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
+		perror("kevent error");
+    }
+}
+
 int Kqueue::get_kq() {
 	return kq;
 }

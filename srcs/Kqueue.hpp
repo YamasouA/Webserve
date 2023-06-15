@@ -19,6 +19,7 @@ class Kqueue {
 		int get_events_num();
 		int get_kq();
 		void set_event(int fd, short ev_filter);
+        void disable_event(int fd, short ev_filter);
 //		void set_register_event(int fd);
 };
 

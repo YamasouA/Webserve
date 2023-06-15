@@ -58,13 +58,13 @@ void assign_server(configParser& conf, Client& client) {
 	}
 }
 
-void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
+HttpRes read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
 	char buf[1024];
 
 	memset(buf, 0, sizeof(buf));
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	if (recv(fd, buf, sizeof(buf), 0) < 0) {
-        return ;
+//        return NULL;
     }
 	/*
 	if (buf ==) {
@@ -83,6 +83,7 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     assign_server(conf, client);
     HttpRes respons(client, kq);
     respons.runHandlers();
+    return respons;
 //    respons.createResponse();
 
 }
@@ -135,8 +136,9 @@ int main(int argc, char *argv[]) {
 	}
 	*/
 
+    HttpRes res;
 	while (1) {
-		Logger::logging("hello");
+//		Logger::logging("hello");
 		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
 		int events_num = kqueue.get_events_num();
 		if (events_num == -1) {
@@ -175,7 +177,7 @@ int main(int argc, char *argv[]) {
 					perror("kevent error");
 				}
 				*/
-			} else if (reciver_event[i].filter & EVFILT_READ) {
+			} else if (reciver_event[i].filter & EVFILT_READ && !(reciver_event[i].filter & EVFILT_WRITE)) {
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
 //				fcntl(event_fd, F_SETFL, O_NONBLOCK);
@@ -183,11 +185,15 @@ int main(int argc, char *argv[]) {
 				//read(0, buf, 1);
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
-				read_request(event_fd, fd_client_map[acceptfd], conf, kqueue);
+				res = read_request(event_fd, fd_client_map[acceptfd], conf, kqueue);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
 			} else if (reciver_event[i].filter & EVFILT_WRITE) {
-				std::cout << "hoge" << std::endl;
+//				std::cout << "hoge" << std::endl;
+				std::cout << res.buf.c_str() << std::endl;
+                write(acceptfd, res.buf.c_str(), res.header_size);
+//                kqueue.disable_event(acceptfd, EVFILT_WRITE);
+//                sleep(1000);
 			}
 		}
 	}
