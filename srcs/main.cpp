@@ -141,6 +141,7 @@ int main(int argc, char *argv[]) {
 //		Logger::logging("hello");
 		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
 		int events_num = kqueue.get_events_num();
+		std::cout << "event_num: " << events_num << std::endl;
 		if (events_num == -1) {
 			perror("kevent");
 			std::exit(1);
@@ -152,7 +153,7 @@ int main(int argc, char *argv[]) {
 		for (int i = 0; i < events_num; ++i) {
 			//int event_fd = reciver_event[i].ident;
 			struct kevent* reciver_event = kqueue.get_reciver_event();
-			int event_fd = reciver_event[i].ident;;
+			int event_fd = reciver_event[i].ident;
 			if (reciver_event[i].flags & EV_EOF) {
 				std::cout << "Client " << event_fd << " has disconnected" << std::endl;
 				close(event_fd);
@@ -168,6 +169,7 @@ int main(int argc, char *argv[]) {
 					continue;
 				}
 				std::cout << "client fd: " << acceptfd << std::endl;
+				std::cout << "EVFILT_READ: " << EVFILT_READ<< std::endl;
 				kqueue.set_event(acceptfd, EVFILT_READ);
 				client.set_fd(acceptfd);
 				fd_client_map.insert(std::make_pair(acceptfd, client));
@@ -177,7 +179,9 @@ int main(int argc, char *argv[]) {
 					perror("kevent error");
 				}
 				*/
-			} else if (reciver_event[i].filter & EVFILT_READ && !(reciver_event[i].filter & EVFILT_WRITE)) {
+			//} else if (reciver_event[i].filter & EVFILT_READ && !(reciver_event[i].filter & EVFILT_WRITE)) {
+			} else if (reciver_event[i].filter ==  EVFILT_READ) {
+				std::cout << "cccccccc" << std::endl;
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
 //				fcntl(event_fd, F_SETFL, O_NONBLOCK);
@@ -185,15 +189,18 @@ int main(int argc, char *argv[]) {
 				//read(0, buf, 1);
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
-				res = read_request(event_fd, fd_client_map[acceptfd], conf, kqueue);
+				std::cout << "read!!!" << std::endl;
+				res = read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
+                kqueue.disable_event(acceptfd, EVFILT_READ);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
-			} else if (reciver_event[i].filter & EVFILT_WRITE) {
+			} else if (reciver_event[i].filter == EVFILT_WRITE) {
+				std::cout << "dddddddd" << std::endl;
 //				std::cout << "hoge" << std::endl;
 				std::cout << res.buf.c_str() << std::endl;
                 write(acceptfd, res.buf.c_str(), res.header_size);
-//                kqueue.disable_event(acceptfd, EVFILT_WRITE);
-//                sleep(1000);
+                kqueue.disable_event(acceptfd, EVFILT_WRITE);
+                sleep(1000);
 			}
 		}
 	}

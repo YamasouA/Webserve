@@ -274,7 +274,7 @@ void HttpRes::set_content_type() {
 
 void HttpRes::ev_queue_insert() {
 	connection.set_event(fd, EVFILT_WRITE);
-    std::cout << "sed event" << std::endl;
+    std::cout << "send event!!!!!!!!!!!!!!!!!!!" << std::endl;
 }
 
 void HttpRes::post_event() {
@@ -452,6 +452,7 @@ void HttpRes::static_handler() {
 
 	int fd;
 	std::string file_name = join_path();
+	file_name = "index.html";
     std::cout << "file_name: " << file_name << std::endl;
 	fd = open(file_name.c_str(), O_RDONLY);
 	// open エラー
