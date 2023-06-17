@@ -199,6 +199,8 @@ int main(int argc, char *argv[]) {
 //				std::cout << "hoge" << std::endl;
 				std::cout << res.buf.c_str() << std::endl;
                 write(acceptfd, res.buf.c_str(), res.header_size);
+				std::cout << res.out_buf.c_str() << std::endl;
+                write(acceptfd, res.out_buf.c_str(), res.body_size);
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
                 sleep(1000);
 			}

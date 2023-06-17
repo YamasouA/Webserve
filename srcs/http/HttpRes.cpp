@@ -393,7 +393,7 @@ void HttpRes::header_filter() {
 	// content_length_n と content_lengthの関係がよくわからん
 	if (last_modified_time != -1) {
 		//buf += "Last-Modified: " + http_time();
-		buf += "\r\n";
+//		buf += "\r\n";
 	}
 
 	// Locationの処理いろいろやってそう
@@ -490,6 +490,7 @@ void HttpRes::static_handler() {
         //status 404
 		return ;
 	}
+    close(fd);
     //discoard request body here ?
 	status_code = 200;
 	content_length_n = sb.st_size;
@@ -500,6 +501,16 @@ void HttpRes::static_handler() {
     sendHeader();
 
 //    init_res_body();
+
+    std::ifstream ifs(file_name.c_str());
+    if (!ifs) {
+        std::cerr << "ifstream ko" << std::endl;
+    }
+    std::ostringstream oss;
+    oss << ifs.rdbuf();
+    out_buf = oss.str();
+    std::cout << "body: " << out_buf << std::endl;
+    body_size = content_length_n;
 
 //    output_filter();
 }

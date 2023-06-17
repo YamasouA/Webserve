@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "../Kqueue.hpp"
 
 enum Status {
@@ -114,6 +115,8 @@ class HttpRes {
         void runHandlers();
 		std::string buf;
         size_t header_size;
+        std::string out_buf;
+        size_t body_size;
 };
 
 #endif
