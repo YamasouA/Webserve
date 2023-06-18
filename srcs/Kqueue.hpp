@@ -5,11 +5,14 @@
 #include <sys/event.h>
 #include <sys/time.h>
 #include <iostream>
+#include <vector>
 
 class Kqueue {
 	private:
 		// 仮置き10
-		struct kevent register_event[10], reciver_event[10];
+		//struct kevent register_event[10], reciver_event[10];
+		std::vector<struct kevent> changes;
+		struct kevent *reciver_event;
 		int kq;
 		struct timespec time_over;
 	public:
