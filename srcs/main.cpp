@@ -61,7 +61,7 @@ void assign_server(configParser& conf, Client& client) {
 	}
 }
 
-HttpRes read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
+void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
 	char buf[1024];
 
 	memset(buf, 0, sizeof(buf));
@@ -89,8 +89,8 @@ HttpRes read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     assign_server(conf, client);
     HttpRes respons(client, kq);
     respons.runHandlers();
-	//client.set_httpRes(respons);
-    return respons;
+    client.set_httpRes(respons);
+//    return respons;
 //    respons.createResponse();
 
 }
@@ -134,7 +134,17 @@ int main(int argc, char *argv[]) {
 	time_over.tv_sec = 10;
 	time_over.tv_nsec = 0;
 
-    HttpRes res;
+	/*
+	struct kevent register_event[4], reciver_event[4];
+	int kq = kqueue();
+	EV_SET(register_event, socket->get_listenfd(), EVFILT_READ, EV_ADD | EV_ENABLE , 0, 0, NULL);
+	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
+		perror("kevent");
+		std::exit(1);
+	}
+	*/
+
+//    HttpRes res;
 	while (1) {
 		std::cout << "loop top size: " << fd_config_map.size() << std::endl;
 //		Logger::logging("hello");
@@ -192,9 +202,7 @@ int main(int argc, char *argv[]) {
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
 				std::cout << "read!!!" << std::endl;
-				std::cout << "accept_fd: " << acceptfd << std::endl;
-				res = read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
-	
+				read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
                 kqueue.disable_event(acceptfd, EVFILT_READ);
 				//kqueue.set_event(acceptfd, EVFILT_WRITE);
 //				std::cout << buf << std::endl;
@@ -202,9 +210,10 @@ int main(int argc, char *argv[]) {
 			} else if (reciver_event[i].filter == EVFILT_WRITE) {
 				std::cout << "WRITE!!!!" << std::endl;
 //				std::cout << "hoge" << std::endl;
-				std::cout << res.buf.c_str() << std::endl;
+                HttpRes res = fd_client_map[acceptfd].get_httpRes();
+				std::cout << "header: " << res.buf.c_str() << std::endl;
                 write(acceptfd, res.buf.c_str(), res.header_size);
-				std::cout << res.out_buf.c_str() << std::endl;
+				std::cout << "body: " << res.out_buf.c_str() << std::endl;
                 write(acceptfd, res.out_buf.c_str(), res.body_size);
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
 			}
