@@ -16,7 +16,7 @@
 #include <utility>
 
 //std::map<int, virtualServer> initialize_fd(configParser conf, Kqueue kqueue) {
-void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer>& fd_config_map) {
+void initialize_fd(configParser conf, Kqueue &kqueue, std::map<int, virtualServer>& fd_config_map) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
 	//std::map<int, virtualServer> fd_config_map;
 	for (std::vector<virtualServer>::iterator it = server_confs.begin(); it != server_confs.end(); it++) {
@@ -28,8 +28,11 @@ void initialize_fd(configParser conf, Kqueue kqueue, std::map<int, virtualServer
 		//Socket *socket = new Socket(8000);
 		socket->set_socket();
 		kqueue.set_event(socket->get_listenfd(), EVFILT_READ);
-		fd_config_map[socket->get_listenfd()] = *it;
+		//fd_config_map[socket->get_listenfd()] = *it;
+		fd_config_map.insert(std::make_pair(socket->get_listenfd(), *it));
+		std::cout << "size: " << fd_config_map.count(socket->get_listenfd()) << std::endl;
 	}
+	std::cout << "size: " << fd_config_map.size() << std::endl;
 	//return fd_config_map;
 }
 
@@ -63,9 +66,11 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
 
 	memset(buf, 0, sizeof(buf));
 	fcntl(fd, F_SETFL, O_NONBLOCK);
+	std::cout << fd << std::endl;
 	if (recv(fd, buf, sizeof(buf), 0) < 0) {
 //        return NULL;
     }
+	std::cout << "buf\n" << buf << std::endl;
 	/*
 	if (buf ==) {
 		std::cout << "ERROR" << std::endl;
@@ -78,6 +83,7 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     //httpParser httpparser(buf);
     httpReq httpreq(buf);
     httpreq.parseRequest();
+	std::cout << "Here" << std::endl;
     client.set_httpReq(httpreq);
 //	client.set_httpReq(httpparser.get);
     assign_server(conf, client);
@@ -109,8 +115,10 @@ int main(int argc, char *argv[]) {
 		conf.parseConf();
 		//std::cout << conf.get_serve_confs()[0] << std::endl;
 		Kqueue kqueue;
+	initialize_fd(conf, kqueue, fd_config_map);
 		//fd_config_map = initialize_fd(conf, kqueue);
-		initialize_fd(conf, kqueue, fd_config_map);
+		//initialize_fd(conf, kqueue, fd_config_map);
+		//std::cout << "before loop size: " << fd_config_map.size() << std::endl;
 	//} catch (const std::exception &e) {
 
 	//}
@@ -126,7 +134,6 @@ int main(int argc, char *argv[]) {
 	time_over.tv_sec = 10;
 	time_over.tv_nsec = 0;
 
-
 	/*
 	struct kevent register_event[4], reciver_event[4];
 	int kq = kqueue();
@@ -139,6 +146,7 @@ int main(int argc, char *argv[]) {
 
 //    HttpRes res;
 	while (1) {
+		std::cout << "loop top size: " << fd_config_map.size() << std::endl;
 //		Logger::logging("hello");
 		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
 		int events_num = kqueue.get_events_num();
@@ -155,6 +163,8 @@ int main(int argc, char *argv[]) {
 			//int event_fd = reciver_event[i].ident;
 			struct kevent* reciver_event = kqueue.get_reciver_event();
 			int event_fd = reciver_event[i].ident;
+			std::cout << "event_fd: " << event_fd << std::endl;
+			std::cout << "size: " << fd_config_map.count(event_fd) << std::endl;
 			if (reciver_event[i].flags & EV_EOF) {
 				std::cout << "Client " << event_fd << " has disconnected" << std::endl;
 				close(event_fd);
@@ -165,6 +175,7 @@ int main(int argc, char *argv[]) {
 				//acceptfd = accept(socket->get_listenfd(), NULL, NULL);
 				Client client;
 				acceptfd = accept(event_fd, NULL, NULL);
+				std::cout << "acceptfd:" << acceptfd << std::endl;
 				if (acceptfd == -1) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
@@ -182,7 +193,7 @@ int main(int argc, char *argv[]) {
 				*/
 			//} else if (reciver_event[i].filter & EVFILT_READ && !(reciver_event[i].filter & EVFILT_WRITE)) {
 			} else if (reciver_event[i].filter ==  EVFILT_READ) {
-				std::cout << "cccccccc" << std::endl;
+				std::cout << "READ!!!" << std::endl;
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
 //				fcntl(event_fd, F_SETFL, O_NONBLOCK);
@@ -193,10 +204,11 @@ int main(int argc, char *argv[]) {
 				std::cout << "read!!!" << std::endl;
 				read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
                 kqueue.disable_event(acceptfd, EVFILT_READ);
+				//kqueue.set_event(acceptfd, EVFILT_WRITE);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
 			} else if (reciver_event[i].filter == EVFILT_WRITE) {
-				std::cout << "dddddddd" << std::endl;
+				std::cout << "WRITE!!!!" << std::endl;
 //				std::cout << "hoge" << std::endl;
                 HttpRes res = fd_client_map[acceptfd].get_httpRes();
 				std::cout << "header: " << res.buf.c_str() << std::endl;
@@ -204,7 +216,6 @@ int main(int argc, char *argv[]) {
 				std::cout << "body: " << res.out_buf.c_str() << std::endl;
                 write(acceptfd, res.out_buf.c_str(), res.body_size);
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
-                sleep(1000);
 			}
 		}
 	}

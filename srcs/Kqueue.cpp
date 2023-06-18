@@ -13,6 +13,8 @@ Kqueue::Kqueue() {
 
 Kqueue::~Kqueue() {}
 
+
+
 //void Kqueue::set_event(int fd) {
 //	EV_SET(register_event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 //	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
@@ -24,38 +26,32 @@ Kqueue::~Kqueue() {}
 
 void Kqueue::set_event(int fd, short ev_filter) {
 	if (ev_filter == EVFILT_READ) {
-		std::cout << "hoge1" << std::endl;
-		EV_SET(&register_event[0], fd, ev_filter, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		if (kevent(kq, &register_event[0], 1, NULL, 0, NULL) == -1) {
-			perror("kevent error");
-		}
+		std::cout << "READ register" << std::endl;
 	}
 	if (ev_filter == EVFILT_WRITE) {
-		std::cout << "hoge2" << std::endl;
-		EV_SET(&register_event[1], fd, ev_filter, EV_ADD | EV_ENABLE, 0, 0, NULL);
-		if (kevent(kq, &register_event[1], 1, NULL, 0, NULL) == -1) {
-			perror("kevent error");
-		}
+		std::cout << "WRITE register" << std::endl;
 	}
+	struct kevent register_event;
+	EV_SET(&register_event, fd, ev_filter, EV_ADD | EV_ENABLE, 0, 0, NULL);
+	changes.push_back(register_event);
+	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
+		perror("kevent error");
+    }
+	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
 
 void Kqueue::disable_event(int fd, short ev_filter) {
-	//EV_SET(&register_event[1], fd, ev_filter, EV_DISABLE, 0, 0, NULL);
-
 	if (ev_filter == EVFILT_READ) {
-		std::cout << "hoge3" << std::endl;
-		EV_SET(&register_event[2], fd, ev_filter, EV_DELETE, 0, 0, NULL);
-		if (kevent(kq, &register_event[2], 1, NULL, 0, NULL) == -1) {
-			perror("kevent error");
-    	}
+		std::cout << "READ delete" << std::endl;
 	}
 	if (ev_filter == EVFILT_WRITE) {
-		std::cout << "hoge2" << std::endl;
-		EV_SET(&register_event[3], fd, ev_filter, EV_DELETE, 0, 0, NULL);
-		if (kevent(kq, &register_event[3], 1, NULL, 0, NULL) == -1) {
-			perror("kevent error");
-    	}
+		std::cout << "WRITE delete" << std::endl;
 	}
+	struct kevent register_event;
+	EV_SET(&register_event, fd, ev_filter, EV_DELETE, 0, 0, NULL);
+	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
+		perror("kevent error");
+    }
 }
 
 int Kqueue::get_kq() {
