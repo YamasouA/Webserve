@@ -58,7 +58,7 @@ void assign_server(configParser& conf, Client& client) {
 	}
 }
 
-HttpRes read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
+void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
 	char buf[1024];
 
 	memset(buf, 0, sizeof(buf));
@@ -83,7 +83,8 @@ HttpRes read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     assign_server(conf, client);
     HttpRes respons(client, kq);
     respons.runHandlers();
-    return respons;
+    client.set_httpRes(respons);
+//    return respons;
 //    respons.createResponse();
 
 }
@@ -136,7 +137,7 @@ int main(int argc, char *argv[]) {
 	}
 	*/
 
-    HttpRes res;
+//    HttpRes res;
 	while (1) {
 //		Logger::logging("hello");
 		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
@@ -190,16 +191,17 @@ int main(int argc, char *argv[]) {
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
 				std::cout << "read!!!" << std::endl;
-				res = read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
+				read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
                 kqueue.disable_event(acceptfd, EVFILT_READ);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
 			} else if (reciver_event[i].filter == EVFILT_WRITE) {
 				std::cout << "dddddddd" << std::endl;
 //				std::cout << "hoge" << std::endl;
-				std::cout << res.buf.c_str() << std::endl;
+                HttpRes res = fd_client_map[acceptfd].get_httpRes();
+				std::cout << "header: " << res.buf.c_str() << std::endl;
                 write(acceptfd, res.buf.c_str(), res.header_size);
-				std::cout << res.out_buf.c_str() << std::endl;
+				std::cout << "body: " << res.out_buf.c_str() << std::endl;
                 write(acceptfd, res.out_buf.c_str(), res.body_size);
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
                 sleep(1000);

@@ -10,7 +10,7 @@ Client::Client()
 
 Client::Client(const Client& source)
 :httpreq(source.get_httpReq()),
-    httpres(source.get_httpResp()),
+    httpres(source.get_httpRes()),
     vServer(source.get_vServer()),
     fd(source.get_fd())
 {
@@ -22,7 +22,7 @@ Client& Client::operator=(const Client& rhs)
         return *this;
     }
     httpreq = rhs.get_httpReq();
-    httpres = rhs.get_httpResp();
+    httpres = rhs.get_httpRes();
     vServer = rhs.get_vServer();
     fd = rhs.get_fd();
     return *this;
@@ -42,7 +42,7 @@ void Client::set_fd(int fd) {
 	this->fd = fd;
 }
 
-void Client::set_httpRes(HttpRes* httpres){
+void Client::set_httpRes(HttpRes httpres){
 	this->httpres = httpres;
 }
 void Client::set_vServer(const virtualServer& vServer){
@@ -64,12 +64,12 @@ httpReq Client::get_httpReq() const
 }
 
 HttpRes Client::get_httpRes() const {
-	return *httpres;
+	return httpres;
 }
 
-HttpRes* Client::get_httpResp() const {
-    return httpres;
-}
+//HttpRes* Client::get_httpResp() const {
+//    return httpres;
+//}
 
 virtualServer Client::get_vServer() const{
 	return vServer;

@@ -31,6 +31,8 @@ HttpRes::HttpRes(const Client& source, Kqueue kq)
 HttpRes::HttpRes(const HttpRes& src) {
     this->buf = src.buf;
     this->header_size = src.header_size;
+    this->out_buf = src.out_buf;
+    this->body_size = src.body_size;
 }
 
 HttpRes::~HttpRes() {

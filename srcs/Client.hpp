@@ -13,7 +13,7 @@ class Client {
 	private:
 		httpReq httpreq;
         //httpParser parsed_req;
-		HttpRes *httpres;
+		HttpRes httpres;
 
 		virtualServer vServer;
 		int fd;
@@ -29,7 +29,7 @@ class Client {
 		void set_httpReq(const HttpRes& source);
         //void set_parsedReq(httpParser parsed_req);
         void set_httpReq(httpReq httpreq);
-		void set_httpRes(HttpRes* source);
+		void set_httpRes(HttpRes source);
 		void set_vServer(const virtualServer& source);
 		void set_uritolocation(const std::map<std::string, Location> map);
 		int get_fd() const;
