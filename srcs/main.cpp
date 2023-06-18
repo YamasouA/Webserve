@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
 				res = read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
 	
                 kqueue.disable_event(acceptfd, EVFILT_READ);
-				kqueue.set_event(acceptfd, EVFILT_WRITE);
+				//kqueue.set_event(acceptfd, EVFILT_WRITE);
 //				std::cout << buf << std::endl;
 //				std::cout << "ok" << std::endl;
 			} else if (reciver_event[i].filter == EVFILT_WRITE) {
