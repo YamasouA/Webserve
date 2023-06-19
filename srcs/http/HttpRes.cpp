@@ -444,34 +444,33 @@ void HttpRes::static_handler() {
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
 		// なんてエラー返そう？
-		return ;
+		return DECLINED;
 	}
 
 	if (uri[uri.length() - 1] == '/') {
         //move next handler
 		// なんて返す？ (declined)
-		return ;
+		return DECLINED;
 	}
 
 	//rc = ngx_http_discard_body(r);
 
 	//map_uri_to_path();
 
-    //disable symlink ?
-
 	int fd;
 	std::string file_name = join_path();
 	file_name = "index.html";
     std::cout << "file_name: " << file_name << std::endl;
 	fd = open(file_name.c_str(), O_RDONLY);
-	// open エラー
 	if (fd == -1) {
         std::cerr << "open error" << std::endl;
-		if ( errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
-		} else if (errno == EACCES) {
-		} else {
+		if (errorno == ENOENT || errorno == ENOTDIR || errorno == ENAMETOOLONG) {
+			return NOT_FOUND;
+		} else if (EACCES){
+			return FORBIDDEN;
 		}
-		return ;
+		// 次のハンドラーに処理を託す
+		return INTERNAL_SERVER_ERROR;
 	}
 
 	struct stat sb;
@@ -481,23 +480,19 @@ void HttpRes::static_handler() {
 	}
 	// ディレクトリだった時
 	if (S_ISDIR(sb.st_mode)) {
-//		Location config = target.uri2location(uri);
-		/*
-		if (config.getAlias() == "" && config.get_root() == "") {
-		}*/
-		location = uri;
+		return DECLINED;
 	}
     if (!S_ISREG(sb.st_mode) && method == "POST") {
         //status 405
         std::cerr << "NOT ALLOW METHOD" << std::endl;
-        return ;
+        return NOT_ALLOWED;
     }
 	// 通常ファイルではない
 	if (!S_ISREG(sb.st_mode)) {
 		// なんのエラー?
         std::cerr << "NOT FOUND(404)" << std::endl;
         //status 404
-		return ;
+		return NOT_FOUND;
 	}
     close(fd);
     //discoard request body here ?
@@ -525,52 +520,5 @@ void HttpRes::static_handler() {
 }
 
 void HttpRes::runHandlers() {
-//    std::cout << "req_uri" << httpreq.getUri() << std::endl;
-//    std::vector<Location> locs = vServer.get_locations();
-//    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
-//        std::cout << "loc: " << *it << std::endl;
-//    }
-//    std::cout << "locations" << vServer.get_locations() << std::endl;
-//	target = longestMatchLocation(httpreq.getUri(), vServer.get_locations());
-//    std::cout << "target: " << target << std::endl;
     static_handler();
 }
-
-//void HttpRes::createResponseHeader(struct stat sb) {
-//	createControlData();
-//    //createDate();
-//    createDate(time(0), "Date");
-//	createDate(sb.st_mtime, "Last-Modified");
-//	createContentLength();
-////    createServerName();
-//	std::cout << header<< std::endl;
-//}
-
-//void HttpRes::createResponse() {
-//	std::cout << httpreq << std::endl;
-//	// 一つもマッチしない場合は？
-//	target = longestMatchLocation(httpreq.getUri(), vServer.get_locations());
-//	//std::string request_path = get_path(httpreq.getUri());
-//	//target = longestMatchLocation(request_path, vServer.get_locations());
-//	std::cout << "target: " << target << std::endl;
-//	std::string method = httpreq.getMethod();
-//	struct stat sb;
-//	std::string file_name = join_path();
-//	if (stat(file_name.c_str(), &sb) == -1) {
-//		std::cout << "Error(stat)" << std::endl;
-//	}
-//	std::cout << "time: " << ctime(&sb.st_mtime) << std::endl;
-//	if (S_ISREG(sb.st_mode)) {
-//		if (isAllowMethod(method)) {
-//			if (method == "GET") {
-//				read_file();
-//			} else if (method == "POST") {
-//				write_file();
-//			} else if (method == "DELETE") {
-//				delete_file();
-//			}
-//			createResponseHeader(sb);
-//		}
-//	} else if (S_ISDIR(sb.st_mode)) {
-//	}
-//}
