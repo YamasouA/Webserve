@@ -344,19 +344,21 @@ void HttpRes::header_filter() {
 	// status_lineの作成
 	if (status_line == "") {
 
-		//if (status_code >= INTERNAL_SERVER_ERROR) {
-		//} else if (status_code >= BAD_REQUEST) {
-        //    //const std::vector<std::string> status_success[30] = {"", "400 Bad Request",};
-		//}
-        //else if (status_code >= MOVED_PERMANENTLY) {
-        //    //const std::vector<std::string> status_success[9] = {"", "301 Moved Permanently", "302 Moved Temporarily", "303 See Other", "304 Not Modied", "", "", "307 Temporary Redirect", "308 Permanent Redirect"};
-        //    if (status_code == NOT_MODIFIED) {
-        //        header_only = 1;
-        //    }
-        //    status_line = "HTTP/1.1 " + status_redirect[status_code - MOVED_PERMANENTLY];
-		//} else if (status_code >= OK) {
-//            const char status_success[8][20] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
-            //const std::vector<std::string> status_success[7] = {"200 OK", "201 Created", "202 Accepted", "", "204 No Content", "", "206 Partial Content"};
+		if (status_code >= INTERNAL_SERVER_ERROR) {
+            // 5XX
+            status_line = "HTTP/1.1 " + status_msg[status_code];
+		} else if (status_code >= BAD_REQUEST) {
+            // 4XX
+            status_line = "HTTP/1.1 " + status_msg[status_code];
+		}
+        else if (status_code >= MOVED_PERMANENTLY) {
+            // 3XX
+            if (status_code == NOT_MODIFIED) {
+                header_only = 1;
+            }
+            status_line = "HTTP/1.1 " + status_redirect[status_code];
+		} else if (status_code >= OK) {
+            // 2XX
             if (status_code == NOT_MODIFIED) {
                 header_only = 1;
             }
@@ -367,11 +369,11 @@ void HttpRes::header_filter() {
             }
             status_line = "HTTP/1.1 " + status_msg[status_code];
         } else {
+            //
 			status_line = "";
 		}
 
 	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
-	//Location loc = httpreq.get_uri2location(uri);
 
 	buf += status_line;
 	buf += "\r\n";
@@ -403,10 +405,15 @@ void HttpRes::header_filter() {
 	// chunkedは無視
 
 	// keep-alive系は問答無用でcloseする？
-	buf += "Connection: close";
+    std::map<std::string, std::string> header_fileds = req.getHeaderFields();
+    if (header_fields["connection"] == "keep-alive") {
+        buf += "Connection: keep-alive";
+    } else {
+	    buf += "Connection: close";
+    }
 	buf += "\r\n";
 
-	// 残りのヘッダー
+	// 残りのヘッダー  もしかしたら必要ないかも？ 現状Connection filedなどがダブってしまっているetc...
 	std::map<std::string, std::string> headers = httpreq.getHeaderFields();
 	std::map<std::string, std::string>::iterator it= headers.begin();
 	for (; it != headers.end(); it++) {
@@ -529,41 +536,41 @@ void HttpRes::runHandlers() {
     static_handler();
 }
 
-void HttpRes::createResponseHeader(struct stat sb) {
-	createControlData();
-    //createDate();
-    createDate(time(0), "Date");
-	createDate(sb.st_mtime, "Last-Modified");
-	createContentLength();
-//    createServerName();
-	std::cout << header<< std::endl;
-}
+//void HttpRes::createResponseHeader(struct stat sb) {
+//	createControlData();
+//    //createDate();
+//    createDate(time(0), "Date");
+//	createDate(sb.st_mtime, "Last-Modified");
+//	createContentLength();
+////    createServerName();
+//	std::cout << header<< std::endl;
+//}
 
-void HttpRes::createResponse() {
-	std::cout << httpreq << std::endl;
-	// 一つもマッチしない場合は？
-	target = longestMatchLocation(httpreq.getUri(), vServer.get_locations());
-	//std::string request_path = get_path(httpreq.getUri());
-	//target = longestMatchLocation(request_path, vServer.get_locations());
-	std::cout << "target: " << target << std::endl;
-	std::string method = httpreq.getMethod();
-	struct stat sb;
-	std::string file_name = join_path();
-	if (stat(file_name.c_str(), &sb) == -1) {
-		std::cout << "Error(stat)" << std::endl;
-	}
-	std::cout << "time: " << ctime(&sb.st_mtime) << std::endl;
-	if (S_ISREG(sb.st_mode)) {
-		if (isAllowMethod(method)) {
-			if (method == "GET") {
-				read_file();
-			} else if (method == "POST") {
-				write_file();
-			} else if (method == "DELETE") {
-				delete_file();
-			}
-			createResponseHeader(sb);
-		}
-	} else if (S_ISDIR(sb.st_mode)) {
-	}
-}
+//void HttpRes::createResponse() {
+//	std::cout << httpreq << std::endl;
+//	// 一つもマッチしない場合は？
+//	target = longestMatchLocation(httpreq.getUri(), vServer.get_locations());
+//	//std::string request_path = get_path(httpreq.getUri());
+//	//target = longestMatchLocation(request_path, vServer.get_locations());
+//	std::cout << "target: " << target << std::endl;
+//	std::string method = httpreq.getMethod();
+//	struct stat sb;
+//	std::string file_name = join_path();
+//	if (stat(file_name.c_str(), &sb) == -1) {
+//		std::cout << "Error(stat)" << std::endl;
+//	}
+//	std::cout << "time: " << ctime(&sb.st_mtime) << std::endl;
+//	if (S_ISREG(sb.st_mode)) {
+//		if (isAllowMethod(method)) {
+//			if (method == "GET") {
+//				read_file();
+//			} else if (method == "POST") {
+//				write_file();
+//			} else if (method == "DELETE") {
+//				delete_file();
+//			}
+//			createResponseHeader(sb);
+//		}
+//	} else if (S_ISDIR(sb.st_mode)) {
+//	}
+//}

@@ -1,6 +1,8 @@
 #include "Kqueue.hpp"
 
-Kqueue::Kqueue() {
+Kqueue::Kqueue()
+:reciver_event(new struct kevent)
+{
 	kq = kqueue();
 	if (kq < -1) {
 		std::cerr << "kqueue Error" << std::endl;
@@ -11,7 +13,9 @@ Kqueue::Kqueue() {
 	time_over.tv_nsec = 0;
 }
 
-Kqueue::~Kqueue() {}
+Kqueue::~Kqueue() {
+    delete reciver_event;
+}
 
 
 

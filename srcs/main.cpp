@@ -150,6 +150,7 @@ int main(int argc, char *argv[]) {
 //		Logger::logging("hello");
 		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
 		int events_num = kqueue.get_events_num();
+        std::cout << "errno: " << errno << std::endl;
 		std::cout << "event_num: " << events_num << std::endl;
 		if (events_num == -1) {
 			perror("kevent");
