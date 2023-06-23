@@ -13,6 +13,24 @@ Kqueue::Kqueue()
 	time_over.tv_nsec = 0;
 }
 
+Kqueue::Kqueue(const Kqueue& src) {
+    this->changes = src.changes;
+    this->reciver_event = src.reciver_event;
+    this->kq = src.kq;
+    this->time_over = src.time_over;
+}
+
+Kqueue& Kqueue::operator=(const Kqueue& rhs) {
+    if (this == &rhs) {
+        return *this;
+    }
+    this->changes = rhs.changes;
+    this->reciver_event = rhs.reciver_event;
+    this->kq = rhs.kq;
+    this->time_over = rhs.time_over;
+    return *this;
+}
+
 Kqueue::~Kqueue() {
     delete reciver_event;
 }

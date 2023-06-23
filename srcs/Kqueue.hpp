@@ -17,6 +17,8 @@ class Kqueue {
 		struct timespec time_over;
 	public:
 		Kqueue();
+        Kqueue(const Kqueue& src);
+        Kqueue& operator=(const Kqueue& rhs);
 		~Kqueue();
 		struct kevent* get_reciver_event();
 		int get_events_num();

@@ -16,8 +16,13 @@
 #include <unistd.h>
 #include "../Kqueue.hpp"
 
+enum server_state {
+    OK = 0,
+    DECLINED = -1 //tmp value
+};
+
 enum Status {
-	OK = 200,
+	HTTP_OK = 200,
 	CREATED = 201,
 	NO_CONTENT =204,
 	PARTIAL_CONTENT = 206,
@@ -42,11 +47,11 @@ enum Status {
 	RANGE_NOT_SATISFIABLE = 416,
 
 	INTERNAL_SERVER_ERROR = 500,
-	NGX_HTTP_NOT_IMPLEMENTED = 501,
-	NGX_HTTP_BAD_GATEWAY = 502,
-	NGX_HTTP_SERVICE_UNAVAILABLE = 503,
-	NGX_HTTP_GATEWAY_TIME_OUT = 504,
-	NGX_HTTP_INSUFFICIENT_STORAGE = 507
+	HTTP_NOT_IMPLEMENTED = 501,
+	HTTP_BAD_GATEWAY = 502,
+	HTTP_SERVICE_UNAVAILABLE = 503,
+	HTTP_GATEWAY_TIME_OUT = 504,
+	HTTP_INSUFFICIENT_STORAGE = 507
 };
 
 class Client;
@@ -98,7 +103,7 @@ class HttpRes {
 		void post_event();
 		void ev_queue_insert();
 		void header_filter();
-        void static_handler();
+        int static_handler();
         void sendHeader();
         Location get_uri2location(std::string uri) const;
         //void createDate();

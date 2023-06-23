@@ -336,7 +336,7 @@ void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
 	std::map<int, std::string> status_msg = create_status_msg();
 	if (last_modified_time != -1) {
-		if (status_code != OK) {
+		if (status_code != HTTP_OK) {
 			last_modified_time = -1;
 		}
 	}
@@ -357,7 +357,7 @@ void HttpRes::header_filter() {
                 header_only = 1;
             }
             status_line = "HTTP/1.1 " + status_msg[status_code];
-		} else if (status_code >= OK) {
+		} else if (status_code >= HTTP_OK) {
             // 2XX
             if (status_code == NOT_MODIFIED) {
                 header_only = 1;
@@ -406,7 +406,7 @@ void HttpRes::header_filter() {
 	// chunkedは無視
 
 	// keep-alive系は問答無用でcloseする？
-    std::map<std::string, std::string> header_fileds = req.getHeaderFields();
+    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
     if (header_fields["connection"] == "keep-alive") {
         buf += "Connection: keep-alive";
     } else {
@@ -437,7 +437,7 @@ void HttpRes::sendHeader() {
     return header_filter();
 }
 
-void HttpRes::static_handler() {
+int HttpRes::static_handler() {
 	std::string uri = httpreq.getUri();
 	target = get_uri2location(uri);
     std::cout << "macth loc: " << target << std::endl;
@@ -458,7 +458,7 @@ void HttpRes::static_handler() {
 
 	//map_uri_to_path();
 
-	int fd;
+	int fd = -1;
 	std::string file_name = join_path();
 	file_name = "index.html";
     std::cout << "file_name: " << file_name << std::endl;
@@ -561,7 +561,7 @@ void HttpRes::static_handler() {
     out_buf = oss.str();
     std::cout << "body: " << out_buf << std::endl;
     body_size = content_length_n;
-
+    return OK;
 //    output_filter();
 }
 
