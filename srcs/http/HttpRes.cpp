@@ -461,44 +461,70 @@ void HttpRes::static_handler() {
 	std::string file_name = join_path();
 	file_name = "index.html";
     std::cout << "file_name: " << file_name << std::endl;
-	fd = open(file_name.c_str(), O_RDONLY);
-	if (fd == -1) {
-        std::cerr << "open error" << std::endl;
-		if (errorno == ENOENT || errorno == ENOTDIR || errorno == ENAMETOOLONG) {
-			return NOT_FOUND;
-		} else if (EACCES){
-			return FORBIDDEN;
-		}
-		// 次のハンドラーに処理を託す
-		return INTERNAL_SERVER_ERROR;
-	}
+    struct stat sb;
+    status_code = 200;
+    if (method == "GET") {
+        fd = open(file_name.c_str(), O_RDONLY);
+        if (fd == -1) {
+            std::cerr << "open error" << std::endl;
+            if (errorno == ENOENT || errorno == ENOTDIR || errorno == ENAMETOOLONG) {
+                return NOT_FOUND;
+            } else if (EACCES){
+                return FORBIDDEN;
+            }
+            // 次のハンドラーに処理を託す
+            return INTERNAL_SERVER_ERROR;
+        }
+        // stat がエラーだったとき
+        if (stat(file_name.c_str(), &sb) == -1) {
+            std::cout << "Error(stat)" << std::endl;
+        }
+        // ディレクトリだった時
+        if (S_ISDIR(sb.st_mode)) {
+            return DECLINED;
+        }
+    //    if (!S_ISREG(sb.st_mode) && method == "POST") {
+    //        //status 405
+    //        std::cerr << "NOT ALLOW METHOD" << std::endl;
+    //        return NOT_ALLOWED;
+    //    }
+        // 通常ファイルではない
+        if (!S_ISREG(sb.st_mode)) {
+            // なんのエラー?
+            std::cerr << "NOT FOUND(404)" << std::endl;
+            //status 404
+            return NOT_FOUND;
+        }
+	    content_length_n = sb.st_size;
+	    last_modified_time = sb.st_mtime;
+    } else if (method == "POST") {
+        if (stat(file_name.c_str(), &sb) == -1) {
+            std::cout << "Error(stat)" << std::endl;
+        }
+        // ディレクトリだった時
+        if (S_ISDIR(sb.st_mode)) {
+            return DECLINED;
+        }
+    //    if (!S_ISREG(sb.st_mode) && method == "POST") {
+    //        //status 405
+    //        std::cerr << "NOT ALLOW METHOD" << std::endl;
+    //        return NOT_ALLOWED;
+    //    }
+        // 通常ファイルではない
+        content_length_n = sb.st_size;
+	    last_modified_time = sb.st_mtime;
+        if (!S_ISREG(sb.st_mode)) {
+            fd = open(file_name.cstr(), O_CREATE | O_WRONLY); //open necessary???
+            if (fd == -1) {
+                std::cerr << "open error" << std::endl;
+                return INTERNAL_SERVER_ERROR;
+            }
+            status_code = 201;
+        }
 
-	struct stat sb;
-	// stat がエラーだったとき
-	if (stat(file_name.c_str(), &sb) == -1) {
-		std::cout << "Error(stat)" << std::endl;
-	}
-	// ディレクトリだった時
-	if (S_ISDIR(sb.st_mode)) {
-		return DECLINED;
-	}
-    if (!S_ISREG(sb.st_mode) && method == "POST") {
-        //status 405
-        std::cerr << "NOT ALLOW METHOD" << std::endl;
-        return NOT_ALLOWED;
     }
-	// 通常ファイルではない
-	if (!S_ISREG(sb.st_mode)) {
-		// なんのエラー?
-        std::cerr << "NOT FOUND(404)" << std::endl;
-        //status 404
-		return NOT_FOUND;
-	}
     close(fd);
     //discoard request body here ?
-	status_code = 200;
-	content_length_n = sb.st_size;
-	last_modified_time = sb.st_mtime;
 	set_content_type();
     //set_etag(); //necessary?
     std::cout << "just before sendHeader" << std::endl;
