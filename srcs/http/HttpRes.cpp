@@ -343,20 +343,23 @@ void HttpRes::header_filter() {
 
 	// status_lineの作成
 	if (status_line == "") {
-
+        std::stringstream ss;
+        ss << status_code;
+        std::string status_code_str = ss.str();
+        ss >> status_code_str;
 		if (status_code >= INTERNAL_SERVER_ERROR) {
             // 5XX
-            status_line = "HTTP/1.1 " + status_msg[status_code];
+            status_line = "HTTP/1.1 " + status_code_str + ' ' + status_msg[status_code];
 		} else if (status_code >= BAD_REQUEST) {
             // 4XX
-            status_line = "HTTP/1.1 " + status_msg[status_code];
+            status_line = "HTTP/1.1 " + status_code_str + ' ' +  status_msg[status_code];
 		}
         else if (status_code >= MOVED_PERMANENTLY) {
             // 3XX
             if (status_code == NOT_MODIFIED) {
                 header_only = 1;
             }
-            status_line = "HTTP/1.1 " + status_msg[status_code];
+            status_line = "HTTP/1.1 " + status_code_str + ' ' +  status_msg[status_code];
 		} else if (status_code >= HTTP_OK) {
             // 2XX
             if (status_code == NOT_MODIFIED) {
@@ -367,7 +370,7 @@ void HttpRes::header_filter() {
                 content_type = "";
                 last_modified = NULL;
             }
-            status_line = "HTTP/1.1 " + status_msg[status_code];
+            status_line = "HTTP/1.1 " + status_code_str + ' ' +  status_msg[status_code];
         } else {
             //
 			status_line = "";
