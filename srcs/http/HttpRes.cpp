@@ -356,7 +356,7 @@ void HttpRes::header_filter() {
             if (status_code == NOT_MODIFIED) {
                 header_only = 1;
             }
-            status_line = "HTTP/1.1 " + status_redirect[status_code];
+            status_line = "HTTP/1.1 " + status_msg[status_code];
 		} else if (status_code >= OK) {
             // 2XX
             if (status_code == NOT_MODIFIED) {
@@ -372,6 +372,7 @@ void HttpRes::header_filter() {
             //
 			status_line = "";
 		}
+	}
 
 	// めっちゃlenを操作してる箇所はいらなさそうだから飛ばす
 
@@ -467,7 +468,7 @@ void HttpRes::static_handler() {
         fd = open(file_name.c_str(), O_RDONLY);
         if (fd == -1) {
             std::cerr << "open error" << std::endl;
-            if (errorno == ENOENT || errorno == ENOTDIR || errorno == ENAMETOOLONG) {
+            if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
                 return NOT_FOUND;
             } else if (EACCES){
                 return FORBIDDEN;
@@ -499,7 +500,13 @@ void HttpRes::static_handler() {
 	    last_modified_time = sb.st_mtime;
     } else if (method == "POST") {
         if (stat(file_name.c_str(), &sb) == -1) {
-            std::cout << "Error(stat)" << std::endl;
+			// ファイルが存在しない
+			if (errno != ENOENT) {
+                std::cerr << "stat error" << std::endl;
+                return INTERNAL_SERVER_ERROR;
+				// throw error
+			}
+			status_code = 201;
         }
         // ディレクトリだった時
         if (S_ISDIR(sb.st_mode)) {
@@ -513,15 +520,28 @@ void HttpRes::static_handler() {
         // 通常ファイルではない
         content_length_n = sb.st_size;
 	    last_modified_time = sb.st_mtime;
-        if (!S_ISREG(sb.st_mode)) {
+        if (!S_ISREG(sb.st_mode) && status_code != 201) {
+			std::cerr << "stat error" << std::endl;
+        	return INTERNAL_SERVER_ERROR;
+			/*
             fd = open(file_name.cstr(), O_CREATE | O_WRONLY); //open necessary???
             if (fd == -1) {
                 std::cerr << "open error" << std::endl;
                 return INTERNAL_SERVER_ERROR;
             }
             status_code = 201;
-        }
+			*/
 
+        } else {
+			// 通常ファイル
+			fd = open(file_name.c_str(), O_CREAT | O_WRONLY);
+			if (fd == -1) {
+                std::cerr << "open error" << std::endl;
+                return INTERNAL_SERVER_ERROR;
+			}
+			std::string body = httpreq.getContentBody().c_str();
+			write(fd, body.c_str(), body.size());
+		}
     }
     close(fd);
     //discoard request body here ?
