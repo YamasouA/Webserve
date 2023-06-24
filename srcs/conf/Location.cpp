@@ -1,6 +1,6 @@
 #include "Location.hpp"
 
-Location::Location() {
+Location::Location(): depth(-1) {
 }
 Location::Location(const Location& src) {
 	this->uri = src.uri;
@@ -12,6 +12,7 @@ Location::Location(const Location& src) {
 	this->autoindex = src.autoindex;
 	this->max_body_size = src.max_body_size;
 	this->locations = src.locations;
+	this->depth = src.depth;
 }
 
 Location& Location::operator=(const Location& src)
@@ -29,6 +30,7 @@ Location& Location::operator=(const Location& src)
 	this->autoindex = src.autoindex;
 	this->max_body_size = src.max_body_size;
 	this->locations = src.locations;
+	this->depth = src.depth;
 	return *this;
 }
 
@@ -86,6 +88,10 @@ void Location::set_location(Location location){
 	locations.push_back(location);
 }
 
+void Location::set_depth(int depth){
+	this->depth = (depth);
+}
+
 std::string Location::get_uri() const{
 	return uri;
 }
@@ -118,6 +124,10 @@ std::string Location::get_return() const {
 
 std::vector<Location> Location::get_locations() const{
 	return locations;
+}
+
+int Location::get_depth() const{
+	return depth;
 }
 
 std::ostream& operator <<(std::ostream& stream, const Location& obj) {

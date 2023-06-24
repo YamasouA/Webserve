@@ -84,6 +84,11 @@ std::map<std::string, std::string> httpReq::getHeaderFields() const
 {
     return this->header_fields;
 }
+
+int httpReq::getContentLength() const
+{
+    return this->content_length;
+}
 //std::vector<httpReq> httpReq::getHeaderInfo() const
 //{
 //    return this->header_info;
@@ -261,6 +266,13 @@ void httpReq::fix_up() {
 	if (header_fields.count("connection") != 1) {
 		std::cerr << "status " << std::endl;
 	}*/
+	if (header_fields.count("content_length") != 1) {
+		std::cerr << "status " << std::endl;
+	}
+	std::string content_length_s = header_fields["content_length"];
+    std::stringstream ss(content_length_s);
+    ss >> content_length;
+
 	if (!(method == "GET" || method == "DELETE" || method == "POST")) {
 		std::cerr << "status " << std::endl;
 	}

@@ -335,9 +335,6 @@ std::map<int, std::string> create_status_msg(){
 int HttpRes::dav_depth() {
 	// アクセスできるディレクトリの深さを返す
 	int depth = target.get_depth();
-	if (depth == -1) {
-		return DEPTH_INF;
-	}
 	return depth;
 }
 
@@ -347,7 +344,8 @@ void HttpRes::dav_delete_path(bool is_dir) {
 		// めんどいからディレクトリの削除を行わせない？
 		status_code = BAD_REQUEST;
 	} else {
-		if (remove(file_name.c_str() < 0)) {
+		std::string file_name = join_path();
+		if (remove(file_name.c_str()) < 0) {
 			status_code = INTERNAL_SERVER_ERROR;
 		}
 		status_code = OK;
@@ -355,7 +353,17 @@ void HttpRes::dav_delete_path(bool is_dir) {
 }
 
 void HttpRes::dav_delete_handler() {
-	if (httpreq.get_content_length() > 0) {
+	/*
+    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
+	if (header_fields.count("content_length") > 0) {
+		int content_length = header_fields["content_length"];
+		if (content_length > 0) {
+			status_code = UNSUPPORTED_MEDIA_TYPE;
+		}
+	}
+	*/
+	int content_length = httpreq.getContentLength();
+	if (content_length > 0) {
 		status_code = UNSUPPORTED_MEDIA_TYPE;
 	}
 	
@@ -374,13 +382,13 @@ void HttpRes::dav_delete_handler() {
 			status_code = BAD_REQUEST;
 		}
 		depth = dav_depth();
-		if (depth != DEPTH_INF) {
+		if (depth != -1) {
 			status_code = BAD_REQUEST;
 		}
 		is_dir = true;
 	} else {
 		depth = dav_depth();
-		if (depth != 0 && depth != DPETH_INF) {
+		if (depth != 0 && depth != -1) {
 			status_code = BAD_REQUEST;
 		}
 		is_dir = false;
