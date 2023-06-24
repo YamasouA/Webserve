@@ -332,6 +332,62 @@ std::map<int, std::string> create_status_msg(){
 	return m;
 }
 
+int HttpRes::dav_depth() {
+	// アクセスできるディレクトリの深さを返す
+	int depth = target.get_depth();
+	if (depth == -1) {
+		return DEPTH_INF;
+	}
+	return depth;
+}
+
+void HttpRes::dav_delete_path(bool is_dir) {
+	if (is_dir) {
+		// 本当ならディレクトリ配下を確認して問題なければディレクトリを消すべき
+		// めんどいからディレクトリの削除を行わせない？
+		status_code = BAD_REQUEST;
+	} else {
+		if (remove(file_name.c_str() < 0)) {
+			status_code = INTERNAL_SERVER_ERROR;
+		}
+		status_code = OK;
+	}
+}
+
+void HttpRes::dav_delete_handler() {
+	if (httpreq.get_content_length() > 0) {
+		status_code = UNSUPPORTED_MEDIA_TYPE;
+	}
+	
+	struct stat sb;
+	bool is_dir;
+	int depth;
+	std::string file_name = join_path();
+	file_name = "hogehoge.txt";
+    if (stat(file_name.c_str(), &sb) == -1) {
+		std::cout << "Error(stat)" << std::endl;
+		status_code = INTERNAL_SERVER_ERROR;
+	}
+	if (S_ISDIR(sb.st_mode)) {
+		std::string uri = httpreq.getUri();
+		if (uri[uri.length() - 1] != '/') {
+			status_code = BAD_REQUEST;
+		}
+		depth = dav_depth();
+		if (depth != DEPTH_INF) {
+			status_code = BAD_REQUEST;
+		}
+		is_dir = true;
+	} else {
+		depth = dav_depth();
+		if (depth != 0 && depth != DPETH_INF) {
+			status_code = BAD_REQUEST;
+		}
+		is_dir = false;
+	}
+	dav_delete_path(is_dir);
+}
+
 void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
 	std::map<int, std::string> status_msg = create_status_msg();
@@ -415,6 +471,7 @@ void HttpRes::header_filter() {
     } else {
 	    buf += "Connection: close";
     }
+	//buf += "Connection: close";
 	buf += "\r\n";
 
 	// 残りのヘッダー  もしかしたら必要ないかも？ 現状Connection filedなどがダブってしまっているetc...
@@ -562,6 +619,7 @@ int HttpRes::static_handler() {
     std::ostringstream oss;
     oss << ifs.rdbuf();
     out_buf = oss.str();
+	//buf += out_buf;
     std::cout << "body: " << out_buf << std::endl;
     body_size = content_length_n;
     return OK;

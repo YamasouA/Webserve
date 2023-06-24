@@ -212,11 +212,19 @@ int main(int argc, char *argv[]) {
 				std::cout << "WRITE!!!!" << std::endl;
 //				std::cout << "hoge" << std::endl;
                 HttpRes res = fd_client_map[acceptfd].get_httpRes();
-				std::cout << "header: " << res.buf.c_str() << std::endl;
+				//std::cout << "response: " << res.buf.c_str() << std::endl;
+				std::cout << "response: " << std::endl << res.buf.c_str() << std::endl;
                 write(acceptfd, res.buf.c_str(), res.header_size);
 				std::cout << "body: " << res.out_buf.c_str() << std::endl;
                 write(acceptfd, res.out_buf.c_str(), res.body_size);
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
+				//std::string connection_header = fd_client_map[acceptfd].get_httpRes().getHeaderFields()["connection"];
+				//std::cout << "connection: " << connection_header << std::endl;
+				/*
+				if (connection_header != "keep-alive")
+					close(acceptfd);
+				*/
+				close(acceptfd);
 			}
 		}
 	}
