@@ -346,10 +346,12 @@ void HttpRes::dav_delete_path(bool is_dir) {
 		status_code = BAD_REQUEST;
 	} else {
 		std::string file_name = join_path();
-		file_name = "hogehgoe.txt";
+		file_name = "hogehoge.txt";
 		std::cout << "delete!!" << std::endl;
 		if (remove(file_name.c_str()) < 0) {
+			std::cout << "delete error" << std::endl;
 			status_code = INTERNAL_SERVER_ERROR;
+			return;
 		}
 		status_code = OK;
 	}
