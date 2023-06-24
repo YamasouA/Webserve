@@ -339,12 +339,15 @@ int HttpRes::dav_depth() {
 }
 
 void HttpRes::dav_delete_path(bool is_dir) {
+	std::cout << "dav_delete_path" << std::endl;
 	if (is_dir) {
 		// 本当ならディレクトリ配下を確認して問題なければディレクトリを消すべき
 		// めんどいからディレクトリの削除を行わせない？
 		status_code = BAD_REQUEST;
 	} else {
 		std::string file_name = join_path();
+		file_name = "hogehgoe.txt";
+		std::cout << "delete!!" << std::endl;
 		if (remove(file_name.c_str()) < 0) {
 			status_code = INTERNAL_SERVER_ERROR;
 		}
@@ -353,15 +356,7 @@ void HttpRes::dav_delete_path(bool is_dir) {
 }
 
 void HttpRes::dav_delete_handler() {
-	/*
-    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
-	if (header_fields.count("content_length") > 0) {
-		int content_length = header_fields["content_length"];
-		if (content_length > 0) {
-			status_code = UNSUPPORTED_MEDIA_TYPE;
-		}
-	}
-	*/
+	std::cout << "\n\n=====dav delete handler=====" << std::endl;
 	int content_length = httpreq.getContentLength();
 	if (content_length > 0) {
 		status_code = UNSUPPORTED_MEDIA_TYPE;
@@ -375,21 +370,27 @@ void HttpRes::dav_delete_handler() {
     if (stat(file_name.c_str(), &sb) == -1) {
 		std::cout << "Error(stat)" << std::endl;
 		status_code = INTERNAL_SERVER_ERROR;
+		return;
 	}
 	if (S_ISDIR(sb.st_mode)) {
 		std::string uri = httpreq.getUri();
 		if (uri[uri.length() - 1] != '/') {
 			status_code = BAD_REQUEST;
+			return;
 		}
 		depth = dav_depth();
 		if (depth != -1) {
 			status_code = BAD_REQUEST;
+			return;
 		}
 		is_dir = true;
 	} else {
+		std::cout << "delete files" << std::endl;
 		depth = dav_depth();
+		std::cout << "depth: " << depth << std::endl;
 		if (depth != 0 && depth != -1) {
 			status_code = BAD_REQUEST;
+			return;
 		}
 		is_dir = false;
 	}
@@ -636,4 +637,5 @@ int HttpRes::static_handler() {
 
 void HttpRes::runHandlers() {
     static_handler();
+	dav_delete_handler();
 }
