@@ -332,6 +332,73 @@ std::map<int, std::string> create_status_msg(){
 	return m;
 }
 
+int HttpRes::dav_depth() {
+	// アクセスできるディレクトリの深さを返す
+	int depth = target.get_depth();
+	return depth;
+}
+
+void HttpRes::dav_delete_path(bool is_dir) {
+	std::cout << "dav_delete_path" << std::endl;
+	if (is_dir) {
+		// 本当ならディレクトリ配下を確認して問題なければディレクトリを消すべき
+		// めんどいからディレクトリの削除を行わせない？
+		status_code = BAD_REQUEST;
+	} else {
+		std::string file_name = join_path();
+		file_name = "hogehoge.txt";
+		std::cout << "delete!!" << std::endl;
+		if (remove(file_name.c_str()) < 0) {
+			std::cout << "delete error" << std::endl;
+			status_code = INTERNAL_SERVER_ERROR;
+			return;
+		}
+		status_code = OK;
+	}
+}
+
+void HttpRes::dav_delete_handler() {
+	std::cout << "\n\n=====dav delete handler=====" << std::endl;
+	int content_length = httpreq.getContentLength();
+	if (content_length > 0) {
+		status_code = UNSUPPORTED_MEDIA_TYPE;
+	}
+	
+	struct stat sb;
+	bool is_dir;
+	int depth;
+	std::string file_name = join_path();
+	file_name = "hogehoge.txt";
+    if (stat(file_name.c_str(), &sb) == -1) {
+		std::cout << "Error(stat)" << std::endl;
+		status_code = INTERNAL_SERVER_ERROR;
+		return;
+	}
+	if (S_ISDIR(sb.st_mode)) {
+		std::string uri = httpreq.getUri();
+		if (uri[uri.length() - 1] != '/') {
+			status_code = BAD_REQUEST;
+			return;
+		}
+		depth = dav_depth();
+		if (depth != -1) {
+			status_code = BAD_REQUEST;
+			return;
+		}
+		is_dir = true;
+	} else {
+		std::cout << "delete files" << std::endl;
+		depth = dav_depth();
+		std::cout << "depth: " << depth << std::endl;
+		if (depth != 0 && depth != -1) {
+			status_code = BAD_REQUEST;
+			return;
+		}
+		is_dir = false;
+	}
+	dav_delete_path(is_dir);
+}
+
 void HttpRes::header_filter() {
 	// ステータスがOKでないならlast_modifiedは消す
 	std::map<int, std::string> status_msg = create_status_msg();
@@ -415,6 +482,7 @@ void HttpRes::header_filter() {
     } else {
 	    buf += "Connection: close";
     }
+	//buf += "Connection: close";
 	buf += "\r\n";
 
 	// 残りのヘッダー  もしかしたら必要ないかも？ 現状Connection filedなどがダブってしまっているetc...
@@ -562,6 +630,7 @@ int HttpRes::static_handler() {
     std::ostringstream oss;
     oss << ifs.rdbuf();
     out_buf = oss.str();
+	//buf += out_buf;
     std::cout << "body: " << out_buf << std::endl;
     body_size = content_length_n;
     return OK;
@@ -570,4 +639,5 @@ int HttpRes::static_handler() {
 
 void HttpRes::runHandlers() {
     static_handler();
+	dav_delete_handler();
 }

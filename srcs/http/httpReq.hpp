@@ -27,10 +27,12 @@ class httpReq {
         std::string getUri() const;
         std::string getVersion() const;
         std::string getContentBody() const;
+        int getContentLength() const;
         std::map<std::string, std::string> getHeaderFields() const;
 		void parseRequest();
         bool isSpace(char c);
 		std::string toLower(std::string str);
+		int content_length;
     private:
         std::string buf;
         size_t idx;

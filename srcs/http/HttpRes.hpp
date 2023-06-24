@@ -106,6 +106,10 @@ class HttpRes {
         int static_handler();
         void sendHeader();
         Location get_uri2location(std::string uri) const;
+
+		void dav_delete_handler();
+		void dav_delete_path(bool is_dir);
+		int dav_depth();
         //void createDate();
 	public:
         HttpRes();
