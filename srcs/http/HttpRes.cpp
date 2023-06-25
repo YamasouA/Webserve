@@ -137,7 +137,8 @@ std::string HttpRes::join_path() {
     std::cout << "===== join_path =====" << std::endl;
 	std::string path_root = target.get_root();
     std::cout << "root: " << path_root << std::endl;
-	std::string file_path  = target.get_uri();
+ 	std::string file_path = httpreq.getUri();
+//	std::string file_path = target.get_uri();
     std::cout << "uri: " << file_path << std::endl;
 	if (file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
 		file_path = "/index.html"; //  "/index" is better?
@@ -343,9 +344,110 @@ int HttpRes::dav_depth() {
 	return depth;
 }
 
+typedef struct {
+    DIR             *dir;
+    struct dirent   *d_ent;
+    struct stat     d_info;
+    bool            valid_info:1;
+} dir_t;
+
+
+std::string HttpRes::join_dir_path(const std::string& dir_path, const std::string& elem_name) {
+	return dir_path + '/' + elem_name;
+}
+
+void HttpRes::diving_through_dir(const std::string& path) {
+    //class is better?
+    dir_t dir_info;
+    dir_info.dir = opendir(path.c_str());
+    if (dir_info.dir == NULL) {
+        std::cerr << "opendir Error" << std::endl;
+    }
+    dir_info.valid_info = 0;
+    for (;;) {
+        errno = 0;
+        dir_info.d_ent = readdir(dir_info.dir);
+        if (!dir_info.d_ent) {
+            if (errno != 0) {
+              std::cerr << "readdir Error" << std::endl;
+          } else {
+            // read directory end
+            }
+            if (closedir(dir_info.dir)) {
+                std::cerr << "closedir error" << std::endl;
+            }
+            return;
+              // done handle
+        }
+        std::string file_name(dir_info.d_ent->d_name);
+        if (file_name.length() == 1 && file_name[0] == '.') {
+            continue;
+        }
+        if (file_name.length() == 2 && file_name[0] == '.' && file_name[1] == '.') {
+            continue;
+        }
+        std::string abs_path = join_dir_path(path, file_name);
+        std::cout << "abs_path: " << abs_path << std::endl;
+
+        if (!dir_info.valid_info) {
+//            dir_info.type = 0;
+            if (stat(abs_path.c_str(), &(dir_info.d_info)) == -1) {
+                continue;
+            }
+        }
+        if ((S_ISREG(dir_info.d_info.st_mode))) {
+            if (remove(abs_path.c_str()) < 0) {
+                std::cerr << "remove error" << std::endl;
+                status_code = INTERNAL_SERVER_ERROR;
+                if (closedir(dir_info.dir)) {
+                    std::cerr << "closedir error" << std::endl;
+                }
+                return;
+            }
+        } else if ((S_ISDIR(dir_info.d_info.st_mode))) {
+            diving_through_dir(abs_path);
+            if (status_code == INTERNAL_SERVER_ERROR) {
+                if (closedir(dir_info.dir)) {
+                    std::cerr << "closedir error" << std::endl;
+                }
+                return;
+            }
+            if (rmdir(abs_path.c_str()) < 0) {
+                std::cerr << "rmdir error" << std::endl;
+                status_code = INTERNAL_SERVER_ERROR;
+                if (closedir(dir_info.dir)) {
+                    std::cerr << "closedir error" << std::endl;
+                }
+                return;
+            }
+        } else {
+            if (remove(abs_path.c_str()) < 0) {
+                std::cerr << "remove error" << std::endl;
+                status_code = INTERNAL_SERVER_ERROR;
+                if (closedir(dir_info.dir)) {
+                    std::cerr << "closedir error" << std::endl;
+                }
+                return;
+            }
+      }
+    }
+}
+
 void HttpRes::dav_delete_path(bool is_dir) {
-	std::cout << "dav_delete_path" << std::endl;
-	if (is_dir) {
+    std::cout << "dav_delete_path" << std::endl;
+    if (is_dir) {
+        std::string dir_path = join_path();
+        std::cout << "dir_path: " << dir_path << std::endl;
+        diving_through_dir(dir_path);
+        if (status_code == INTERNAL_SERVER_ERROR) {
+            return;
+        }
+        if (rmdir(dir_path.c_str()) < 0) {
+			std::cout << "delete error" << std::endl;
+			status_code = INTERNAL_SERVER_ERROR;
+            return;
+        }
+
 		// 本当ならディレクトリ配下を確認して問題なければディレクトリを消すべき
 		// めんどいからディレクトリの削除を行わせない？
 		status_code = BAD_REQUEST;
@@ -368,7 +470,7 @@ void HttpRes::dav_delete_handler() {
 	if (content_length > 0) {
 		status_code = UNSUPPORTED_MEDIA_TYPE;
 	}
-	
+
 	struct stat sb;
 	bool is_dir;
 	int depth;
@@ -386,7 +488,7 @@ void HttpRes::dav_delete_handler() {
 	}
 
 	std::string file_name = join_path();
-	//file_name = "hogehoge.txt";
+	file_name = "abc";
     if (stat(file_name.c_str(), &sb) == -1) {
 		std::cout << "Error(stat)" << std::endl;
 		status_code = INTERNAL_SERVER_ERROR;
@@ -394,16 +496,19 @@ void HttpRes::dav_delete_handler() {
 	}
 	if (S_ISDIR(sb.st_mode)) {
 		std::string uri = httpreq.getUri();
-		if (uri[uri.length() - 1] != '/') {
-			status_code = BAD_REQUEST;
-			return;
-		}
+        std::cout << "dir uri: " << uri << std::endl;
+//		if (uri[uri.length() - 1] != '/') {
+//			status_code = BAD_REQUEST;
+//			return;
+//		}
+        std::cout << "ok1" << std::endl;
 		depth = dav_depth();
 		if (depth != -1) {
 			status_code = BAD_REQUEST;
 			return;
 		}
 		is_dir = true;
+        std::cout << "ok" << std::endl;
 	} else {
 		std::cout << "delete files" << std::endl;
 		depth = dav_depth();
