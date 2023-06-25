@@ -181,8 +181,6 @@ int main(int argc, char *argv[]) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
 				}
-				std::cout << "client fd: " << acceptfd << std::endl;
-				std::cout << "EVFILT_READ: " << EVFILT_READ<< std::endl;
 				kqueue.set_event(acceptfd, EVFILT_READ);
 				client.set_fd(acceptfd);
 				fd_client_map.insert(std::make_pair(acceptfd, client));
@@ -194,6 +192,8 @@ int main(int argc, char *argv[]) {
 				*/
 			//} else if (reciver_event[i].filter & EVFILT_READ && !(reciver_event[i].filter & EVFILT_WRITE)) {
 			} else if (reciver_event[i].filter ==  EVFILT_READ) {
+				//acceptfd = accept(event_fd, NULL, NULL);
+				acceptfd = event_fd;
 				std::cout << "READ!!!" << std::endl;
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
@@ -203,7 +203,9 @@ int main(int argc, char *argv[]) {
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
 				//acceptfd = reciver_event[i].data;
-				acceptfd = event_fd;
+				//acceptfd = event_fd;
+				std::cout << "accept fd: " << acceptfd << std::endl;
+				std::cout << "errorno: " << errno << std::endl;
 				read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
                 kqueue.disable_event(acceptfd, EVFILT_READ);
 				//kqueue.set_event(acceptfd, EVFILT_WRITE);
@@ -211,6 +213,9 @@ int main(int argc, char *argv[]) {
 //				std::cout << "ok" << std::endl;
 			} else if (reciver_event[i].filter == EVFILT_WRITE) {
 				std::cout << "WRITE!!!!" << std::endl;
+				//acceptfd = accept(event_fd, NULL, NULL);
+				acceptfd = event_fd;
+				std::cout << "accept fd: " << acceptfd << std::endl;
 //				std::cout << "hoge" << std::endl;
                 HttpRes res = fd_client_map[acceptfd].get_httpRes();
 				//std::cout << "response: " << res.buf.c_str() << std::endl;
