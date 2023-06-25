@@ -134,7 +134,7 @@ bool HttpRes::isAllowMethod(std::string method) {
 }
 
 std::string HttpRes::join_path() {
-    std::cout << "join_path" << std::endl;
+    std::cout << "===== join_path =====" << std::endl;
 	std::string path_root = target.get_root();
     std::cout << "root: " << path_root << std::endl;
 	std::string file_path  = target.get_uri();
@@ -142,8 +142,13 @@ std::string HttpRes::join_path() {
 	if (file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
 		file_path = "/index.html"; //  "/index" is better?
 	}
-    std::cout << "not auto index" << std::endl;
-    std::cout << file_path << std::endl;
+    //std::cout << "not auto index" << std::endl;
+    std::cout << "file_path(in join_path): " << file_path << std::endl;
+	if (path_root == "") {
+		file_path = file_path.substr(1);
+	}
+	std::cout << "path: " << path_root + file_path << std::endl;
+    std::cout << "===== End join_path =====" << std::endl;
 	return path_root + file_path;
 }
 
@@ -346,7 +351,7 @@ void HttpRes::dav_delete_path(bool is_dir) {
 		status_code = BAD_REQUEST;
 	} else {
 		std::string file_name = join_path();
-		file_name = "hogehoge.txt";
+		//file_name = "hogehoge.txt";
 		std::cout << "delete!!" << std::endl;
 		if (remove(file_name.c_str()) < 0) {
 			std::cout << "delete error" << std::endl;
@@ -367,8 +372,12 @@ void HttpRes::dav_delete_handler() {
 	struct stat sb;
 	bool is_dir;
 	int depth;
+	std::string method = httpreq.getMethod();
+	if (method != "DELETE") {
+		return;
+	}
 	std::string file_name = join_path();
-	file_name = "hogehoge.txt";
+	//file_name = "hogehoge.txt";
     if (stat(file_name.c_str(), &sb) == -1) {
 		std::cout << "Error(stat)" << std::endl;
 		status_code = INTERNAL_SERVER_ERROR;
@@ -509,6 +518,7 @@ void HttpRes::sendHeader() {
 }
 
 int HttpRes::static_handler() {
+	std::cout << "===== static_handler =====" << std::endl;
 	std::string uri = httpreq.getUri();
 	target = get_uri2location(uri);
     std::cout << "macth loc: " << target << std::endl;
@@ -531,8 +541,9 @@ int HttpRes::static_handler() {
 
 	int fd = -1;
 	std::string file_name = join_path();
-	file_name = "index.html";
+	//file_name = "index.html";
     std::cout << "file_name: " << file_name << std::endl;
+	std::cout << "method: " << method << std::endl;
     struct stat sb;
     status_code = 200;
     if (method == "GET") {
@@ -549,7 +560,7 @@ int HttpRes::static_handler() {
         }
         // stat がエラーだったとき
         if (stat(file_name.c_str(), &sb) == -1) {
-            std::cout << "Error(stat)" << std::endl;
+            std::cout << "GET Error(stat)" << std::endl;
         }
         // ディレクトリだった時
         if (S_ISDIR(sb.st_mode)) {
@@ -605,12 +616,14 @@ int HttpRes::static_handler() {
 
         } else {
 			// 通常ファイル
-			fd = open(file_name.c_str(), O_CREAT | O_WRONLY);
+			//file_name = "sinki.html";
+			fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND, 00644);
 			if (fd == -1) {
-                std::cerr << "open error" << std::endl;
+                std::cerr << "POST open error" << std::endl;
                 return INTERNAL_SERVER_ERROR;
 			}
 			std::string body = httpreq.getContentBody().c_str();
+			std::cout << "POST body: \n" << body << std::endl;
 			write(fd, body.c_str(), body.size());
 		}
     }
@@ -633,6 +646,7 @@ int HttpRes::static_handler() {
 	//buf += out_buf;
     std::cout << "body: " << out_buf << std::endl;
     body_size = content_length_n;
+	std::cout << "===== End static_handler =====" << std::endl;
     return OK;
 //    output_filter();
 }
