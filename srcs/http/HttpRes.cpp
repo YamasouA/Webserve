@@ -137,20 +137,32 @@ std::string HttpRes::join_path() {
     std::cout << "===== join_path =====" << std::endl;
 	std::string path_root = target.get_root();
     std::cout << "root: " << path_root << std::endl;
- 	std::string file_path = httpreq.getUri();
-//	std::string file_path = target.get_uri();
-    std::cout << "uri: " << file_path << std::endl;
-	if (file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
+	//std::string file_path  = target.get_uri();
+	std::string config_path  = target.get_uri();
+	std::string file_path = httpreq.getUri().substr(config_path.length());
+	std::cout << "config_path: " << config_path<< std::endl;
+	std::cout << "Path: " << file_path << std::endl;
+    //std::cout << "uri: " << file_path << std::endl;
+	if (file_path.length() && file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
 		file_path = "/index.html"; //  "/index" is better?
+	}
+	std::string alias;
+	if ((alias = target.get_alias()) != "") {
+		config_path = alias;
 	}
     //std::cout << "not auto index" << std::endl;
     std::cout << "file_path(in join_path): " << file_path << std::endl;
-	if (path_root == "" || path_root[path_root.length() - 1] == '/') {
+	if (path_root[path_root.length() - 1] == '/') {
+		//file_path = file_path.substr(1);
+		config_path = config_path.substr(1);
+	}
+	if (config_path == "" || config_path[config_path.length() - 1] == '/') {
+		//file_path = file_path.substr(1);
 		file_path = file_path.substr(1);
 	}
-	std::cout << "path: " << path_root + file_path << std::endl;
+	std::cout << "path: " << path_root + config_path + file_path << std::endl;
     std::cout << "===== End join_path =====" << std::endl;
-	return path_root + file_path;
+	return path_root + config_path + file_path;
 }
 
 void HttpRes::set_body(std::string strs)

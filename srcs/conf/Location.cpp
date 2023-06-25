@@ -13,6 +13,7 @@ Location::Location(const Location& src) {
 	this->max_body_size = src.max_body_size;
 	this->locations = src.locations;
 	this->depth = src.depth;
+	this->alias = src.alias;
 }
 
 Location& Location::operator=(const Location& src)
@@ -31,6 +32,7 @@ Location& Location::operator=(const Location& src)
 	this->max_body_size = src.max_body_size;
 	this->locations = src.locations;
 	this->depth = src.depth;
+	this->alias = src.alias;
 	return *this;
 }
 
@@ -92,6 +94,11 @@ void Location::set_depth(int depth){
 	this->depth = (depth);
 }
 
+void Location::set_alias(std::string alias)
+{
+	this->alias = alias;
+}
+
 std::string Location::get_uri() const{
 	return uri;
 }
@@ -128,6 +135,10 @@ std::vector<Location> Location::get_locations() const{
 
 int Location::get_depth() const{
 	return depth;
+}
+
+std::string Location::get_alias() const {
+	return alias;
 }
 
 std::ostream& operator <<(std::ostream& stream, const Location& obj) {

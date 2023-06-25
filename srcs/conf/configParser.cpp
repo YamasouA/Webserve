@@ -221,6 +221,8 @@ Location configParser::parseLocation() {
 				std::cerr << "overflow" << std::endl;
 			}
 			location.set_max_body_size(result);
+		} else if (directive == "alias") {
+			location.set_alias(getToken(';'));
 		} else if (directive == "location") {
 			std::cout << "location-location" << std::endl;
 			location.set_location(parseLocation());

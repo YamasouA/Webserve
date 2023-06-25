@@ -19,6 +19,7 @@ class Location {
 		void set_return(std::string ret);
 		void set_location(Location location);
 		void set_depth(int depth);
+		void set_alias(std::string alias);
 		std::vector<Location> get_locations() const;
 		std::string get_uri() const;
 		std::vector<std::string> get_methods() const;
@@ -30,6 +31,7 @@ class Location {
 		std::string get_cgi_path() const;
 		std::string get_return() const;
 		int get_depth() const;
+		std::string get_alias() const;
 		Location(const Location& src);
 		Location();
 		Location& operator=(const Location& src);
@@ -42,6 +44,7 @@ class Location {
 		std::string upload_path;
 		std::string cgi_path;
 		int depth;
+		std::string alias;
 		bool autoindex;
 		size_t max_body_size;
 		std::vector<Location> locations;
