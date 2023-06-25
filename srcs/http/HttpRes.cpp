@@ -49,11 +49,11 @@ Location HttpRes::get_uri2location(std::string uri) const
 //    }
 	std::map<std::string, Location> uri2location = vServer.get_uri2location();
 	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
-	std::cout << "uri: " << uri << std::endl;
+	std::cout << "request uri: " << uri << std::endl;
 	std::cout << "size: " << uri2location.size() << std::endl;
 	for (std::map<std::string, Location>::iterator it = uri2location.begin();
 		it != uri2location.end(); it++) {
-		std::cout << "uri: " << it->second.get_uri() << std::endl;
+		std::cout << "location uri: " << it->second.get_uri() << std::endl;
 	}
 	if (loc != uri2location.end()) {
         std::cout << "match all" << std::endl;
@@ -376,6 +376,15 @@ void HttpRes::dav_delete_handler() {
 	if (method != "DELETE") {
 		return;
 	}
+
+	std::vector<std::string> allow_methods = target.get_methods();
+	std::cout << "allow_methods: " << std::endl;
+	if (find(allow_methods.begin(), allow_methods.end(), method) == allow_methods.end()) {
+		std::cout << "not allow (conf)" << std::endl;
+		status_code = BAD_REQUEST;
+		return ;
+	}
+
 	std::string file_name = join_path();
 	//file_name = "hogehoge.txt";
     if (stat(file_name.c_str(), &sb) == -1) {
@@ -526,6 +535,13 @@ int HttpRes::static_handler() {
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
 		// なんてエラー返そう？
+		return DECLINED;
+	}
+	std::vector<std::string> allow_methods = target.get_methods();
+	std::cout << "allow_methods: " << std::endl;
+	if (find(allow_methods.begin(), allow_methods.end(), method) == allow_methods.end()) {
+		std::cout << "not allow (conf)" << std::endl;
+		status_code = BAD_REQUEST;
 		return DECLINED;
 	}
 
