@@ -202,7 +202,8 @@ int main(int argc, char *argv[]) {
 				//read(0, buf, 1);
 				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
-				std::cout << "read!!!" << std::endl;
+				//acceptfd = reciver_event[i].data;
+				acceptfd = event_fd;
 				read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
                 kqueue.disable_event(acceptfd, EVFILT_READ);
 				//kqueue.set_event(acceptfd, EVFILT_WRITE);
