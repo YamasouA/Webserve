@@ -144,7 +144,7 @@ std::string HttpRes::join_path() {
 	}
     //std::cout << "not auto index" << std::endl;
     std::cout << "file_path(in join_path): " << file_path << std::endl;
-	if (path_root == "") {
+	if (path_root == "" || path_root[path_root.length() - 1] == '/') {
 		file_path = file_path.substr(1);
 	}
 	std::cout << "path: " << path_root + file_path << std::endl;
