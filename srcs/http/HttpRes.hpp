@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "../Kqueue.hpp"
 
 enum server_state {
@@ -110,6 +111,8 @@ class HttpRes {
 		void dav_delete_handler();
 		void dav_delete_path(bool is_dir);
 		int dav_depth();
+        std::string join_dir_path(const std::string& dir_path, const std::string& elem_name);
+        void diving_through_dir(const std::string& path);
         //void createDate();
 	public:
         HttpRes();
