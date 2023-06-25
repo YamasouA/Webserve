@@ -4,3 +4,9 @@
 server
 venv/*
 logs/*
+*.html
+.vscode/
+out
+*.sh
+*.txt
+**/*.conf
