@@ -784,7 +784,72 @@ int HttpRes::static_handler() {
 //    output_filter();
 }
 
+//int HttpRes::redirect_handler() {
+//    switch (status_code) {
+//        case BAD_REQUEST:
+//        case REQUEST_ENTITY_TOO_LARGE:
+//        case REQUEST_URI_TOO_LARGE:
+//        case HTTP_TO_HTTPS:
+//        case HTTPS_CERT_ERROR:
+//        case HTTPS_NO_CERT:
+//        case HTTP_INTERNAL_SERVER_ERROR:
+//        case HTTP_NOT_IMPLEMENTED:
+//            //Disable keep alive
+//    }
+    // content_type_len = 0
+    // if conf_error_pages == 1
+    // if match status_code == err_pages[]
+    //    return send_error_page
+    //
+    // discard request body
+    //
+    // if 49x ~ 5xx
+    //    switch (status_code)
+    //      case HTTP_TO_HTTPS:
+    //      case HTTPS_CERT_ERROR:
+    //      case HTTPS_NO_CERT:
+    //      case HTTP_REQUEST_HEADER_TOO_LARGE:
+    //          status_code = BAD_REQUEST
+    // else
+    //    unknown
+    //
+    // if err_page
+    //    content_length = err_pages.length
+    //    content_type = txet/html
+    // else
+    //    content_length = 0
+    // clear accept_range
+    // clear last_modified
+    // clear etag
+    //
+    // send_header
+    // if err || only_header
+    //    return
+    // if content_length == 0
+    //    // something
+    // out_buf = err_page
+
+
+//}
+
+//void HttpRes::finalize_res(int handler_status)
+//{
+//    if (200 <= status_code && status_code < 207) //except 201, 204 ? //or DONE, OK{
+//        // handle connection
+//        return;
+//    }
+//    if (status_code >= 300) //and 201, 204 ? {
+//        // handle around timeer
+//        //
+//        return redirect_handler(); //recurcive finalize_res is better?
+//    }
+//}
+
 void HttpRes::runHandlers() {
-    static_handler();
-	dav_delete_handler();
+    int handler_status = 0;
+    handler_status = static_handler();
+//    if (handler_status != DECLINED) {
+//        return finalize_res(handler_status);
+//    }
+//	dav_delete_handler();
 }
