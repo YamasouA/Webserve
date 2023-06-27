@@ -2,7 +2,8 @@
 
 Socket::Socket(int port): port(port) {}
 
-Socket::~Socket() {}
+Socket::~Socket() {
+}
 
 Socket::Socket(const Socket& source)  {
 	*this = source;

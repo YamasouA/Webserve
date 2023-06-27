@@ -33,9 +33,8 @@ Kqueue& Kqueue::operator=(const Kqueue& rhs) {
 
 Kqueue::~Kqueue() {
     //delete reciver_event;
+	//close(kq);
 }
-
-
 
 //void Kqueue::set_event(int fd) {
 //	EV_SET(register_event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -75,6 +74,10 @@ void Kqueue::disable_event(int fd, short ev_filter) {
 	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
 		perror("kevent error");
     }
+	if (ev_filter == EVFILT_WRITE) {
+		std::cout << "close" << std::endl;
+		close(fd);
+	}
 	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
 
@@ -95,7 +98,7 @@ int Kqueue::get_events_num() {
 	//int event_num = kevent(kq, event, changes.size(), reciver_event, 100, &time_over);
 	int event_num = kevent(kq, NULL, 0, reciver_event, 100, &time_over);
 	std::cout << "event_num: " << event_num << std::endl;
-	changes.clear();
+	//changes.clear();
 	return event_num;
 }
 

@@ -11,9 +11,10 @@ Client::Client()
 Client::Client(const Client& source)
 :httpreq(source.get_httpReq()),
     httpres(source.get_httpRes()),
-    vServer(source.get_vServer()),
-    fd(source.get_fd())
+    vServer(source.get_vServer())
+    //fd(source.get_fd())
 {
+	this->fd = source.get_fd();
 }
 
 Client& Client::operator=(const Client& rhs)
@@ -29,7 +30,9 @@ Client& Client::operator=(const Client& rhs)
 }
 
 Client::~Client()
-{}
+{
+	close(fd);
+}
 
 
 //void Client::set_parsedReq(httpParser parsed_req)
