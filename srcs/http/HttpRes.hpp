@@ -87,7 +87,7 @@ class HttpRes {
 
 		httpReq httpreq;
 		virtualServer vServer;
-        Kqueue connection;
+        Kqueue* connection;
 		int fd;
 
 		Location target;
@@ -117,7 +117,7 @@ class HttpRes {
 	public:
         HttpRes();
         HttpRes(const HttpRes& src);
-		HttpRes(const Client& source, Kqueue kq);
+		HttpRes(const Client& source, Kqueue &kq);
 		~HttpRes();
 		Location longestMatchLocation(std::string request_path, std::vector<Location> locations);
         bool isAllowMethod(std::string method);
