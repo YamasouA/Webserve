@@ -76,6 +76,7 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     httpReq httpreq(buf);
     httpreq.parseRequest();
 	std::cout << "Here" << std::endl;
+	client.set_fd(fd);
     client.set_httpReq(httpreq);
 //	client.set_httpReq(httpparser.get);
     assign_server(conf, client);
@@ -131,6 +132,7 @@ int main(int argc, char *argv[]) {
 			struct kevent* reciver_event = kqueue.get_reciver_event();
 			int event_fd = reciver_event[i].ident;
 			fcntl(event_fd, F_SETFL, O_NONBLOCK);
+			std::cout << "===== loop top =====" << std::endl;
 			std::cout << "event_fd(): " << event_fd << std::endl;
 			//std::cout << "size: " << fd_config_map.count(event_fd) << std::endl;
 			if (reciver_event[i].flags & EV_EOF) {

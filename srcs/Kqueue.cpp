@@ -50,6 +50,7 @@ void Kqueue::set_event(int fd, short ev_filter) {
 		std::cout << "READ register" << std::endl;
 	}
 	if (ev_filter == EVFILT_WRITE) {
+		std::cout << "register fd: " << fd << std::endl;
 		std::cout << "WRITE register" << std::endl;
 	}
 	struct kevent register_event;
@@ -59,7 +60,7 @@ void Kqueue::set_event(int fd, short ev_filter) {
 		std::cout << errno << std::endl;
 		perror("kevent error(register)");
     }
-	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
+	//std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
 
 void Kqueue::disable_event(int fd, short ev_filter) {
@@ -79,7 +80,7 @@ void Kqueue::disable_event(int fd, short ev_filter) {
 		std::cout << "close" << std::endl;
 		close(fd);
 	}
-	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
+	//std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
 
 int Kqueue::get_kq() {
