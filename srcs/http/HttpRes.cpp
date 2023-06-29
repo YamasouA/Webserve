@@ -611,6 +611,7 @@ void HttpRes::header_filter() {
 	// chunkedは無視
 
 	// keep-alive系は問答無用でcloseする？
+    // keep-alive looks better managed with flags.
     std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
     if (header_fields["connection"] == "keep-alive") {
         buf += "Connection: keep-alive";
@@ -784,72 +785,100 @@ int HttpRes::static_handler() {
 //    output_filter();
 }
 
-//int HttpRes::redirect_handler() {
-//    switch (status_code) {
-//        case BAD_REQUEST:
-//        case REQUEST_ENTITY_TOO_LARGE:
-//        case REQUEST_URI_TOO_LARGE:
-//        case HTTP_TO_HTTPS:
-//        case HTTPS_CERT_ERROR:
-//        case HTTPS_NO_CERT:
-//        case HTTP_INTERNAL_SERVER_ERROR:
-//        case HTTP_NOT_IMPLEMENTED:
-//            //Disable keep alive
-//    }
-    // content_type_len = 0
-    // if conf_error_pages == 1
-    // if match status_code == err_pages[]
-    //    return send_error_page
-    //
-    // discard request body
-    //
-    // if 49x ~ 5xx
-    //    switch (status_code)
-    //      case HTTP_TO_HTTPS:
-    //      case HTTPS_CERT_ERROR:
-    //      case HTTPS_NO_CERT:
-    //      case HTTP_REQUEST_HEADER_TOO_LARGE:
-    //          status_code = BAD_REQUEST
-    // else
-    //    unknown
-    //
-    // if err_page
-    //    content_length = err_pages.length
-    //    content_type = txet/html
-    // else
-    //    content_length = 0
-    // clear accept_range
-    // clear last_modified
-    // clear etag
-    //
-    // send_header
-    // if err || only_header
-    //    return
-    // if content_length == 0
-    //    // something
-    // out_buf = err_page
+std::string HttpRes::create_err_page() {
+    std::map<int, std::string> status_msg_map;
+    std::string err_page_buf = "<html>" "\r\n""<head><title>";
+    std::stringstream ss;
+	ss << status_code;
+	err_page_buf += ss.str();
+    err_page_buf += " ";
+    err_page_buf += status_msg_map[status_code];
+    err_page_buf += "</title></head>" "\r\n""<body>" "\r\n""<center><h1>";
+	err_page_buf += ss.str();
+    err_page_buf += " ";
+    err_page_buf += status_msg_map[status_code];
+    err_page_buf += "</h1></center>" "\r\n";
+    std::cout << "err_page: " << err_page_buf << std::endl;
+}
 
+int HttpRes::redirect_handler() {
+    switch (status_code) {
+        case BAD_REQUEST:
+        case REQUEST_ENTITY_TOO_LARGE:
+        case REQUEST_URI_TOO_LARGE:
+        case HTTP_TO_HTTPS:
+        case HTTPS_CERT_ERROR:
+        case HTTPS_NO_CERT:
+        case HTTP_INTERNAL_SERVER_ERROR:
+        case HTTP_NOT_IMPLEMENTED:
+            //Disable keep alive
+    }
+    content_type.erase();
+//     if conf_error_pages == 1 {
+//         err_page = from conf
+//         if match status_code == err_pages[]
+//             return send_error_page
+//     }
+//     discard request body
+    if (out_buf.length()) {
+        out_buf.erase();
+        content_length_n = 0;
+    }
 
-//}
+    if (status_code >= 490) { //49x ~ 5xx
+        switch (status_code) {
+            case HTTP_TO_HTTPS:
+            case HTTPS_CERT_ERROR:
+            case HTTPS_NO_CERT:
+            case HTTP_REQUEST_HEADER_TOO_LARGE:
+                status_code = BAD_REQUEST;
+        }
+    } else {
+        std::cout << "unknown status code" << std::endl;
+    }
+    // create new tmp file ?
+    // or map<status_code, err_page_content> ?
+    // if We create a new file, how do We handle mtime?
+//    std::string err_page_buf = error_pages[status_code];
+    std::string err_page_buf = create_err_page();
+    if (err_page_buf.length()) {
+        content_length_n = err_page_buf.length();
+        content_type = "txet/html";
+    }
+    else {
+        content_length_n = 0;
+    }
+//  clear accept_range
+//  clear last_modified
+    last_modified_time = -1;
+//  clear etag
 
-//void HttpRes::finalize_res(int handler_status)
-//{
-//    if (200 <= status_code && status_code < 207) //except 201, 204 ? //or DONE, OK{
-//        // handle connection
-//        return;
-//    }
-//    if (status_code >= 300) //and 201, 204 ? {
-//        // handle around timeer
-//        //
-//        return redirect_handler(); //recurcive finalize_res is better?
-//    }
-//}
+    sendHeader();
+//    if err || only_header
+//        return
+//    if content_length == 0
+        // something
+    out_buf = err_page_buf;
+}
+
+void HttpRes::finalize_res(int handler_status)
+{
+    if (200 <= status_code && status_code < 207) //except 201, 204 ? //or DONE, OK{
+        // handle connection
+        return;
+    }
+    if (status_code >= 300) {//and 201, 204 ?
+        // handle around timeer
+        //
+        return redirect_handler(); //recurcive finalize_res is better?
+    }
+}
 
 void HttpRes::runHandlers() {
     int handler_status = 0;
     handler_status = static_handler();
-//    if (handler_status != DECLINED) {
-//        return finalize_res(handler_status);
-//    }
+    if (handler_status != DECLINED) {
+        return finalize_res(handler_status);
+    }
 //	dav_delete_handler();
 }
