@@ -87,7 +87,7 @@ class HttpRes {
 
 		httpReq httpreq;
 		virtualServer vServer;
-        Kqueue connection;
+        Kqueue* connection;
 		int fd;
 
 		Location target;

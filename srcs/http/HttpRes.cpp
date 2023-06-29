@@ -24,7 +24,7 @@ HttpRes::HttpRes(const Client& source, Kqueue &kq)
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
 	this->vServer = source.get_vServer();
-    this->connection = kq;
+    this->connection = &kq;
 	this->fd = source.get_fd();
 }
 
@@ -36,7 +36,7 @@ HttpRes::HttpRes(const HttpRes& src) {
 }
 
 HttpRes::~HttpRes() {
-	close(fd);
+	//close(fd);
 }
 
 
@@ -294,7 +294,8 @@ void HttpRes::set_content_type() {
 }
 
 void HttpRes::ev_queue_insert() {
-	connection.set_event(fd, EVFILT_WRITE);
+	//connection.set_event(fd, EVFILT_WRITE);
+	connection->set_event(fd, EVFILT_WRITE);
     std::cout << "send event!!!!!!!!!!!!!!!!!!!" << std::endl;
 }
 

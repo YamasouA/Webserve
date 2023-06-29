@@ -56,7 +56,8 @@ void Kqueue::set_event(int fd, short ev_filter) {
 	EV_SET(&register_event, fd, ev_filter, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	changes.push_back(register_event);
 	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
-		perror("kevent error");
+		std::cout << errno << std::endl;
+		perror("kevent error(register)");
     }
 	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
@@ -72,7 +73,7 @@ void Kqueue::disable_event(int fd, short ev_filter) {
 	EV_SET(&register_event, fd, ev_filter, EV_DELETE, 0, 0, NULL);
 	changes.push_back(register_event);
 	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
-		perror("kevent error");
+		perror("kevent error(in disable)");
     }
 	if (ev_filter == EVFILT_WRITE) {
 		std::cout << "close" << std::endl;
