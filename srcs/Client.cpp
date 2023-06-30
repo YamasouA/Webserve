@@ -30,9 +30,7 @@ Client& Client::operator=(const Client& rhs)
 }
 
 Client::~Client()
-{
-	close(fd);
-}
+{}
 
 
 //void Client::set_parsedReq(httpParser parsed_req)

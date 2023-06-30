@@ -387,7 +387,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
           } else {
             // read directory end
             }
-            if (closedir(dir_info.dir)) {
+            if (closedir(dir_info.dir) == -1) {
                 std::cerr << "closedir error" << std::endl;
             }
             return;
@@ -413,7 +413,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
             if (remove(abs_path.c_str()) < 0) {
                 std::cerr << "remove error" << std::endl;
                 status_code = INTERNAL_SERVER_ERROR;
-                if (closedir(dir_info.dir)) {
+                if (closedir(dir_info.dir) == -1) {
                     std::cerr << "closedir error" << std::endl;
                 }
                 return;
@@ -421,7 +421,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
         } else if ((S_ISDIR(dir_info.d_info.st_mode))) {
             diving_through_dir(abs_path);
             if (status_code == INTERNAL_SERVER_ERROR) {
-                if (closedir(dir_info.dir)) {
+                if (closedir(dir_info.dir) == -1) {
                     std::cerr << "closedir error" << std::endl;
                 }
                 return;
@@ -429,7 +429,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
             if (rmdir(abs_path.c_str()) < 0) {
                 std::cerr << "rmdir error" << std::endl;
                 status_code = INTERNAL_SERVER_ERROR;
-                if (closedir(dir_info.dir)) {
+                if (closedir(dir_info.dir) == -1) {
                     std::cerr << "closedir error" << std::endl;
                 }
                 return;
@@ -438,7 +438,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
             if (remove(abs_path.c_str()) < 0) {
                 std::cerr << "remove error" << std::endl;
                 status_code = INTERNAL_SERVER_ERROR;
-                if (closedir(dir_info.dir)) {
+                if (closedir(dir_info.dir) == -1) {
                     std::cerr << "closedir error" << std::endl;
                 }
                 return;
@@ -675,7 +675,7 @@ int HttpRes::static_handler() {
 
 	//map_uri_to_path();
 
-	int fd = -1;
+	int _fd = -1;
 	std::string file_name = join_path();
 	//file_name = "index.html";
     std::cout << "file_name: " << file_name << std::endl;
@@ -683,9 +683,9 @@ int HttpRes::static_handler() {
     struct stat sb;
     status_code = 200;
     if (method == "GET") {
-        fd = open(file_name.c_str(), O_RDONLY);
-		std::cout << "RES GET fd: " << fd << std::endl;
-        if (fd == -1) {
+        _fd = open(file_name.c_str(), O_RDONLY);
+		std::cout << "RES GET fd: " << _fd << std::endl;
+        if (_fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
                 return NOT_FOUND;
@@ -701,7 +701,7 @@ int HttpRes::static_handler() {
         }
         // ディレクトリだった時
         if (S_ISDIR(sb.st_mode)) {
-			close(fd);
+			close(_fd);
             return DECLINED;
         }
     //    if (!S_ISREG(sb.st_mode) && method == "POST") {
@@ -711,7 +711,7 @@ int HttpRes::static_handler() {
     //    }
         // 通常ファイルではない
         if (!S_ISREG(sb.st_mode)) {
-			close(fd);
+			close(_fd);
             // なんのエラー?
             std::cerr << "NOT FOUND(404)" << std::endl;
             //status 404
@@ -723,7 +723,7 @@ int HttpRes::static_handler() {
         if (stat(file_name.c_str(), &sb) == -1) {
 			// ファイルが存在しない
 			if (errno != ENOENT) {
-				close(fd);
+				close(_fd);
                 std::cerr << "stat error" << std::endl;
                 return INTERNAL_SERVER_ERROR;
 				// throw error
@@ -732,7 +732,7 @@ int HttpRes::static_handler() {
         }
         // ディレクトリだった時
         if (S_ISDIR(sb.st_mode)) {
-			close(fd);
+			close(_fd);
             return DECLINED;
         }
     //    if (!S_ISREG(sb.st_mode) && method == "POST") {
@@ -745,7 +745,7 @@ int HttpRes::static_handler() {
 	    last_modified_time = sb.st_mtime;
         if (!S_ISREG(sb.st_mode) && status_code != 201) {
 			std::cerr << "stat error" << std::endl;
-			close(fd);
+			close(_fd);
         	return INTERNAL_SERVER_ERROR;
 			/*
             fd = open(file_name.cstr(), O_CREATE | O_WRONLY); //open necessary???
@@ -759,17 +759,17 @@ int HttpRes::static_handler() {
         } else {
 			// 通常ファイル
 			//file_name = "sinki.html";
-			fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND, 00644);
-			if (fd == -1) {
+			_fd = open(file_name.c_str(), O_CREAT | O_WRONLY | O_APPEND, 00644);
+			if (_fd == -1) {
                 std::cerr << "POST open error" << std::endl;
                 return INTERNAL_SERVER_ERROR;
 			}
 			std::string body = httpreq.getContentBody().c_str();
 			std::cout << "POST body: \n" << body << std::endl;
-			write(fd, body.c_str(), body.size());
+			write(_fd, body.c_str(), body.size());
 		}
     }
-    close(fd);
+    close(_fd);
     //discoard request body here ?
 	set_content_type();
     //set_etag(); //necessary?

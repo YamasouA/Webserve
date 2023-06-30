@@ -176,8 +176,6 @@ int main(int argc, char *argv[]) {
                 write(acceptfd, res.out_buf.c_str(), res.body_size);
 				std::cout << "wait" << std::endl;
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
-				int i = close(acceptfd);
-				std::cout << "i: " << i << std::endl;
 				fd_client_map.erase(acceptfd);
 			}
 		}
