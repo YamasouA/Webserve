@@ -18,13 +18,13 @@ HttpRes::HttpRes() {
 
 }
 
-HttpRes::HttpRes(const Client& source, Kqueue kq)
+HttpRes::HttpRes(const Client& source, Kqueue &kq)
 :is_posted(0)
 {
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
 	this->vServer = source.get_vServer();
-    this->connection = kq;
+    this->connection = &kq;
 	this->fd = source.get_fd();
 }
 
@@ -36,12 +36,13 @@ HttpRes::HttpRes(const HttpRes& src) {
 }
 
 HttpRes::~HttpRes() {
+	//close(fd);
 }
 
 
 Location HttpRes::get_uri2location(std::string uri) const
 {
-	std::cout << "===== get_uri2location() =====" << std::endl;
+	//std::cout << "===== get_uri2location() =====" << std::endl;
 //    std::vector<Location> locs = vServer.get_locations();
 //    std::map<std::string, Location> uri2loc;
 //    for (std::vector<Location>::iterator it = locs.begin(); it != locs.end(); ++it) {
@@ -49,14 +50,14 @@ Location HttpRes::get_uri2location(std::string uri) const
 //    }
 	std::map<std::string, Location> uri2location = vServer.get_uri2location();
 	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
-	std::cout << "request uri: " << uri << std::endl;
-	std::cout << "size: " << uri2location.size() << std::endl;
+	//std::cout << "request uri: " << uri << std::endl;
+	//std::cout << "size: " << uri2location.size() << std::endl;
 	for (std::map<std::string, Location>::iterator it = uri2location.begin();
 		it != uri2location.end(); it++) {
-		std::cout << "location uri: " << it->second.get_uri() << std::endl;
+		//std::cout << "location uri: " << it->second.get_uri() << std::endl;
 	}
 	if (loc != uri2location.end()) {
-        std::cout << "match all" << std::endl;
+        //std::cout << "match all" << std::endl;
 		return loc->second;
 	}
 	/*
@@ -69,12 +70,12 @@ Location HttpRes::get_uri2location(std::string uri) const
 //		std::cout << "i: " << i << std::endl;
 //		std::cout << "a" << std::endl;
 		if (i == std::string::npos) {
-			std::cout << "a" << std::endl;
-            std::cout << "okend" << std::endl;
+			//std::cout << "a" << std::endl;
+            //std::cout << "okend" << std::endl;
 			break;
 		}
 //		std::cout << "b" << std::endl;
-		std::cout << "path(bef): " << path << std::endl;
+		//std::cout << "path(bef): " << path << std::endl;
 		if (i == 0) {
 			path = path.substr(0, 1);
         } else {
@@ -82,11 +83,11 @@ Location HttpRes::get_uri2location(std::string uri) const
         }
 		//std::cout << "path: " << path << std::endl;
 //        }
-        std::cout << "substr path: " << path << std::endl;
+        //std::cout << "substr path: " << path << std::endl;
 		loc = uri2location.find(path);
 //		std::map<std::string, Location>::const_iterator loc = uri2location.find(path);
 		if (loc != uri2location.end()) {
-            std::cout << "ok1" << std::endl;
+            //std::cout << "ok1" << std::endl;
 			return loc->second;
 		}
 
@@ -95,7 +96,7 @@ Location HttpRes::get_uri2location(std::string uri) const
 
 	}
 
-	std::cout << "break" << std::endl;
+	//std::cout << "break" << std::endl;
 	// 何もマッチしなかった場合の挙動イズなに？
 	return loc->second;
 }
@@ -106,8 +107,8 @@ Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Loc
 	for (std::vector<Location>::iterator it = locations.begin(); it != locations.end(); it++) {
         std::string location_path = it->get_uri();
 		// locationの方が長い場合はマッチしない
-		std::cout << "request_path: " << request_path << std::endl;
-		std::cout << "location_path: " << location_path << std::endl;
+		//std::cout << "request_path: " << request_path << std::endl;
+		//std::cout << "location_path: " << location_path << std::endl;
 		if (request_path.find(location_path) == 0) {
 			// 終端が'/'でないまたは、最後のスペルまでマッチしている以外は
 			// 中途半端にマッチしていて間違っている
@@ -136,12 +137,12 @@ bool HttpRes::isAllowMethod(std::string method) {
 std::string HttpRes::join_path() {
     std::cout << "===== join_path =====" << std::endl;
 	std::string path_root = target.get_root();
-    std::cout << "root: " << path_root << std::endl;
+    //std::cout << "root: " << path_root << std::endl;
 	//std::string file_path  = target.get_uri();
 	std::string config_path  = target.get_uri();
 	std::string file_path = httpreq.getUri().substr(config_path.length());
-	std::cout << "config_path: " << config_path<< std::endl;
-	std::cout << "Path: " << file_path << std::endl;
+	//std::cout << "config_path: " << config_path<< std::endl;
+	//std::cout << "Path: " << file_path << std::endl;
     //std::cout << "uri: " << file_path << std::endl;
 	if (file_path.length() && file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
 		file_path = "/index.html"; //  "/index" is better?
@@ -151,7 +152,7 @@ std::string HttpRes::join_path() {
 		config_path = alias;
 	}
     //std::cout << "not auto index" << std::endl;
-    std::cout << "file_path(in join_path): " << file_path << std::endl;
+    //std::cout << "file_path(in join_path): " << file_path << std::endl;
 	if (path_root[path_root.length() - 1] == '/') {
 		//file_path = file_path.substr(1);
 		config_path = config_path.substr(1);
@@ -160,7 +161,7 @@ std::string HttpRes::join_path() {
 		//file_path = file_path.substr(1);
 		file_path = file_path.substr(1);
 	}
-	std::cout << "path: " << path_root + config_path + file_path << std::endl;
+	//std::cout << "path: " << path_root + config_path + file_path << std::endl;
     std::cout << "===== End join_path =====" << std::endl;
 	return path_root + config_path + file_path;
 }
@@ -180,31 +181,31 @@ void HttpRes::read_file() {
 	if (!ifs) {
 		// file not foundかそれ以外かをどう見分けるか
 		status_code = 404;
-		std::cout << "ko" << std::endl;
+		//std::cout << "ko" << std::endl;
 	}
 	std::ostringstream oss;
 	oss << ifs.rdbuf();
 	status_code = 200;
 	const std::string strs = oss.str();
 	set_body(strs);
-	std::cout << body << std::endl;
+	//std::cout << body << std::endl;
 }
 
 void HttpRes::write_file() {
-	std::cout << "Write" << std::endl;
+	//std::cout << "Write" << std::endl;
 	std::string file_name = join_path();
-	std::cout << "file_name: " << file_name << std::endl;
+	//std::cout << "file_name: " << file_name << std::endl;
 	std::ofstream ofs(file_name);
 	if (!ofs.is_open()) {
-		std::cout << "Error(ofstream)" << std::endl;
+		//std::cout << "Error(ofstream)" << std::endl;
 	}
 	ofs << httpreq.getContentBody();
 }
 
 void HttpRes::delete_file() {
-	std::cout << "Delete" << std::endl;
+	//std::cout << "Delete" << std::endl;
 	std::string file_name = join_path();
-	std::cout << "file_name: " << file_name << std::endl;
+	//std::cout << "file_name: " << file_name << std::endl;
 	// cのremoveなら使っても大丈夫??
 	// c++だと新しくてダメっぽい
 	if (remove(file_name.c_str())) {
@@ -230,9 +231,9 @@ void HttpRes::createControlData() {
 	header += "HTTP1.1 ";
 	std::stringstream ss;
 	std::string code;
-	std::cout << "status_code: " << status_code << std::endl;
+	//std::cout << "status_code: " << status_code << std::endl;
 	ss << status_code;
-	std::cout << "code: " << code << std::endl;
+	//std::cout << "code: " << code << std::endl;
 	header += ss.str();
 	header += " ";
 	header += getStatusString();
@@ -259,7 +260,7 @@ void HttpRes::createContentLength() {
 	std::stringstream ss;
 	std::string code;
 	ss << body.length();
-	std::cout << "code: " << code << std::endl;
+	//std::cout << "code: " << code << std::endl;
 	header += "Content-Length: ";
 	header += ss.str();
 }
@@ -297,7 +298,8 @@ void HttpRes::set_content_type() {
 }
 
 void HttpRes::ev_queue_insert() {
-	connection.set_event(fd, EVFILT_WRITE);
+	//connection.set_event(fd, EVFILT_WRITE);
+	connection->set_event(fd, EVFILT_WRITE);
     std::cout << "send event!!!!!!!!!!!!!!!!!!!" << std::endl;
 }
 
@@ -403,7 +405,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
             continue;
         }
         std::string abs_path = join_dir_path(path, file_name);
-        std::cout << "abs_path: " << abs_path << std::endl;
+        //std::cout << "abs_path: " << abs_path << std::endl;
 
         if (!dir_info.valid_info) {
 //            dir_info.type = 0;
@@ -453,13 +455,13 @@ void HttpRes::dav_delete_path(bool is_dir) {
     std::cout << "dav_delete_path" << std::endl;
     if (is_dir) {
         std::string dir_path = join_path();
-        std::cout << "dir_path: " << dir_path << std::endl;
+        //std::cout << "dir_path: " << dir_path << std::endl;
         diving_through_dir(dir_path);
         if (status_code == INTERNAL_SERVER_ERROR) {
             return;
         }
         if (rmdir(dir_path.c_str()) < 0) {
-			std::cout << "delete error" << std::endl;
+			//std::cout << "delete error" << std::endl;
 			status_code = INTERNAL_SERVER_ERROR;
             return;
         }
@@ -470,9 +472,9 @@ void HttpRes::dav_delete_path(bool is_dir) {
 	} else {
 		std::string file_name = join_path();
 		//file_name = "hogehoge.txt";
-		std::cout << "delete!!" << std::endl;
+		//std::cout << "delete!!" << std::endl;
 		if (remove(file_name.c_str()) < 0) {
-			std::cout << "delete error" << std::endl;
+			//std::cout << "delete error" << std::endl;
 			status_code = INTERNAL_SERVER_ERROR;
 			return;
 		}
@@ -490,13 +492,14 @@ void HttpRes::dav_delete_handler() {
 	struct stat sb;
 	bool is_dir;
 	int depth;
+	//std::cout << "a" << std::endl;
 	std::string method = httpreq.getMethod();
 	if (method != "DELETE") {
 		return;
 	}
 
 	std::vector<std::string> allow_methods = target.get_methods();
-	std::cout << "allow_methods: " << std::endl;
+	//std::cout << "allow_methods: " << std::endl;
 	if (find(allow_methods.begin(), allow_methods.end(), method) == allow_methods.end()) {
 		std::cout << "not allow (conf)" << std::endl;
 		status_code = BAD_REQUEST;
@@ -512,23 +515,23 @@ void HttpRes::dav_delete_handler() {
 	}
 	if (S_ISDIR(sb.st_mode)) {
 		std::string uri = httpreq.getUri();
-        std::cout << "dir uri: " << uri << std::endl;
+        //std::cout << "dir uri: " << uri << std::endl;
 //		if (uri[uri.length() - 1] != '/') {
 //			status_code = BAD_REQUEST;
 //			return;
 //		}
-        std::cout << "ok1" << std::endl;
+        //std::cout << "ok1" << std::endl;
 		depth = dav_depth();
 		if (depth != -1) {
 			status_code = BAD_REQUEST;
 			return;
 		}
 		is_dir = true;
-        std::cout << "ok" << std::endl;
+        //std::cout << "ok" << std::endl;
 	} else {
-		std::cout << "delete files" << std::endl;
+		//std::cout << "delete files" << std::endl;
 		depth = dav_depth();
-		std::cout << "depth: " << depth << std::endl;
+		//std::cout << "depth: " << depth << std::endl;
 		if (depth != 0 && depth != -1) {
 			status_code = BAD_REQUEST;
 			return;
@@ -657,7 +660,7 @@ int HttpRes::static_handler() {
 	std::cout << "===== static_handler =====" << std::endl;
 	std::string uri = httpreq.getUri();
 	target = get_uri2location(uri);
-    std::cout << "macth loc: " << target << std::endl;
+    //std::cout << "macth loc: " << target << std::endl;
 	std::string method = httpreq.getMethod();
 	if (method != "GET" && method != "HEAD" && method != "POST") {
         std::cerr << "not allow method(405)" << std::endl;
@@ -665,9 +668,9 @@ int HttpRes::static_handler() {
 		return DECLINED;
 	}
 	std::vector<std::string> allow_methods = target.get_methods();
-	std::cout << "allow_methods: " << std::endl;
+	//std::cout << "allow_methods: " << std::endl;
 	if (find(allow_methods.begin(), allow_methods.end(), method) == allow_methods.end()) {
-		std::cout << "not allow (conf)" << std::endl;
+		//std::cout << "not allow (conf)" << std::endl;
 		status_code = BAD_REQUEST;
 		return DECLINED;
 	}
@@ -691,6 +694,7 @@ int HttpRes::static_handler() {
     status_code = 200;
     if (method == "GET") {
         fd = open(file_name.c_str(), O_RDONLY);
+		std::cout << "RES GET fd: " << fd << std::endl;
         if (fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
@@ -711,6 +715,7 @@ int HttpRes::static_handler() {
         }
         // ディレクトリだった時
         if (S_ISDIR(sb.st_mode)) {
+			close(fd);
             return DECLINED;
         }
     //    if (!S_ISREG(sb.st_mode) && method == "POST") {
@@ -720,6 +725,7 @@ int HttpRes::static_handler() {
     //    }
         // 通常ファイルではない
         if (!S_ISREG(sb.st_mode)) {
+			close(fd);
             // なんのエラー?
             std::cerr << "NOT FOUND(404)" << std::endl;
             //status 404
@@ -731,6 +737,7 @@ int HttpRes::static_handler() {
         if (stat(file_name.c_str(), &sb) == -1) {
 			// ファイルが存在しない
 			if (errno != ENOENT) {
+				close(fd);
                 std::cerr << "stat error" << std::endl;
                 return INTERNAL_SERVER_ERROR;
 				// throw error
@@ -739,6 +746,7 @@ int HttpRes::static_handler() {
         }
         // ディレクトリだった時
         if (S_ISDIR(sb.st_mode)) {
+			close(fd);
             return DECLINED;
         }
     //    if (!S_ISREG(sb.st_mode) && method == "POST") {
@@ -751,6 +759,7 @@ int HttpRes::static_handler() {
 	    last_modified_time = sb.st_mtime;
         if (!S_ISREG(sb.st_mode) && status_code != 201) {
 			std::cerr << "stat error" << std::endl;
+			close(fd);
         	return INTERNAL_SERVER_ERROR;
 			/*
             fd = open(file_name.cstr(), O_CREATE | O_WRONLY); //open necessary???

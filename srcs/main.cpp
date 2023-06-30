@@ -18,22 +18,14 @@
 //std::map<int, virtualServer> initialize_fd(configParser conf, Kqueue kqueue) {
 void initialize_fd(configParser conf, Kqueue &kqueue, std::map<int, virtualServer>& fd_config_map) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
-	//std::map<int, virtualServer> fd_config_map;
 	for (std::vector<virtualServer>::iterator it = server_confs.begin(); it != server_confs.end(); it++) {
-		//std::cout << "=============" << std::endl;
-		//std::cout << *it << std::endl;
-		//std::string default_file = *it.get_root();
 		std::cout << "it->get_listen(): " << it->get_listen() << std::endl;
 		Socket *socket = new Socket(it->get_listen());
-		//Socket *socket = new Socket(8000);
 		socket->set_socket();
+		//fd_config_map.insert(std::make_pair(socket->get_listenfd(), *it));
+		fd_config_map[socket->get_listenfd()] =  *it;
 		kqueue.set_event(socket->get_listenfd(), EVFILT_READ);
-		//fd_config_map[socket->get_listenfd()] = *it;
-		fd_config_map.insert(std::make_pair(socket->get_listenfd(), *it));
-		std::cout << "size: " << fd_config_map.count(socket->get_listenfd()) << std::endl;
 	}
-	std::cout << "size: " << fd_config_map.size() << std::endl;
-	//return fd_config_map;
 }
 
 void assign_server(configParser& conf, Client& client) {
@@ -84,6 +76,7 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     httpReq httpreq(buf);
     httpreq.parseRequest();
 	std::cout << "Here" << std::endl;
+	client.set_fd(fd);
     client.set_httpReq(httpreq);
 //	client.set_httpReq(httpparser.get);
     assign_server(conf, client);
@@ -116,42 +109,16 @@ int main(int argc, char *argv[]) {
 		//std::cout << conf.get_serve_confs()[0] << std::endl;
 		Kqueue kqueue;
 	initialize_fd(conf, kqueue, fd_config_map);
-		//fd_config_map = initialize_fd(conf, kqueue);
-		//initialize_fd(conf, kqueue, fd_config_map);
-		//std::cout << "before loop size: " << fd_config_map.size() << std::endl;
-	//} catch (const std::exception &e) {
-
-	//}
-	//std::string default_file = "index.html";
-	//Socket *socket = new Socket(8000); //port num is tmp
-	//socket->set_socket();
-
 	int acceptfd;
-	//ssize_t ret;
-	//char buf[1024];
 
 	struct timespec time_over;
 	time_over.tv_sec = 10;
 	time_over.tv_nsec = 0;
 
-	/*
-	struct kevent register_event[4], reciver_event[4];
-	int kq = kqueue();
-	EV_SET(register_event, socket->get_listenfd(), EVFILT_READ, EV_ADD | EV_ENABLE , 0, 0, NULL);
-	if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
-		perror("kevent");
-		std::exit(1);
-	}
-	*/
-
-//    HttpRes res;
 	while (1) {
-		std::cout << "loop top size: " << fd_config_map.size() << std::endl;
-//		Logger::logging("hello");
-		//int events_num = kevent(kqueue->get_kq(), NULL, 0, reciver_event, 1, &time_over);
 		int events_num = kqueue.get_events_num();
-        std::cout << "errno: " << errno << std::endl;
 		std::cout << "event_num: " << events_num << std::endl;
+        std::cout << "errno: " << errno << std::endl;
 		if (events_num == -1) {
 			perror("kevent");
 			std::exit(1);
@@ -164,73 +131,55 @@ int main(int argc, char *argv[]) {
 			//int event_fd = reciver_event[i].ident;
 			struct kevent* reciver_event = kqueue.get_reciver_event();
 			int event_fd = reciver_event[i].ident;
-			std::cout << "event_fd: " << event_fd << std::endl;
-			std::cout << "size: " << fd_config_map.count(event_fd) << std::endl;
+			fcntl(event_fd, F_SETFL, O_NONBLOCK);
+			std::cout << "===== loop top =====" << std::endl;
+			std::cout << "event_fd(): " << event_fd << std::endl;
+			//std::cout << "size: " << fd_config_map.count(event_fd) << std::endl;
 			if (reciver_event[i].flags & EV_EOF) {
 				std::cout << "Client " << event_fd << " has disconnected" << std::endl;
 				close(event_fd);
-			}
-
-			//else if (event_fd == socket->get_listenfd()) {
-			else if (fd_config_map.count(event_fd) == 1) {
-				//acceptfd = accept(socket->get_listenfd(), NULL, NULL);
+			} else if (fd_config_map.count(event_fd) == 1) {
+				std::cout << "first register" << std::endl;
 				Client client;
+				// ここのevent_fdはconfigで設定されてるserverのfd
 				acceptfd = accept(event_fd, NULL, NULL);
-				std::cout << "acceptfd:" << acceptfd << std::endl;
 				if (acceptfd == -1) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
 				}
+				//fcntl(acceptfd, F_SETFL, O_NONBLOCK);
+				//fd_client_map.insert(std::make_pair(acceptfd, client));
+				//std::cout << "sleep1" << std::endl;
+				//sleep(5);
+				fd_client_map[acceptfd] =  client;
+				//std::cout << "sleep2" << std::endl;
+				//sleep(5);
 				kqueue.set_event(acceptfd, EVFILT_READ);
-				client.set_fd(acceptfd);
-				fd_client_map.insert(std::make_pair(acceptfd, client));
-				/*
-				EV_SET(register_event, acceptfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-				if (kevent(kq, register_event, 1, NULL, 0, NULL) == -1) {
-					perror("kevent error");
-				}
-				*/
-			//} else if (reciver_event[i].filter & EVFILT_READ && !(reciver_event[i].filter & EVFILT_WRITE)) {
 			} else if (reciver_event[i].filter ==  EVFILT_READ) {
-				//acceptfd = accept(event_fd, NULL, NULL);
 				acceptfd = event_fd;
-				std::cout << "READ!!!" << std::endl;
 				char buf[1024];
 				memset(buf, 0, sizeof(buf));
 //				fcntl(event_fd, F_SETFL, O_NONBLOCK);
-				//fcntl(0, F_SETFL, O_NONBLOCK);
-				//read(0, buf, 1);
-				//recv(event_fd, buf, sizeof(buf), 0);
 				//client->set_request(buf);
 				//acceptfd = reciver_event[i].data;
-				//acceptfd = event_fd;
-				std::cout << "accept fd: " << acceptfd << std::endl;
-				std::cout << "errorno: " << errno << std::endl;
+				//std::cout << "errorno: " << errno << std::endl;
+				//std::cout << "sleep3:" << std::endl;
+				//sleep(5);
+				//
 				read_request(acceptfd, fd_client_map[acceptfd], conf, kqueue);
                 kqueue.disable_event(acceptfd, EVFILT_READ);
-				//kqueue.set_event(acceptfd, EVFILT_WRITE);
-//				std::cout << buf << std::endl;
-//				std::cout << "ok" << std::endl;
+				kqueue.set_event(acceptfd, EVFILT_WRITE);
 			} else if (reciver_event[i].filter == EVFILT_WRITE) {
 				std::cout << "WRITE!!!!" << std::endl;
-				//acceptfd = accept(event_fd, NULL, NULL);
 				acceptfd = event_fd;
-				std::cout << "accept fd: " << acceptfd << std::endl;
-//				std::cout << "hoge" << std::endl;
                 HttpRes res = fd_client_map[acceptfd].get_httpRes();
-				//std::cout << "response: " << res.buf.c_str() << std::endl;
-				std::cout << "response: " << std::endl << res.buf.c_str() << std::endl;
                 write(acceptfd, res.buf.c_str(), res.header_size);
-				std::cout << "body: " << res.out_buf.c_str() << std::endl;
                 write(acceptfd, res.out_buf.c_str(), res.body_size);
+				std::cout << "wait" << std::endl;
                 kqueue.disable_event(acceptfd, EVFILT_WRITE);
-				//std::string connection_header = fd_client_map[acceptfd].get_httpRes().getHeaderFields()["connection"];
-				//std::cout << "connection: " << connection_header << std::endl;
-				/*
-				if (connection_header != "keep-alive")
-					close(acceptfd);
-				*/
-				close(acceptfd);
+				int i = close(acceptfd);
+				std::cout << "i: " << i << std::endl;
+				fd_client_map.erase(acceptfd);
 			}
 		}
 	}

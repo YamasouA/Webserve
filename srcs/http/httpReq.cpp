@@ -33,7 +33,8 @@ httpReq& httpReq::operator=(const httpReq& rhs)
 }
 
 httpReq::~httpReq()
-{}
+{
+}
 
 void httpReq::setMethod(const std::string& token)
 {

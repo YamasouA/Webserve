@@ -33,9 +33,8 @@ Kqueue& Kqueue::operator=(const Kqueue& rhs) {
 
 Kqueue::~Kqueue() {
     //delete reciver_event;
+	//close(kq);
 }
-
-
 
 //void Kqueue::set_event(int fd) {
 //	EV_SET(register_event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -51,15 +50,17 @@ void Kqueue::set_event(int fd, short ev_filter) {
 		std::cout << "READ register" << std::endl;
 	}
 	if (ev_filter == EVFILT_WRITE) {
+		std::cout << "register fd: " << fd << std::endl;
 		std::cout << "WRITE register" << std::endl;
 	}
 	struct kevent register_event;
 	EV_SET(&register_event, fd, ev_filter, EV_ADD | EV_ENABLE, 0, 0, NULL);
 	changes.push_back(register_event);
 	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
-		perror("kevent error");
+		std::cout << errno << std::endl;
+		perror("kevent error(register)");
     }
-	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
+	//std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
 
 void Kqueue::disable_event(int fd, short ev_filter) {
@@ -73,9 +74,13 @@ void Kqueue::disable_event(int fd, short ev_filter) {
 	EV_SET(&register_event, fd, ev_filter, EV_DELETE, 0, 0, NULL);
 	changes.push_back(register_event);
 	if (kevent(kq, &register_event, 1, NULL, 0, NULL) == -1) {
-		perror("kevent error");
+		perror("kevent error(in disable)");
     }
-	std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
+	if (ev_filter == EVFILT_WRITE) {
+		std::cout << "close" << std::endl;
+		close(fd);
+	}
+	//std::cout << "REGISTER: changes.size(): " << changes.size() << std::endl;
 }
 
 int Kqueue::get_kq() {
@@ -95,7 +100,7 @@ int Kqueue::get_events_num() {
 	//int event_num = kevent(kq, event, changes.size(), reciver_event, 100, &time_over);
 	int event_num = kevent(kq, NULL, 0, reciver_event, 100, &time_over);
 	std::cout << "event_num: " << event_num << std::endl;
-	changes.clear();
+	//changes.clear();
 	return event_num;
 }
 
