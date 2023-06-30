@@ -29,6 +29,7 @@ class httpReq {
         std::string getContentBody() const;
         int getContentLength() const;
         std::map<std::string, std::string> getHeaderFields() const;
+        int getKeepAlive() const;
 		void parseRequest();
         bool isSpace(char c);
 		std::string toLower(std::string str);
@@ -44,6 +45,7 @@ class httpReq {
         std::map<std::string, std::string> header_fields;
         std::string content_body;
 		bool parse_error;
+        int keep_alive;
 
 		void trim(std::string& str);
 		void skipSpace();

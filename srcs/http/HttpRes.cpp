@@ -239,16 +239,20 @@ void HttpRes::createControlData() {
 }
 
 //void HttpRes::createDate()
-void HttpRes::createDate(time_t now, std::string fieldName)
+std::string HttpRes::createDate(time_t now, std::string fieldName)
 {
+    std::string str;
     char buf[1000];
     //time_t now = time(0);
     struct tm tm = *gmtime(&now);
     std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S ", &tm);
     //body += "Date: ";
-	header += fieldName + ": ";
+	str += fieldName + ": ";
+//	header += fieldName + ": ";
     std::string date(buf);
-    header += date + "GMT\n";
+    str += date + "GMT\n";
+//    header += date + "GMT\n";
+    return str;
 }
 
 void HttpRes::createContentLength() {
@@ -588,7 +592,8 @@ void HttpRes::header_filter() {
 
 	buf += "\r\n";
 	// Cacheとかは考慮しないのでdateの処理は飛ばす
-
+    time_t now = std::time(NULL);
+    buf += createDate(now, "Date");
 	if (content_type != "") {
 		buf += "Content-Type: " + content_type;
 
@@ -599,7 +604,10 @@ void HttpRes::header_filter() {
 		}
 		buf += "\r\n";
 	}
-
+    std::stringstream ss;
+    ss << content_length_n;
+    buf += "Content-Length: " + ss.str();
+	buf += "\r\n";
 	// content_length_n と content_lengthの関係がよくわからん
 	if (last_modified_time != -1) {
 		//buf += "Last-Modified: " + http_time();
@@ -612,8 +620,9 @@ void HttpRes::header_filter() {
 
 	// keep-alive系は問答無用でcloseする？
     // keep-alive looks better managed with flags.
-    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
-    if (header_fields["connection"] == "keep-alive") {
+//    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
+//    if (header_fields["connection"] == "keep-alive") {
+    if (httpreq.getKeepAlive()) {
         buf += "Connection: keep-alive";
     } else {
 	    buf += "Connection: close";
@@ -623,13 +632,13 @@ void HttpRes::header_filter() {
 
 	// 残りのヘッダー  もしかしたら必要ないかも？ 現状Connection filedなどがダブってしまっているetc...
 	std::map<std::string, std::string> headers = httpreq.getHeaderFields();
-	std::map<std::string, std::string>::iterator it= headers.begin();
-	for (; it != headers.end(); it++) {
-		buf += it->first;
-		buf += ": ";
-		buf += it->second;
-		buf += "\r\n";
-	}
+//	std::map<std::string, std::string>::iterator it= headers.begin();
+//	for (; it != headers.end(); it++) {
+//		buf += it->first;
+//		buf += ": ";
+//		buf += it->second;
+//		buf += "\r\n";
+//	}
 	buf += "\r\n";
 	header_size = buf.size();
 
@@ -685,8 +694,12 @@ int HttpRes::static_handler() {
         if (fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+                std::cout << "NOT FOUND" << std::endl;
+                status_code = NOT_FOUND;
                 return NOT_FOUND;
             } else if (EACCES){
+                std::cout << "FORBIDDEN" << std::endl;
+                status_code = FORBIDDEN;
                 return FORBIDDEN;
             }
             // 次のハンドラーに処理を託す
@@ -786,7 +799,8 @@ int HttpRes::static_handler() {
 }
 
 std::string HttpRes::create_err_page() {
-    std::map<int, std::string> status_msg_map;
+    std::map<int, std::string> status_msg_map = create_status_msg();
+//    std::string err_page_buf = "<!DOCTYPE html>" "\r\n";
     std::string err_page_buf = "<html>" "\r\n""<head><title>";
     std::stringstream ss;
 	ss << status_code;
@@ -798,20 +812,25 @@ std::string HttpRes::create_err_page() {
     err_page_buf += " ";
     err_page_buf += status_msg_map[status_code];
     err_page_buf += "</h1></center>" "\r\n";
+    err_page_buf += "<hr><center>";
+    err_page_buf += kServerName;
+    err_page_buf += "</center>" "\r\n""</body>""\r\n""</html>";
+
     std::cout << "err_page: " << err_page_buf << std::endl;
+    return err_page_buf;
 }
 
 int HttpRes::redirect_handler() {
     switch (status_code) {
         case BAD_REQUEST:
-        case REQUEST_ENTITY_TOO_LARGE:
-        case REQUEST_URI_TOO_LARGE:
-        case HTTP_TO_HTTPS:
-        case HTTPS_CERT_ERROR:
-        case HTTPS_NO_CERT:
-        case HTTP_INTERNAL_SERVER_ERROR:
+//        case REQUEST_ENTITY_TOO_LARGE:
+//        case REQUEST_URI_TOO_LARGE:
+//        case HTTP_TO_HTTPS:
+//        case HTTPS_CERT_ERROR:
+//        case HTTPS_NO_CERT:
+        case INTERNAL_SERVER_ERROR:
         case HTTP_NOT_IMPLEMENTED:
-            //Disable keep alive
+            keep_alive = 0;
     }
     content_type.erase();
 //     if conf_error_pages == 1 {
@@ -826,13 +845,13 @@ int HttpRes::redirect_handler() {
     }
 
     if (status_code >= 490) { //49x ~ 5xx
-        switch (status_code) {
-            case HTTP_TO_HTTPS:
-            case HTTPS_CERT_ERROR:
-            case HTTPS_NO_CERT:
-            case HTTP_REQUEST_HEADER_TOO_LARGE:
+//        switch (status_code) {
+//            case HTTP_TO_HTTPS:
+//            case HTTPS_CERT_ERROR:
+//            case HTTPS_NO_CERT:
+//            case HTTP_REQUEST_HEADER_TOO_LARGE:
                 status_code = BAD_REQUEST;
-        }
+//        }
     } else {
         std::cout << "unknown status code" << std::endl;
     }
@@ -843,7 +862,7 @@ int HttpRes::redirect_handler() {
     std::string err_page_buf = create_err_page();
     if (err_page_buf.length()) {
         content_length_n = err_page_buf.length();
-        content_type = "txet/html";
+        content_type = "text/html";
     }
     else {
         content_length_n = 0;
@@ -852,32 +871,40 @@ int HttpRes::redirect_handler() {
 //  clear last_modified
     last_modified_time = -1;
 //  clear etag
-
     sendHeader();
 //    if err || only_header
 //        return
 //    if content_length == 0
         // something
     out_buf = err_page_buf;
+    body_size = content_length_n;
+    return OK;
 }
 
 void HttpRes::finalize_res(int handler_status)
 {
-    if (200 <= status_code && status_code < 207) //except 201, 204 ? //or DONE, OK{
+    if (handler_status == DECLINED) {
+        return;
+    }
+    if (200 <= status_code && status_code < 207) {//except 201, 204 ? //or DONE, OK
         // handle connection
         return;
     }
     if (status_code >= 300) {//and 201, 204 ?
         // handle around timeer
         //
-        return redirect_handler(); //recurcive finalize_res is better?
+        std::cout << "status code over 300 case" << std::endl;
+        redirect_handler(); //recurcive finalize_res is better?
+        return;
     }
 }
 
 void HttpRes::runHandlers() {
     int handler_status = 0;
     handler_status = static_handler();
+    std::cout << "handler status after static handler: " << handler_status << std::endl;
     if (handler_status != DECLINED) {
+        std::cout << "in finalize" << std::endl;
         return finalize_res(handler_status);
     }
 //	dav_delete_handler();

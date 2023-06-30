@@ -89,6 +89,11 @@ int httpReq::getContentLength() const
 {
     return this->content_length;
 }
+
+int httpReq::getKeepAlive() const
+{
+    return this->keep_alive;
+}
 //std::vector<httpReq> httpReq::getHeaderInfo() const
 //{
 //    return this->header_info;
@@ -262,10 +267,15 @@ void httpReq::fix_up() {
 	if (header_fields.count("host") != 1) {
 		std::cerr << "status " << std::endl;
 	}
-	/*
+
 	if (header_fields.count("connection") != 1) {
 		std::cerr << "status " << std::endl;
-	}*/
+	}
+    if (header_fields["connection"] == "keep-alive") {
+        keep_alive = 1;
+    } else {
+        keep_alive = 0;
+    }
 	if (header_fields.count("content_length") != 1) {
 		std::cerr << "status " << std::endl;
 	}
