@@ -52,10 +52,11 @@ Location HttpRes::get_uri2location(std::string uri) const
 	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
 	//std::cout << "request uri: " << uri << std::endl;
 	//std::cout << "size: " << uri2location.size() << std::endl;
+	/*
 	for (std::map<std::string, Location>::iterator it = uri2location.begin();
 		it != uri2location.end(); it++) {
 		//std::cout << "location uri: " << it->second.get_uri() << std::endl;
-	}
+	}*/
 	if (loc != uri2location.end()) {
         //std::cout << "match all" << std::endl;
 		return loc->second;
@@ -100,6 +101,8 @@ Location HttpRes::get_uri2location(std::string uri) const
 	// 何もマッチしなかった場合の挙動イズなに？
 	return loc->second;
 }
+
+
 
 Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Location> locations) {
 	Location location;
@@ -908,10 +911,63 @@ void HttpRes::finalize_res(int handler_status)
     }
 }
 
+void HttpRes::redirect() {
+	std::cout << "===== redirect =====" << std::endl;
+	std::string uri = httpreq.getUri();
+	Location loc = get_uri2location(uri);
+	std::string ret = loc.get_return();
+	std::cout << "return: " << ret << std::endl;
+	if (ret == "")
+		return;
+	std::vector<std::string> elms;
+	std::string elm;
+	std::stringstream ss1(ret);
+
+	while (std::getline(ss1, elm, ' ')) {
+		if (!elm.empty()) {
+			elms.push_back(elm);
+		}
+	}
+	std::stringstream ss(elms[0]);
+	ss >> status_code;
+	std::cout << "status: " << status_code << std::endl;
+	std::string path;
+	// 1引数目が数値じゃない場合(URIが入ってる)
+	if (ss.fail()) {
+		// URLのスキームが正常か？
+		//if (uri.startswith("http://") || uri.startswith("https://")) {
+		path = elms[0];
+		std::cout << "path(bef): " << path << std::endl;
+		if (!path.compare(0, 7, "http://") || !path.compare(0, 8, "https://")) {
+			status_code = MOVED_TEMPORARILY;
+			//path = elms[0];
+		} else {
+			std::cout << "scheme Error" << std::endl;
+			return; //ERROR;
+		}
+	} else {
+		// statusの値が正常値じゃない場合(999)
+		if (status_code > 999) {
+			std::cout << "status_code Error" << std::endl;
+			return; //ERROR;
+		}
+		// status_codeのみ
+		if (elms.size() == 1) {
+			std::cout << "status_code only" << std::endl;
+			return; //OK;
+		}
+		path = elms[1];
+	}
+	std::cout << "path(aft): " << path << std::endl;
+	// compile_complex_valueは$の展開をしてそう
+	return;
+}
+
 void HttpRes::runHandlers() {
     int handler_status = 0;
+	redirect();
     handler_status = static_handler();
-    std::cout << "handler status after static handler: " << handler_status << std::endl;
+    //std::cout << "handler status after static handler: " << handler_status << std::endl;
     if (handler_status != DECLINED) {
         std::cout << "in finalize" << std::endl;
         return finalize_res(handler_status);
