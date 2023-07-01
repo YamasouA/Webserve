@@ -832,6 +832,31 @@ std::string HttpRes::create_err_page() {
     return err_page_buf;
 }
 
+// handle return derective ??? or handle only error_page directive ?
+int send_error_page() {
+    //if path[0] == '/'
+    //  if method != "HEAD"
+    //      method = "GET"
+    //  return internal_redirect ???
+    //if path[0] == '@'
+    //  nameed_location
+    //
+    //discard_request_body
+    //
+    // ovar_write ??
+    //if !MOVED_PERMANENTLY &&
+    //   !MOVED_TEMPORARILY &&
+    //   !SEE_OTHER &&
+    //   !TEMPORARY_REDIRECT &&
+    //   !PERMANENT_REDIRECT
+    //      err_status = MOVED_TEMPORARILY;
+    //
+    //
+    //clear location
+    //location = location info
+    //location_field = location
+}
+
 int HttpRes::redirect_handler() {
     switch (status_code) {
         case BAD_REQUEST:
