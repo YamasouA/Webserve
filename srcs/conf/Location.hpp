@@ -20,6 +20,7 @@ class Location {
 		void set_location(Location location);
 		void set_depth(int depth);
 		void set_alias(std::string alias);
+		void set_error_pages(std::vector<std::string> pages);
 		std::vector<Location> get_locations() const;
 		std::string get_uri() const;
 		std::vector<std::string> get_methods() const;
@@ -30,6 +31,7 @@ class Location {
 		size_t get_max_body_size() const;
 		std::string get_cgi_path() const;
 		std::string get_return() const;
+		std::vector<std::string> get_error_pages() const;
 		int get_depth() const;
 		std::string get_alias() const;
 		Location(const Location& src);
@@ -43,6 +45,7 @@ class Location {
 		std::vector<std::string> methods;
 		std::string upload_path;
 		std::string cgi_path;
+		std::vector<std::string> error_pages;
 		int depth;
 		std::string alias;
 		bool autoindex;

@@ -913,14 +913,14 @@ void HttpRes::finalize_res(int handler_status)
     }
 }
 
-void HttpRes::redirect() {
+int HttpRes::return_redirect() {
 	std::cout << "===== redirect =====" << std::endl;
 	std::string uri = httpreq.getUri();
 	Location loc = get_uri2location(uri);
 	std::string ret = loc.get_return();
 	std::cout << "return: " << ret << std::endl;
 	if (ret == "")
-		return;
+		return DECLINED;
 	std::vector<std::string> elms;
 	std::string elm;
 	std::stringstream ss1(ret);
@@ -945,30 +945,34 @@ void HttpRes::redirect() {
 			//path = elms[0];
 		} else {
 			std::cout << "scheme Error" << std::endl;
-			return; //ERROR;
+			return DECLINED; //ERROR;
 		}
 	} else {
 		// statusの値が正常値じゃない場合(999)
 		if (status_code > 999) {
 			std::cout << "status_code Error" << std::endl;
-			return; //ERROR;
+			return DECLINED; //ERROR;
 		}
 		// status_codeのみ
 		if (elms.size() == 1) {
 			std::cout << "status_code only" << std::endl;
-			return; //OK;
+			return DECLINED; //OK;
 		}
 		path = elms[1];
 	}
 	std::cout << "path(aft): " << path << std::endl;
+	uri = path;
     // needs path with support status_code
 	// compile_complex_valueは$の展開をしてそう
-	return;
+	return OK;
 }
 
 void HttpRes::runHandlers() {
     int handler_status = 0;
-	redirect();
+	handler_status = return_redirect();
+	if (handler_status != DECLINED) {
+		finalize_res(handler_status);
+	}
     handler_status = static_handler();
     //std::cout << "handler status after static handler: " << handler_status << std::endl;
     if (handler_status != DECLINED) {

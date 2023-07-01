@@ -99,6 +99,10 @@ void Location::set_alias(std::string alias)
 	this->alias = alias;
 }
 
+void Location::set_error_pages(std::vector<std::string> pages)
+{
+	this->error_pages = pages;
+}
 std::string Location::get_uri() const{
 	return uri;
 }
@@ -141,6 +145,9 @@ std::string Location::get_alias() const {
 	return alias;
 }
 
+std::vector<std::string> Location::get_error_pages() const{
+	return error_pages;
+}
 std::ostream& operator <<(std::ostream& stream, const Location& obj) {
 			const std::vector<std::string> tmp = obj.get_methods();
 			stream << "uri: " << obj.get_uri() << std::endl

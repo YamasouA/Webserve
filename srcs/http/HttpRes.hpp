@@ -118,7 +118,7 @@ class HttpRes {
         void finalize_res(int handler_status);
         std::string create_err_page();
         int redirect_handler();
-		void redirect();
+		int return_redirect();
         //void createDate();
 	public:
         HttpRes();
