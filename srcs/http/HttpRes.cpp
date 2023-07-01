@@ -635,7 +635,10 @@ void HttpRes::header_filter() {
     }
 	//buf += "Connection: close";
 	buf += "\r\n";
-
+	if (status_code >= 300 && status_code < 400) {
+		buf += "Location: " + redirect_path;
+	}
+	buf += "\r\n";
 	// 残りのヘッダー  もしかしたら必要ないかも？ 現状Connection filedなどがダブってしまっているetc...
 	std::map<std::string, std::string> headers = httpreq.getHeaderFields();
 //	std::map<std::string, std::string>::iterator it= headers.begin();
@@ -649,6 +652,7 @@ void HttpRes::header_filter() {
 	header_size = buf.size();
 
 	//
+	std::cout << "here" << buf << std::endl;
     post_event();
 	//write_filter();
 }
@@ -855,6 +859,7 @@ int send_error_page() {
     //clear location
     //location = location info
     //location_field = location
+	return 0;
 }
 
 int HttpRes::redirect_handler() {
@@ -870,6 +875,7 @@ int HttpRes::redirect_handler() {
             keep_alive = 0;
     }
     content_type.erase();
+	/*
     if conf_error_pages == 1 {// have err_page directive
          //err_pages = from conf
          for (size_t i = 0; i < err_pages_num; ++i) {
@@ -877,6 +883,7 @@ int HttpRes::redirect_handler() {
                 return send_error_page();
          }
      }
+	 */
 //     discard request body
     if (out_buf.length()) {
         out_buf.erase();
@@ -986,7 +993,7 @@ int HttpRes::return_redirect() {
 		path = elms[1];
 	}
 	std::cout << "path(aft): " << path << std::endl;
-	uri = path;
+	redirect_path = path;
     // needs path with support status_code
 	// compile_complex_valueは$の展開をしてそう
 	return OK;

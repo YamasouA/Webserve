@@ -135,6 +135,7 @@ class HttpRes {
         size_t header_size;
         std::string out_buf;
         size_t body_size;
+		std::string redirect_path;
 };
 
 #endif
