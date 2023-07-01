@@ -845,11 +845,13 @@ int HttpRes::redirect_handler() {
             keep_alive = 0;
     }
     content_type.erase();
-//     if conf_error_pages == 1 {
-//         err_page = from conf
-//         if match status_code == err_pages[]
-//             return send_error_page
-//     }
+    if conf_error_pages == 1 {// have err_page directive
+         //err_pages = from conf
+         for (size_t i = 0; i < err_pages_num; ++i) {
+            if (status_code == err_pages[])
+                return send_error_page();
+         }
+     }
 //     discard request body
     if (out_buf.length()) {
         out_buf.erase();
@@ -959,6 +961,7 @@ void HttpRes::redirect() {
 		path = elms[1];
 	}
 	std::cout << "path(aft): " << path << std::endl;
+    // needs path with support status_code
 	// compile_complex_valueは$の展開をしてそう
 	return;
 }
