@@ -136,15 +136,21 @@ bool HttpRes::isAllowMethod(std::string method) {
 
 std::string HttpRes::join_path() {
     std::cout << "===== join_path =====" << std::endl;
+	std::cout << "location: " <<  location << std::endl;
 	std::string path_root = target.get_root();
-    //std::cout << "root: " << path_root << std::endl;
-	//std::string file_path  = target.get_uri();
 	std::string config_path  = target.get_uri();
 	std::string file_path = httpreq.getUri().substr(config_path.length());
-	//std::cout << "config_path: " << config_path<< std::endl;
-	//std::cout << "Path: " << file_path << std::endl;
-    //std::cout << "uri: " << file_path << std::endl;
-	if (file_path.length() && file_path[file_path.length() - 1] == '/' && target.get_is_autoindex()) {
+	/*
+						|            request uri       |
+		/User/root/path/ /config/location/ /file_path.html
+		path_root         config_path     file_path
+	*/
+	std::cout << "root: " << path_root << std::endl;
+	std::cout << "config: " << config_path << std::endl;
+	std::cout << "file: " << file_path << std::endl;
+	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_is_autoindex()) {
+	if (config_path == "/")
+		config_path = "";
 		file_path = "/index.html"; //  "/index" is better?
 	}
 	std::string alias;
@@ -152,16 +158,18 @@ std::string HttpRes::join_path() {
 		config_path = alias;
 	}
     //std::cout << "not auto index" << std::endl;
-    //std::cout << "file_path(in join_path): " << file_path << std::endl;
-	if (path_root[path_root.length() - 1] == '/') {
-		//file_path = file_path.substr(1);
-		config_path = config_path.substr(1);
+    //std::cout << "file_path(in join_path): " << file_path << std::endl; 
+	if ((path_root.size() && path_root[path_root.length() - 1] == '/') || path_root.size() == 0) {
+		if (config_path.size() >= 1)
+			config_path = config_path.substr(1);
 	}
 	if (config_path == "" || config_path[config_path.length() - 1] == '/') {
 		//file_path = file_path.substr(1);
-		file_path = file_path.substr(1);
+		//if (file_path.size() >= 1)
+			file_path = file_path.substr(1);
 	}
 	//std::cout << "path: " << path_root + config_path + file_path << std::endl;
+	std::cout << "join_path: " << path_root + config_path + file_path << std::endl;
     std::cout << "===== End join_path =====" << std::endl;
 	return path_root + config_path + file_path;
 }
@@ -665,7 +673,7 @@ int HttpRes::static_handler() {
 		return DECLINED;
 	}
 
-	if (uri[uri.length() - 1] == '/') {
+	if (uri[uri.length() - 1] == '/' && !target.get_is_autoindex()) {
         //move next handler
 		// なんて返す？ (declined)
 		return DECLINED;
