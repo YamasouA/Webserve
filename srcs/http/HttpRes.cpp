@@ -949,10 +949,10 @@ int HttpRes::redirect_handler() {
 
 void HttpRes::finalize_res(int handler_status)
 {
-    if (handler_status == DECLINED) {
+    if (handler_status == DECLINED || handler_status == OK) {
         return;
     }
-    if (200 <= status_code && status_code < 207) {//except 201, 204 ? //or DONE, OK
+    if ((200 <= status_code && status_code < 207)) {// || err_status > 0) {//except 201, 204 ? //or DONE, OK
         // handle connection
         return;
     }
