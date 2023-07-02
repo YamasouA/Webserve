@@ -152,17 +152,19 @@ std::string HttpRes::join_path() {
 	std::cout << "root: " << path_root << std::endl;
 	std::cout << "config: " << config_path << std::endl;
 	std::cout << "file: " << file_path << std::endl;
-	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_is_autoindex()) {
-	if (config_path == "/")
-		config_path = "";
-		file_path = "/index.html"; //  "/index" is better?
+	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_is_autoindex()) { // actually not autoindex, Completely different directive index directive
+//	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_index_file() {
+	    if (config_path == "/") {
+		    config_path = "";
+        }
+	    file_path = "/index.html"; // from index directive
 	}
 	std::string alias;
 	if ((alias = target.get_alias()) != "") {
 		config_path = alias;
 	}
     //std::cout << "not auto index" << std::endl;
-    //std::cout << "file_path(in join_path): " << file_path << std::endl; 
+    //std::cout << "file_path(in join_path): " << file_path << std::endl;
 	if ((path_root.size() && path_root[path_root.length() - 1] == '/') || path_root.size() == 0) {
 		if (config_path.size() >= 1)
 			config_path = config_path.substr(1);
@@ -696,6 +698,7 @@ int HttpRes::static_handler() {
 	}
 
 	if (uri[uri.length() - 1] == '/' && !target.get_is_autoindex()) {
+//	if (uri[uri.length() - 1] == '/' && !target.get_index_file()) {
         //move next handler
 		// なんて返す？ (declined)
 		return DECLINED;
@@ -1027,6 +1030,10 @@ int HttpRes::return_redirect() {
 	return OK;
 }
 
+int HttpRes::auto_index_handler() {
+
+}
+
 void HttpRes::runHandlers() {
     int handler_status = 0;
     static int i = 0;
@@ -1034,6 +1041,7 @@ void HttpRes::runHandlers() {
 	if (handler_status != DECLINED) {
 		finalize_res(handler_status);
 	}
+    auto_index_handler();
     handler_status = static_handler();
     std::cout << "run handler i: " << i++ << std::endl;
     //std::cout << "handler status after static handler: " << handler_status << std::endl;
