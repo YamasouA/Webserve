@@ -77,6 +77,9 @@ class HttpRes {
 		bool header_only;
         time_t last_modified;
         std::string charset;
+        int keep_alive;
+
+        int err_status;
 //        size_t header_size;
 
 		// 対応可能なMedia-Typeを持つ
@@ -98,7 +101,8 @@ class HttpRes {
 		//void createResponseBody();
 		std::string getStatusString();
 		void createControlData();
-        void createDate(time_t now, std::string fieldName);
+        std::string createDate(time_t now, std::string fieldName);
+//        void createDate(time_t now, std::string fieldName);
 		void createContentLength();
 		void set_content_type();
 		void post_event();
@@ -113,6 +117,11 @@ class HttpRes {
 		int dav_depth();
         std::string join_dir_path(const std::string& dir_path, const std::string& elem_name);
         void diving_through_dir(const std::string& path);
+        void finalize_res(int handler_status);
+        std::string create_err_page();
+        int redirect_handler();
+		int return_redirect();
+        int send_error_page();
         //void createDate();
 	public:
         HttpRes();
@@ -129,6 +138,7 @@ class HttpRes {
         size_t header_size;
         std::string out_buf;
         size_t body_size;
+		std::string redirect_path;
 };
 
 #endif

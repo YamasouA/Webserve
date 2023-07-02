@@ -19,7 +19,8 @@ HttpRes::HttpRes() {
 }
 
 HttpRes::HttpRes(const Client& source, Kqueue &kq)
-:is_posted(0)
+:is_posted(0),
+    err_status(0)
 {
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
@@ -52,10 +53,11 @@ Location HttpRes::get_uri2location(std::string uri) const
 	std::map<std::string, Location>::const_iterator loc = uri2location.find(uri);
 	//std::cout << "request uri: " << uri << std::endl;
 	//std::cout << "size: " << uri2location.size() << std::endl;
+	/*
 	for (std::map<std::string, Location>::iterator it = uri2location.begin();
 		it != uri2location.end(); it++) {
 		//std::cout << "location uri: " << it->second.get_uri() << std::endl;
-	}
+	}*/
 	if (loc != uri2location.end()) {
         //std::cout << "match all" << std::endl;
 		return loc->second;
@@ -100,6 +102,8 @@ Location HttpRes::get_uri2location(std::string uri) const
 	// 何もマッチしなかった場合の挙動イズなに？
 	return loc->second;
 }
+
+
 
 Location HttpRes::longestMatchLocation(std::string request_path, std::vector<Location> locations) {
 	Location location;
@@ -248,16 +252,20 @@ void HttpRes::createControlData() {
 }
 
 //void HttpRes::createDate()
-void HttpRes::createDate(time_t now, std::string fieldName)
+std::string HttpRes::createDate(time_t now, std::string fieldName)
 {
+    std::string str;
     char buf[1000];
     //time_t now = time(0);
     struct tm tm = *gmtime(&now);
     std::strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S ", &tm);
     //body += "Date: ";
-	header += fieldName + ": ";
+	str += fieldName + ": ";
+//	header += fieldName + ": ";
     std::string date(buf);
-    header += date + "GMT\n";
+    str += date + "GMT\n";
+//    header += date + "GMT\n";
+    return str;
 }
 
 void HttpRes::createContentLength() {
@@ -298,7 +306,9 @@ void HttpRes::set_content_type() {
 	content_type = getContentType(type);
 
 	// マッチしなかったらデフォルトの値をセットする
-	content_type = default_type;
+    if (content_type.length() == 0) {
+	    content_type = default_type;
+    }
 }
 
 void HttpRes::ev_queue_insert() {
@@ -599,7 +609,8 @@ void HttpRes::header_filter() {
 
 	buf += "\r\n";
 	// Cacheとかは考慮しないのでdateの処理は飛ばす
-
+    time_t now = std::time(NULL);
+    buf += createDate(now, "Date");
 	if (content_type != "") {
 		buf += "Content-Type: " + content_type;
 
@@ -610,7 +621,10 @@ void HttpRes::header_filter() {
 		}
 		buf += "\r\n";
 	}
-
+    std::stringstream ss;
+    ss << content_length_n;
+    buf += "Content-Length: " + ss.str();
+	buf += "\r\n";
 	// content_length_n と content_lengthの関係がよくわからん
 	if (last_modified_time != -1) {
 		//buf += "Last-Modified: " + http_time();
@@ -622,35 +636,43 @@ void HttpRes::header_filter() {
 	// chunkedは無視
 
 	// keep-alive系は問答無用でcloseする？
-    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
-    if (header_fields["connection"] == "keep-alive") {
+    // keep-alive looks better managed with flags.
+//    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
+//    if (header_fields["connection"] == "keep-alive") {
+    if (httpreq.getKeepAlive()) {
         buf += "Connection: keep-alive";
     } else {
 	    buf += "Connection: close";
     }
 	//buf += "Connection: close";
 	buf += "\r\n";
-
+	if (status_code >= 300 && status_code < 400 && redirect_path.length()> 0) {
+		buf += "Location: " + redirect_path;
+	}
+	buf += "\r\n";
 	// 残りのヘッダー  もしかしたら必要ないかも？ 現状Connection filedなどがダブってしまっているetc...
 	std::map<std::string, std::string> headers = httpreq.getHeaderFields();
-	std::map<std::string, std::string>::iterator it= headers.begin();
-	for (; it != headers.end(); it++) {
-		buf += it->first;
-		buf += ": ";
-		buf += it->second;
-		buf += "\r\n";
-	}
+//	std::map<std::string, std::string>::iterator it= headers.begin();
+//	for (; it != headers.end(); it++) {
+//		buf += it->first;
+//		buf += ": ";
+//		buf += it->second;
+//		buf += "\r\n";
+//	}
 	buf += "\r\n";
 	header_size = buf.size();
 
 	//
+	std::cout << "here" << buf << std::endl;
     post_event();
 	//write_filter();
 }
 
 void HttpRes::sendHeader() {
     // check alredy sent
-    // handle err_status?
+    if (err_status) {
+        status_code = err_status;
+    }
     return header_filter();
 }
 
@@ -696,8 +718,12 @@ int HttpRes::static_handler() {
         if (_fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+                std::cout << "NOT FOUND" << std::endl;
+                status_code = NOT_FOUND;
                 return NOT_FOUND;
             } else if (EACCES){
+                std::cout << "FORBIDDEN" << std::endl;
+                status_code = FORBIDDEN;
                 return FORBIDDEN;
             }
             // 次のハンドラーに処理を託す
@@ -801,7 +827,219 @@ int HttpRes::static_handler() {
 //    output_filter();
 }
 
+std::string HttpRes::create_err_page() {
+    std::map<int, std::string> status_msg_map = create_status_msg();
+//    std::string err_page_buf = "<!DOCTYPE html>" "\r\n";
+    std::string err_page_buf = "<html>" "\r\n""<head><title>";
+    std::stringstream ss;
+	ss << status_code;
+	err_page_buf += ss.str();
+    err_page_buf += " ";
+    err_page_buf += status_msg_map[status_code];
+    err_page_buf += "</title></head>" "\r\n""<body>" "\r\n""<center><h1>";
+	err_page_buf += ss.str();
+    err_page_buf += " ";
+    err_page_buf += status_msg_map[status_code];
+    err_page_buf += "</h1></center>" "\r\n";
+    err_page_buf += "<hr><center>";
+    err_page_buf += kServerName;
+    err_page_buf += "</center>" "\r\n""</body>""\r\n""</html>";
+
+    std::cout << "err_page: " << err_page_buf << std::endl;
+    return err_page_buf;
+}
+
+// handle return derective ??? or handle only error_page directive ?
+int HttpRes::send_error_page() {
+    std::string path = target.get_error_page(status_code);
+    if (path[0] == '/') {
+        std::string method = httpreq.getMethod();
+        if (method != "HEAD") { //we non-supported HEAD
+            method = "GET";
+        }
+        httpreq.setUri(path);
+        if (buf.length()) {
+            buf.erase();
+        }
+        if (out_buf.length()) {
+            out_buf.erase();
+        }
+        runHandlers();
+        return OK;
+        //return internal_redirect
+    }
+    //if path[0] == '@' non-supported
+    //  nameed_location
+    //
+    //discard request body
+    //
+    // ovar_write ??
+    //if !MOVED_PERMANENTLY &&
+    //   !MOVED_TEMPORARILY &&
+    //   !SEE_OTHER &&
+    //   !TEMPORARY_REDIRECT &&
+    //   !PERMANENT_REDIRECT
+    //      err_status = MOVED_TEMPORARILY;
+    //
+    //
+    //clear location
+    //location = location info
+    //location_field = location
+	return 0;
+}
+
+int HttpRes::redirect_handler() {
+    err_status = status_code;
+    switch (status_code) {
+        case BAD_REQUEST:
+//        case REQUEST_ENTITY_TOO_LARGE:
+//        case REQUEST_URI_TOO_LARGE:
+//        case HTTP_TO_HTTPS:
+//        case HTTPS_CERT_ERROR:
+//        case HTTPS_NO_CERT:
+        case INTERNAL_SERVER_ERROR:
+        case HTTP_NOT_IMPLEMENTED:
+            keep_alive = 0;
+    }
+    content_type.erase();
+
+//    if (have_error_pages == 1) {// have err_page directive
+         //err_pages = from conf
+//         for (size_t i = 0; i < err_pages_num; ++i) {
+    if (target.get_error_page(status_code) != "") {
+        return send_error_page();
+    }
+//            }
+//     }
+//     discard request body
+    if (out_buf.length()) {
+        out_buf.erase();
+        content_length_n = 0;
+    }
+
+    if (status_code >= 490) { //49x ~ 5xx
+//        switch (status_code) {
+//            case HTTP_TO_HTTPS:
+//            case HTTPS_CERT_ERROR:
+//            case HTTPS_NO_CERT:
+//            case HTTP_REQUEST_HEADER_TOO_LARGE:
+                status_code = BAD_REQUEST;
+                // or err_status = BAD_REQUEST;
+//        }
+    } else {
+        std::cout << "unknown status code" << std::endl;
+    }
+    // create new tmp file ?
+    // or map<status_code, err_page_content> ?
+    // if We create a new file, how do We handle mtime?
+//    std::string err_page_buf = error_pages[status_code];
+    std::string err_page_buf = create_err_page();
+    if (err_page_buf.length()) {
+        content_length_n = err_page_buf.length();
+        content_type = "text/html";
+    }
+    else {
+        content_length_n = 0;
+    }
+//  clear accept_range
+//  clear last_modified
+    last_modified_time = -1;
+//  clear etag
+    sendHeader();
+//    if err || only_header
+//        return
+//    if content_length == 0
+        // something
+    out_buf = err_page_buf;
+    body_size = content_length_n;
+    return OK;
+}
+
+void HttpRes::finalize_res(int handler_status)
+{
+    if (handler_status == DECLINED || handler_status == OK) {
+        return;
+    }
+    if ((200 <= status_code && status_code < 207)) {// || err_status > 0) {//except 201, 204 ? //or DONE, OK
+        // handle connection
+        return;
+    }
+    if (status_code >= 300) {//and 201, 204 ?
+        // handle around timeer
+        //
+        std::cout << "status code over 300 case" << std::endl;
+        redirect_handler(); //recurcive finalize_res is better?
+        return;
+    }
+}
+
+int HttpRes::return_redirect() {
+	std::cout << "===== redirect =====" << std::endl;
+	std::string uri = httpreq.getUri();
+	Location loc = get_uri2location(uri);
+	std::string ret = loc.get_return();
+	std::cout << "return: " << ret << std::endl;
+	if (ret == "")
+		return DECLINED;
+	std::vector<std::string> elms;
+	std::string elm;
+	std::stringstream ss1(ret);
+
+	while (std::getline(ss1, elm, ' ')) {
+		if (!elm.empty()) {
+			elms.push_back(elm);
+		}
+	}
+	std::stringstream ss(elms[0]);
+	ss >> status_code;
+	std::cout << "status: " << status_code << std::endl;
+	std::string path;
+	// 1引数目が数値じゃない場合(URIが入ってる)
+	if (ss.fail()) {
+		// URLのスキームが正常か？
+		//if (uri.startswith("http://") || uri.startswith("https://")) {
+		path = elms[0];
+		std::cout << "path(bef): " << path << std::endl;
+		if (!path.compare(0, 7, "http://") || !path.compare(0, 8, "https://")) {
+			status_code = MOVED_TEMPORARILY;
+			//path = elms[0];
+		} else {
+			std::cout << "scheme Error" << std::endl;
+			return DECLINED; //ERROR;
+		}
+	} else {
+		// statusの値が正常値じゃない場合(999)
+		if (status_code > 999) {
+			std::cout << "status_code Error" << std::endl;
+			return DECLINED; //ERROR;
+		}
+		// status_codeのみ
+		if (elms.size() == 1) {
+			std::cout << "status_code only" << std::endl;
+			return DECLINED; //OK;
+		}
+		path = elms[1];
+	}
+	std::cout << "path(aft): " << path << std::endl;
+	redirect_path = path;
+    // needs path with support status_code
+	// compile_complex_valueは$の展開をしてそう
+	return OK;
+}
+
 void HttpRes::runHandlers() {
-    static_handler();
-	dav_delete_handler();
+    int handler_status = 0;
+    static int i = 0;
+	handler_status = return_redirect();
+	if (handler_status != DECLINED) {
+		finalize_res(handler_status);
+	}
+    handler_status = static_handler();
+    std::cout << "run handler i: " << i++ << std::endl;
+    //std::cout << "handler status after static handler: " << handler_status << std::endl;
+    if (handler_status != DECLINED) {
+        std::cout << "in finalize" << std::endl;
+        return finalize_res(handler_status);
+    }
+//	dav_delete_handler();
 }
