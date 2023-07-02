@@ -19,7 +19,8 @@ HttpRes::HttpRes() {
 }
 
 HttpRes::HttpRes(const Client& source, Kqueue &kq)
-:is_posted(0)
+:is_posted(0),
+    err_status(0)
 {
 	//this->httpreq = source.get_parsedReq();
 	this->httpreq = source.get_httpReq();
@@ -297,7 +298,9 @@ void HttpRes::set_content_type() {
 	content_type = getContentType(type);
 
 	// マッチしなかったらデフォルトの値をセットする
-	content_type = default_type;
+    if (content_type.length() == 0) {
+	    content_type = default_type;
+    }
 }
 
 void HttpRes::ev_queue_insert() {
@@ -635,7 +638,7 @@ void HttpRes::header_filter() {
     }
 	//buf += "Connection: close";
 	buf += "\r\n";
-	if (status_code >= 300 && status_code < 400) {
+	if (status_code >= 300 && status_code < 400 && redirect_path.length()> 0) {
 		buf += "Location: " + redirect_path;
 	}
 	buf += "\r\n";
@@ -659,7 +662,9 @@ void HttpRes::header_filter() {
 
 void HttpRes::sendHeader() {
     // check alredy sent
-    // handle err_status?
+    if (err_status) {
+        status_code = err_status;
+    }
     return header_filter();
 }
 
@@ -837,15 +842,28 @@ std::string HttpRes::create_err_page() {
 }
 
 // handle return derective ??? or handle only error_page directive ?
-int send_error_page() {
-    //if path[0] == '/'
-    //  if method != "HEAD"
-    //      method = "GET"
-    //  return internal_redirect ???
-    //if path[0] == '@'
+int HttpRes::send_error_page() {
+    std::string path = target.get_error_page(status_code);
+    if (path[0] == '/') {
+        std::string method = httpreq.getMethod();
+        if (method != "HEAD") { //we non-supported HEAD
+            method = "GET";
+        }
+        httpreq.setUri(path);
+        if (buf.length()) {
+            buf.erase();
+        }
+        if (out_buf.length()) {
+            out_buf.erase();
+        }
+        runHandlers();
+        return OK;
+        //return internal_redirect
+    }
+    //if path[0] == '@' non-supported
     //  nameed_location
     //
-    //discard_request_body
+    //discard request body
     //
     // ovar_write ??
     //if !MOVED_PERMANENTLY &&
@@ -863,6 +881,7 @@ int send_error_page() {
 }
 
 int HttpRes::redirect_handler() {
+    err_status = status_code;
     switch (status_code) {
         case BAD_REQUEST:
 //        case REQUEST_ENTITY_TOO_LARGE:
@@ -875,15 +894,15 @@ int HttpRes::redirect_handler() {
             keep_alive = 0;
     }
     content_type.erase();
-	/*
-    if conf_error_pages == 1 {// have err_page directive
+
+//    if (have_error_pages == 1) {// have err_page directive
          //err_pages = from conf
-         for (size_t i = 0; i < err_pages_num; ++i) {
-            if (status_code == err_pages[])
-                return send_error_page();
-         }
-     }
-	 */
+//         for (size_t i = 0; i < err_pages_num; ++i) {
+    if (target.get_error_page(status_code) != "") {
+        return send_error_page();
+    }
+//            }
+//     }
 //     discard request body
     if (out_buf.length()) {
         out_buf.erase();
@@ -897,6 +916,7 @@ int HttpRes::redirect_handler() {
 //            case HTTPS_NO_CERT:
 //            case HTTP_REQUEST_HEADER_TOO_LARGE:
                 status_code = BAD_REQUEST;
+                // or err_status = BAD_REQUEST;
 //        }
     } else {
         std::cout << "unknown status code" << std::endl;
@@ -1001,11 +1021,13 @@ int HttpRes::return_redirect() {
 
 void HttpRes::runHandlers() {
     int handler_status = 0;
+    static int i = 0;
 	handler_status = return_redirect();
 	if (handler_status != DECLINED) {
 		finalize_res(handler_status);
 	}
     handler_status = static_handler();
+    std::cout << "run handler i: " << i++ << std::endl;
     //std::cout << "handler status after static handler: " << handler_status << std::endl;
     if (handler_status != DECLINED) {
         std::cout << "in finalize" << std::endl;

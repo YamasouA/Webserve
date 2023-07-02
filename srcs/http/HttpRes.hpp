@@ -78,6 +78,8 @@ class HttpRes {
         time_t last_modified;
         std::string charset;
         int keep_alive;
+
+        int err_status;
 //        size_t header_size;
 
 		// 対応可能なMedia-Typeを持つ
@@ -119,6 +121,7 @@ class HttpRes {
         std::string create_err_page();
         int redirect_handler();
 		int return_redirect();
+        int send_error_page();
         //void createDate();
 	public:
         HttpRes();
