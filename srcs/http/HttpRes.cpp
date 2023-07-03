@@ -19,7 +19,8 @@ HttpRes::HttpRes() {
 }
 
 HttpRes::HttpRes(const Client& source, Kqueue &kq)
-:is_posted(0),
+:content_length_n(0),
+is_posted(0),
     err_status(0)
 {
 	//this->httpreq = source.get_parsedReq();
@@ -151,8 +152,9 @@ std::string HttpRes::join_path() {
 	*/
 	std::cout << "root: " << path_root << std::endl;
 	std::cout << "config: " << config_path << std::endl;
+    std::cout << "ok" << std::endl;
 	std::cout << "file: " << file_path << std::endl;
-	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_is_autoindex()) { // actually not autoindex, Completely different directive index directive
+	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_index().length() != 0) { // actually not autoindex, Completely different directive index directive
 //	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_index_file() {
 	    if (config_path == "/") {
 		    config_path = "";
@@ -171,8 +173,9 @@ std::string HttpRes::join_path() {
 	}
 	if (config_path == "" || config_path[config_path.length() - 1] == '/') {
 		//file_path = file_path.substr(1);
-		//if (file_path.size() >= 1)
+		if (file_path.size() >= 1) { //
 			file_path = file_path.substr(1);
+        }
 	}
 	//std::cout << "path: " << path_root + config_path + file_path << std::endl;
 	std::cout << "join_path: " << path_root + config_path + file_path << std::endl;
@@ -378,12 +381,6 @@ int HttpRes::dav_depth() {
 	return depth;
 }
 
-typedef struct {
-    DIR             *dir;
-    struct dirent   *d_ent;
-    struct stat     d_info;
-    bool            valid_info:1;
-} dir_t;
 
 
 std::string HttpRes::join_dir_path(const std::string& dir_path, const std::string& elem_name) {
@@ -404,7 +401,7 @@ void HttpRes::diving_through_dir(const std::string& path) {
         if (!dir_info.d_ent) {
             if (errno != 0) {
               std::cerr << "readdir Error" << std::endl;
-          } else {
+            } else {
             // read directory end
             }
             if (closedir(dir_info.dir) == -1) {
@@ -523,7 +520,7 @@ void HttpRes::dav_delete_handler() {
 	}
 
 	std::string file_name = join_path();
-	file_name = "abc";
+//	file_name = "abc";
     if (stat(file_name.c_str(), &sb) == -1) {
 		std::cout << "Error(stat)" << std::endl;
 		status_code = INTERNAL_SERVER_ERROR;
@@ -622,11 +619,12 @@ void HttpRes::header_filter() {
 			// content_type に charsetを加える
 		}
 		buf += "\r\n";
-	}
-    std::stringstream ss;
-    ss << content_length_n;
-    buf += "Content-Length: " + ss.str();
-	buf += "\r\n";
+	} if (content_length_n > 0) { // Is this process ok?
+        std::stringstream ss;
+        ss << content_length_n;
+        buf += "Content-Length: " + ss.str();
+	    buf += "\r\n";
+    }
 	// content_length_n と content_lengthの関係がよくわからん
 	if (last_modified_time != -1) {
 		//buf += "Last-Modified: " + http_time();
@@ -685,7 +683,7 @@ int HttpRes::static_handler() {
     //std::cout << "macth loc: " << target << std::endl;
 	std::string method = httpreq.getMethod();
 	if (method != "GET" && method != "HEAD" && method != "POST") {
-        std::cerr << "not allow method(405)" << std::endl;
+        std::cerr << "not allow method in static handler" << std::endl;
 		// なんてエラー返そう？
 		return DECLINED;
 	}
@@ -697,8 +695,8 @@ int HttpRes::static_handler() {
 		return DECLINED;
 	}
 
-	if (uri[uri.length() - 1] == '/' && !target.get_is_autoindex()) {
-//	if (uri[uri.length() - 1] == '/' && !target.get_index_file()) {
+//	if (uri[uri.length() - 1] == '/' && !target.get_is_autoindex()) {
+	if (uri[uri.length() - 1] == '/' && !target.get_index().length() && !target.get_is_autoindex()) {
         //move next handler
 		// なんて返す？ (declined)
 		return DECLINED;
@@ -721,6 +719,13 @@ int HttpRes::static_handler() {
         if (_fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+                if (target.get_index().length() > 0) {
+                    std::cout << "FORBIDDEN" << std::endl;
+                    status_code = FORBIDDEN;
+                    return FORBIDDEN;
+                } else if (!target.get_index().length() && target.get_is_autoindex()) {
+                    return DECLINED;
+                }
                 std::cout << "NOT FOUND" << std::endl;
                 status_code = NOT_FOUND;
                 return NOT_FOUND;
@@ -892,6 +897,7 @@ int HttpRes::send_error_page() {
 }
 
 int HttpRes::redirect_handler() {
+    std::cout << "===== redirect_handler =====" << std::endl;
     err_status = status_code;
     switch (status_code) {
         case BAD_REQUEST:
@@ -960,6 +966,7 @@ int HttpRes::redirect_handler() {
 
 void HttpRes::finalize_res(int handler_status)
 {
+	std::cout << "===== finalize_res =====" << std::endl;
     if (handler_status == DECLINED || handler_status == OK) {
         return;
     }
@@ -1030,24 +1037,160 @@ int HttpRes::return_redirect() {
 	return OK;
 }
 
+static std::string createMtime(time_t modified)
+{
+    char buf[1000];
+    //time_t now = time(0);
+    struct tm tm = *gmtime(&modified);
+    std::strftime(buf, sizeof(buf), "%d-%b-%Y %H:%M ", &tm);
+    std::string str(buf);
+    return str;
+}
+
+
+std::string HttpRes::create_auto_index_html(std::map<std::string, dir_t> index_of) {
+    std::string body = "<html>" "\r\n""<head><title>Index of ";
+    body += httpreq.getUri();
+    body += "</title></head>" "\r\n""<body>" "\r\n""<h1>Index of ";
+    body += httpreq.getUri();
+    body += "</h1>" "<hr><pre><a href=\"../\">../</a>" "\r\n";
+    for (std::map<std::string, dir_t>::iterator it = index_of.begin(); it != index_of.end(); ++it) {
+        body += "<a href=\"";
+        body += it->first;
+        dir_t info = it->second;
+        if ((S_ISDIR(info.d_info.st_mode))) {
+            body += '/';
+        }
+        body += "\">"; //
+        body += it->first; //handle utf ?
+        if ((S_ISDIR(info.d_info.st_mode))) {
+            body += '/';
+        }
+        body += "</a> ";
+
+        body += createMtime(info.d_info.st_mtime);
+        if ((S_ISDIR(info.d_info.st_mode))) {
+            body += "                  -";
+        } else {
+            std::stringstream ss;
+            ss << std::setw(19) << info.d_info.st_size;
+            body += ss.str();
+        }
+        body += "\r\n";
+
+    }
+    body += "</pre><hr>";
+    body +=  "</body>" "\r\n""</html>" "\r\n";
+    return body;
+
+
+}
+
 int HttpRes::auto_index_handler() {
+    std::cout << "===== auto_index_handler =====" << std::endl;
+    std::cout << "keep-alive: " << httpreq.getKeepAlive() << std::endl;
+    std::string req_uri = httpreq.getUri();
+    target = get_uri2location(req_uri);
+    if (req_uri[req_uri.length() - 1] != '/' || !(target.get_is_autoindex())) {
+        std::cout << "ko" << std::endl;
+        return DECLINED;
+    }
+	std::string method = httpreq.getMethod();
+	if (method != "GET" && method != "HEAD") {
+        std::cerr << "not allow method in auto_index handler" << std::endl;
+		return DECLINED;
+	}
+
+	std::vector<std::string> allow_methods = target.get_methods();
+	if (find(allow_methods.begin(), allow_methods.end(), method) == allow_methods.end()) {
+		status_code = BAD_REQUEST; // or NOT_ALLOWED
+		return DECLINED;
+	}
+    // discard req body
+
+    std::string dir_path = join_path();
+    std::cout << "dir_path: " << dir_path << std::endl;
+    if (dir_path[dir_path.length() - 1] == '/') {
+        dir_path = dir_path.substr(0, dir_path.length() - 1);
+    }
+    std::cout << "dir_path: " << dir_path.c_str() << std::endl;
+    dir_t dir_info;
+    dir_info.dir = opendir(dir_path.c_str());
+    if (dir_info.dir == NULL) {
+       if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+           std::cout << "NOT_FOUND" << std::endl;
+           return NOT_FOUND;
+       } else if (errno == EACCES) {
+           std::cout << "FORBIDDEN" << std::endl;
+           return FORBIDDEN;
+       }
+       std::cout << "errno: " << errno << std::endl;
+       std::cout << "INTERNAL_SERVER_ERROR" << std::endl;
+       return INTERNAL_SERVER_ERROR;
+    }
+    status_code = HTTP_OK; // 200
+    // auto_index only text/html for now
+    content_type = "text/html";
+    sendHeader(); // later ?
+
+    dir_info.valid_info = 0;
+    std::map<std::string, dir_t> index_of;
+    for (;;) {
+        errno = 0;
+        dir_info.d_ent = readdir(dir_info.dir);
+        if (!dir_info.d_ent) {
+            if (errno != 0) {
+                std::cerr << "readdir Error" << std::endl;
+                // close dir and return error or INTERNAL_SERVER_ERROR
+            } else {
+                //read directory end
+            }
+            break;
+        }
+        std::string file_name(dir_info.d_ent->d_name);
+        if (file_name[0] == '.') {
+            continue;
+        }
+        std::string abs_path = join_dir_path(dir_path, file_name);
+        if (!dir_info.valid_info) {
+            if (stat(abs_path.c_str(), &(dir_info.d_info)) == -1) {
+                //only EACCES
+                continue;
+            }
+            // handle ENOENT or ELOOP -> error or INTERNAL_SERVER_ERROR
+        }
+        // check link info
+
+        index_of[file_name] = dir_info;
+    }
+    if (closedir(dir_info.dir) == -1) {
+        std::cerr << "closedir error" << std::endl;
+    }
+    out_buf = create_auto_index_html(index_of);
+    body_size = out_buf.length();
+    std::cout << "auot_index_html: " << out_buf << std::endl;
+    return OK;
 
 }
 
 void HttpRes::runHandlers() {
     int handler_status = 0;
-    static int i = 0;
+//    static int i = 0;
 	handler_status = return_redirect();
 	if (handler_status != DECLINED) {
 		finalize_res(handler_status);
 	}
-    auto_index_handler();
     handler_status = static_handler();
-    std::cout << "run handler i: " << i++ << std::endl;
-    //std::cout << "handler status after static handler: " << handler_status << std::endl;
     if (handler_status != DECLINED) {
         std::cout << "in finalize" << std::endl;
         return finalize_res(handler_status);
     }
+    handler_status = auto_index_handler();
+    if (handler_status != DECLINED) {
+        std::cout << "in finalize" << std::endl;
+        return finalize_res(handler_status);
+    }
+//    std::cout << "run handler i: " << i++ << std::endl;
+    //std::cout << "handler status after static handler: " << handler_status << std::endl;
 //	dav_delete_handler();
 }
