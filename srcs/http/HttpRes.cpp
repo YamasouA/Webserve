@@ -695,8 +695,8 @@ int HttpRes::static_handler() {
 		return DECLINED;
 	}
 
-	if (uri[uri.length() - 1] == '/' && !target.get_is_autoindex()) {
-//	if (uri[uri.length() - 1] == '/' && !target.get_index_file()) {
+//	if (uri[uri.length() - 1] == '/' && !target.get_is_autoindex()) {
+	if (uri[uri.length() - 1] == '/' && !target.get_index().length() && !target.get_is_autoindex()) {
         //move next handler
 		// なんて返す？ (declined)
 		return DECLINED;
@@ -719,6 +719,13 @@ int HttpRes::static_handler() {
         if (_fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
+                if (target.get_index().length() > 0) {
+                    std::cout << "FORBIDDEN" << std::endl;
+                    status_code = FORBIDDEN;
+                    return FORBIDDEN;
+                } else if (!target.get_index().length() && target.get_is_autoindex()) {
+                    return DECLINED;
+                }
                 std::cout << "NOT FOUND" << std::endl;
                 status_code = NOT_FOUND;
                 return NOT_FOUND;
@@ -1124,7 +1131,7 @@ int HttpRes::auto_index_handler() {
     status_code = HTTP_OK; // 200
     // auto_index only text/html for now
     content_type = "text/html";
-    sendHeader();
+    sendHeader(); // later ?
 
     dir_info.valid_info = 0;
     std::map<std::string, dir_t> index_of;
@@ -1168,22 +1175,22 @@ int HttpRes::auto_index_handler() {
 
 void HttpRes::runHandlers() {
     int handler_status = 0;
-    static int i = 0;
+//    static int i = 0;
 	handler_status = return_redirect();
 	if (handler_status != DECLINED) {
 		finalize_res(handler_status);
 	}
+    handler_status = static_handler();
+    if (handler_status != DECLINED) {
+        std::cout << "in finalize" << std::endl;
+        return finalize_res(handler_status);
+    }
     handler_status = auto_index_handler();
     if (handler_status != DECLINED) {
         std::cout << "in finalize" << std::endl;
         return finalize_res(handler_status);
     }
-    handler_status = static_handler();
-    std::cout << "run handler i: " << i++ << std::endl;
+//    std::cout << "run handler i: " << i++ << std::endl;
     //std::cout << "handler status after static handler: " << handler_status << std::endl;
-    if (handler_status != DECLINED) {
-        std::cout << "in finalize" << std::endl;
-        return finalize_res(handler_status);
-    }
 //	dav_delete_handler();
 }
