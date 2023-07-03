@@ -55,6 +55,13 @@ enum Status {
 	HTTP_INSUFFICIENT_STORAGE = 507
 };
 
+typedef struct {
+    DIR             *dir;
+    struct dirent   *d_ent;
+    struct stat     d_info;
+    bool            valid_info:1;
+} dir_t;
+
 class Client;
 
 class HttpRes {
@@ -122,6 +129,9 @@ class HttpRes {
         int redirect_handler();
 		int return_redirect();
         int send_error_page();
+        int auto_index_handler();
+        std::string create_auto_index_html(std::map<std::string, dir_t> index_of);
+
         //void createDate();
 	public:
         HttpRes();

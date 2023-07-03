@@ -5,7 +5,8 @@ httpReq::httpReq()
 
 httpReq::httpReq(const std::string& request_msg)
 :buf(request_msg),
-    idx(0)
+    idx(0),
+    keep_alive(0)
 {}
 
 httpReq::httpReq(const httpReq& src)
@@ -14,7 +15,8 @@ httpReq::httpReq(const httpReq& src)
     version(src.getVersion()),
     header_fields(src.getHeaderFields()),
     content_body(src.getContentBody()),
-	parse_error(false)
+	parse_error(false),
+    keep_alive(src.getKeepAlive())
 {
     (void)src;
 }
@@ -29,6 +31,7 @@ httpReq& httpReq::operator=(const httpReq& rhs)
     this->version = rhs.getVersion();
     this->header_fields = rhs.getHeaderFields();
     this->content_body = rhs.getContentBody();
+    this->keep_alive = rhs.getKeepAlive();
     return *this;
 }
 
@@ -409,6 +412,7 @@ void httpReq::parseRequest()
 //        header_info.push_back(header_field);
     }
     content_body = getToken_to_eof();
+    fix_up();
 }
 
 std::ostream& operator<<(std::ostream& stream, const httpReq& obj) {
