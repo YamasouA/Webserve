@@ -154,7 +154,7 @@ std::string HttpRes::join_path() {
 	std::cout << "config: " << config_path << std::endl;
     std::cout << "ok" << std::endl;
 	std::cout << "file: " << file_path << std::endl;
-	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_index().length() != 0) { // actually not autoindex, Completely different directive index directive
+	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && (target.get_index().length() != 0 || target.get_is_autoindex())) { // actually not autoindex, Completely different directive index directive
 //	if (!file_path.length() && config_path[config_path.length() - 1] == '/' && target.get_index_file() {
 	    if (config_path == "/") {
 		    config_path = "";
@@ -719,12 +719,13 @@ int HttpRes::static_handler() {
         if (_fd == -1) {
             std::cerr << "open error" << std::endl;
             if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG) {
-                if (target.get_index().length() > 0) {
+                if (target.get_is_autoindex()) {
+//                } else if (!target.get_index().length() && target.get_is_autoindex()) {
+                    return DECLINED;
+                } else if (target.get_index().length() > 0) {
                     std::cout << "FORBIDDEN" << std::endl;
                     status_code = FORBIDDEN;
                     return FORBIDDEN;
-                } else if (!target.get_index().length() && target.get_is_autoindex()) {
-                    return DECLINED;
                 }
                 std::cout << "NOT FOUND" << std::endl;
                 status_code = NOT_FOUND;
@@ -735,6 +736,7 @@ int HttpRes::static_handler() {
                 return FORBIDDEN;
             }
             // 次のハンドラーに処理を託す
+            status_code = INTERNAL_SERVER_ERROR;
             return INTERNAL_SERVER_ERROR;
         }
         // stat がエラーだったとき
@@ -757,6 +759,7 @@ int HttpRes::static_handler() {
             // なんのエラー?
             std::cerr << "NOT FOUND(404)" << std::endl;
             //status 404
+            status_code = NOT_FOUND;
             return NOT_FOUND;
         }
 	    content_length_n = sb.st_size;
@@ -1086,6 +1089,37 @@ std::string HttpRes::create_auto_index_html(std::map<std::string, dir_t> index_o
 
 }
 
+
+std::string HttpRes::join_path_autoindex() {
+    std::cout << "===== join_path =====" << std::endl;
+	std::string path_root = target.get_root();
+	std::string config_path  = target.get_uri();
+	std::string file_path = httpreq.getUri().substr(config_path.length());
+	/*
+						|            request uri       |
+		/User/root/path/ /config/location/ /file_path.html
+		path_root         config_path     file_path
+	*/
+	std::string alias;
+	if ((alias = target.get_alias()) != "") {
+		config_path = alias;
+	}
+	if ((path_root.size() && path_root[path_root.length() - 1] == '/') || path_root.size() == 0) {
+		if (config_path.size() >= 1)
+			config_path = config_path.substr(1);
+	}
+	if (config_path == "" || config_path[config_path.length() - 1] == '/') {
+		//file_path = file_path.substr(1);
+		if (file_path.size() >= 1) { //
+			file_path = file_path.substr(1);
+        }
+	}
+	std::cout << "join_path: " << path_root + config_path + file_path << std::endl;
+    std::cout << "===== End join_path =====" << std::endl;
+	return path_root + config_path + file_path;
+}
+
+
 int HttpRes::auto_index_handler() {
     std::cout << "===== auto_index_handler =====" << std::endl;
     std::cout << "keep-alive: " << httpreq.getKeepAlive() << std::endl;
@@ -1108,7 +1142,8 @@ int HttpRes::auto_index_handler() {
 	}
     // discard req body
 
-    std::string dir_path = join_path();
+//    std::string dir_path = join_path();
+    std::string dir_path = join_path_autoindex();
     std::cout << "dir_path: " << dir_path << std::endl;
     if (dir_path[dir_path.length() - 1] == '/') {
         dir_path = dir_path.substr(0, dir_path.length() - 1);
