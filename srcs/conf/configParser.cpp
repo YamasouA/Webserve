@@ -229,7 +229,10 @@ Location configParser::parseLocation() {
 		} else if (directive == "error_page") {
 			const std::string pages = getToken(';');
 			location.set_error_pages(methodsSplit(pages, ' '));
-		}else {
+		} else if (directive == "") {
+            // comment out
+            continue;
+        } else {
 			throw SyntaxException("directive syntax error in parseLocation");
 //			std::cerr << "\033[1;31msyntax error in location\033[0m: " << directive << std::endl;
 			// 適切な例外を作成して投げる
