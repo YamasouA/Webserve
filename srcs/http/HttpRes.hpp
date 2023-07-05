@@ -131,6 +131,7 @@ class HttpRes {
         int send_error_page();
         int auto_index_handler();
         std::string create_auto_index_html(std::map<std::string, dir_t> index_of);
+		bool is_cgi();
 
         //void createDate();
 	public:
