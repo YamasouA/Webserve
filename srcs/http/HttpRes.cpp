@@ -1218,7 +1218,8 @@ bool HttpRes::is_cgi() {
 
 void HttpRes::runHandlers() {
 	if (is_cgi()) {
-		run_cgi();
+		Cgi cgi(httpreq);
+		cgi.run_cgi();
 	} else {
 		int handler_status = 0;
 //  	  static int i = 0;
