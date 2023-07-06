@@ -23,17 +23,53 @@ bool Cgi::is_meta_var() {
 	}
 }
 
-bool Cgi::check_meta_var(string var) {
+bool Cgi::check_meta_var(std::string var1, std::string var2) {
 	// 必須の箇所にデータが入ってるか
 	// フォーマットがあるやつはそれを確認
 
-	if (var == "auth_type" || var ==  "content_length" || var ==  "content_type"
-		var == "gateway_interface" || var ==  "path_info" || var ==  "path_translated" ||
-		var == "query_string" ||  var == "remote_addr" ||  var == "remote_host" || var == "remote_ident", "remote_user", "request_method", "script_name",
-							"server_name", "server_port", "server_protocol", "server_software"}
+	if (var1 == "auth_type" || var1 ==  "content_length" || var1 ==  "content_type"
+		var1 == "gateway_interface" || var1 ==  "path_info" || var1 ==  "path_translated" ||
+		var1 == "query_string" ||  var1 == "remote_addr" ||  var1 == "remote_host" ||
+		var1 == "remote_ident" || var1 == "remote_user" || var1 ==  "request_method" ||
+		var1 ==  "script_name" || var1 == "server_name" || var1 == "server_port" ||
+		var1 == "server_protocol" || var1 == "server_software") {
+			if (var2 != "") {
+				return true;
+			}
+	}
+	return false;
+}
+
+std::string Cgi::encode_uri() {
+	std::ostringstream rets;
+	for(size_t n = 0; n < url.size(); n++) {
+	  unsigned char c = (unsigned char)url[n];
+	  if (isalnum(c) || c == '_' || c == '.' || c == '/' )
+	    rets << c;
+	  else {
+	    char buf[8];
+	    sprintf(buf, "%02x", (int)c);
+	    rets << '%' << buf[0] << buf[1];
+	  }
+	}
+	return rets.str();
 }
 
 
+void Cgi::fix_up() {
+    //CONTENT_LENGTH is set exist message-body [MUST]
+	if (envs.count("content_length") == 0) {
+		throw new Error();
+	}
+    //CONTENT_TYPE is set exist message-body　セットされていない場合はスクリプトが受信したデータのmime型を決定しようと試みる可能性がある
+    //  未知のままであれば、スクリプトは型を application/octet-stream とみなすかもしれないし、誤りとして拒絶するかもしれない
+    //  リクエストにCONTENT_TYPEが存在した場合はsetしなければならない [MUST]
+    //GATEWAY_INTERFACE is must set value [MUST] CGI/1.1
+
+	envs["gateway_interface"] = "CGI/1.1";
+    //PATH_INFO　文字大小保存 制限を課しても課さなくても良い
+    // set sever info meta vars
+}
 
 // "AUTH_TYPE" | "CONTENT_LENGTH" |
 // "CONTENT_TYPE" | "GATEWAY_INTERFACE" |
@@ -55,19 +91,12 @@ void Cgi::set_env() {
 	std::map<std::string, std::string> envs;
 
 	for (; it != httpreq.end(); it++) {
-	    if (check_meta_var() {
+	    if (check_meta_var(it->first, it->second) {
 		    envs[it->first] = it->second;
         }
 	}
-    //CONTENT_LENGTH is set exist message-body [MUST]
-    //CONTENT_TYPE is set exist message-body　セットされていない場合はスクリプトが受信したデータのmime型を決定しようと試みる可能性がある
-    //  未知のままであれば、スクリプトは型を application/octet-stream とみなすかもしれないし、誤りとして拒絶するかもしれない
-    //  リクエストにCONTENT_TYPEが存在した場合はsetしなければならない [MUST]
-    //GATEWAY_INTERFACE is must set value [MUST] CGI/1.1
-    //PATH_INFO　文字大小保存 制限を課しても課さなくても良い
-    //
-    //
-    // set sever info meta vars
+
+	fix_up();
 }
 
 void Cgi::send_body() {
