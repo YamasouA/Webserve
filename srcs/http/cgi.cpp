@@ -57,17 +57,27 @@ std::string Cgi::encode_uri() {
 
 
 void Cgi::fix_up() {
-    //CONTENT_LENGTH is set exist message-body [MUST]
+    //if exist message-body, must set CONTENT_LENGTH value [MUST]
 	if (envs.count("content_length") == 0) {
 		throw new Error();
 	}
-    //CONTENT_TYPE is set exist message-body　セットされていない場合はスクリプトが受信したデータのmime型を決定しようと試みる可能性がある
+    //if exist message-body, must set CONTENT_TYPE value　セットされていない場合はスクリプトが受信したデータのmime型を決定しようと試みる可能性がある
     //  未知のままであれば、スクリプトは型を application/octet-stream とみなすかもしれないし、誤りとして拒絶するかもしれない
     //  リクエストにCONTENT_TYPEが存在した場合はsetしなければならない [MUST]
     //GATEWAY_INTERFACE is must set value [MUST] CGI/1.1
 
 	envs["gateway_interface"] = "CGI/1.1";
-    //PATH_INFO　文字大小保存 制限を課しても課さなくても良い
+    // PATH_INFO　文字大小保存 制限を課しても課さなくても良い
+    // PATH_TRANSLATED  QUERY_STRINGとかこの辺りはhttpreqで処理した方が良さそう？
+    // REMOTE_ADDR [MUST] acceptの第２引数で取得できそう？
+    // REMOTE_HOST(完全修飾ドメイン名) [SHOULD] 多分hostname
+    // REMOTE_IDENT [MAY]
+    // REMOTE_USER http認証をclientが求めている場合は[MUST]
+    // REQUEST_METHOD [MUST] 文字大小区別
+    // SCRIPT_NAME [MUST] CGIスクリプトを識別することができる(URL符号化されていない)URL path
+    //  pahtがNULLの場合は値は省略可能だが変数はセットしなければならない
+    //
+    //
     // set sever info meta vars
 }
 
