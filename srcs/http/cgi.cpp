@@ -1,6 +1,6 @@
 #include "cgi.hpp"
 
-Cgi::Cgi()
+Cgi::Cgi(httpReq httpReq)
 {}
 
 Cgi::Cgi(const &Cgi src)
@@ -15,11 +15,34 @@ Cgi::~Cgi()
 void Cgi::reset_env() {
 }
 
+bool Cgi::is_meta_var() {
+	std::map<std::string, std::string> envs;
+
+	for (; it != httpreq.end(); it++) {
+		if 
+	}
+}
+
+bool Cgi::check_meta_var(string var) {
+	// 必須の箇所にデータが入ってるか
+	// フォーマットがあるやつはそれを確認
+
+	if (var == "auth_type" || var ==  "content_length" || var ==  "content_type"
+		var == "gateway_interface" || var ==  "path_info" || var ==  "path_translated" || 
+		var == "query_string" ||  var == "remote_addr" ||  var == "remote_host" || var == "remote_ident", "remote_user", "request_method", "script_name",
+							"server_name", "server_port", "server_protocol", "server_software"}
+}
+
 void Cgi::set_env() {
 	std::map<std::string, std::string>::iterator it = httpreq.begin();
+	char **env_ptr;
+	std::map<std::string, std::string> envs;
+
 	for (; it != httpreq.end(); it++) {
-		setenv(it->first.c_str(), it->second.c_str(), 1);
+		envs[it->first] = it->second;
 	}
+
+	check_meta_var();
 }
 
 void Cgi::send_body() {
