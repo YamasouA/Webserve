@@ -67,6 +67,7 @@ void Cgi::fix_up() {
     //GATEWAY_INTERFACE is must set value [MUST] CGI/1.1
 
 	envs["gateway_interface"] = "CGI/1.1";
+
     // PATH_INFO　文字大小保存 制限を課しても課さなくても良い
     // PATH_TRANSLATED  QUERY_STRINGとかこの辺りはhttpreqで処理した方が良さそう？
     // REMOTE_ADDR [MUST] acceptの第２引数で取得できそう？
@@ -75,7 +76,24 @@ void Cgi::fix_up() {
     // REMOTE_USER http認証をclientが求めている場合は[MUST]
     // REQUEST_METHOD [MUST] 文字大小区別
     // SCRIPT_NAME [MUST] CGIスクリプトを識別することができる(URL符号化されていない)URL path
-    //  pahtがNULLの場合は値は省略可能だが変数はセットしなければならない
+    //  pahtがNULLの場合は値は省略可能だが変数はセットしなければならない PATH_INFO部はまったく含まれない
+    //
+    // SERVER_NAME [MUST] 文字大小を区別しないhostnameまたはネットワークアドレス
+    // SERVER_PORT [MUST] clientからリクエストを受信したTCP/IP port番号
+    // SERVER_PROTOCOL [MUST] CGIリクエストに使用されるアプリケーションプロトコルの名前とバーション。clientとの通信でserverが使用するプロトコルの
+    //  バージョンと違ってもよい[MAY]
+    //
+    // SERVER_SOFTWARE [MUST] CGIリクエストを行い、ゲートウェイを実行するサーバーソフトウェアの名前とバージョン clientに報告されたサーバーの説明があれば
+    //  それと同じであるべき [SHOULD]
+    //
+    // Protocol-Specific Meta-Variables [MUST] 名前がHTTP_で始まるメタ変数は使用されるプロトコルがHTTPであればclient request header filedから読んだ値
+    //  を含む
+    //  HTTPヘッダフィールド名は全て大文字に変換し、'-'は'_'に変換し、頭に"HTTP"を付けてメタ変数とする。同じ名前のヘッダフィールドが複数受信された場合、
+    //  サーバーは同じ意味の一つの値に書き換えなければならない [MUST] サーバーは必要であればデータ表現(文字集合など)をCGIメタ変数で適切なように変更
+    //  しなければならない [MUST]
+    //  サーバーは受信した全てのヘッダフィールドのメタ変数を作成する必要はない。特に認証情報を伝搬するもの(Authorizationなど)や他のメタ変数が
+    //  スクリプトから利用可能なもの(Content-Type、Content-Length)は削除すべき [SHOULD]
+    //  サーバーはConnectionヘッダフィールドなどのクライアントとの通信に関係するだけのヘッダフィールドを削除してもよい [MAY]
     //
     //
     // set sever info meta vars
