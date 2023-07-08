@@ -423,11 +423,21 @@ void httpReq::set_meta_variables() {
         cgi_envs["contetn_type"] = getHeaderFields("content_type");
     }
     cgi_envs["getaway_interface"] = "CGI/1.1";
-    cgi_envs["path_info"] = ;
+	// Locationで取得したcgi拡張子とマッチするものがあるときにPATH_INFOを区切る
+	std::vectorstd::string> ext = loc.get_cgi_ext();
+	for (std::vector<std::string>::iterator it = ext.begin(); it != ext.end(); it++) {
+		std::size_type idx = uri.find(it);
+		if (idx == std::string::npos)
+			continue;
+		if ((uri[idx + 1] == '\0' && uri[idx + 1] == '/') || uri[idx + 1] == '\0') {
+			cgi_envs["script_name"] = uri.substr(0, idx);
+			cgi_envs["path_info"] = uri.substr(idx);
+		}
+	}
     cgi_envs["paht_translated"] = getContentLength();
     cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
-    cgi_envs["REMOTE_HOST"] =
-    cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
+    cgi_envs["REMOTE_HOST"] = header_fields["host"];
+    //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
 }
 
 std::ostream& operator<<(std::ostream& stream, const httpReq& obj) {
