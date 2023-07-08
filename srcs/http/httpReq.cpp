@@ -415,6 +415,21 @@ void httpReq::parseRequest()
     fix_up();
 }
 
+void httpReq::set_meta_variables() {
+    if (getContentLength()) {
+        cgi_envs["content_length"] = getContentLength(); //　メタ変数名後で大文字にする
+    }
+    if (getHeaderFields("content_type")) {
+        cgi_envs["contetn_type"] = getHeaderFields("content_type");
+    }
+    cgi_envs["getaway_interface"] = "CGI/1.1";
+    cgi_envs["path_info"] = ;
+    cgi_envs["paht_translated"] = getContentLength();
+    cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
+    cgi_envs["REMOTE_HOST"] =
+    cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
+}
+
 std::ostream& operator<<(std::ostream& stream, const httpReq& obj) {
 //    const std::vector<httpReq> tmp = obj.getHeaderInfo();
     const std::map<std::string, std::string> tmp = obj.getHeaderFields();

@@ -1216,8 +1216,10 @@ bool HttpRes::is_cgi() {
 	return false;
 }
 
+
 void HttpRes::runHandlers() {
 	if (is_cgi()) {
+        httpreq.set_meta_var();
 		Cgi cgi(httpreq);
 		cgi.run_cgi();
 	} else {
