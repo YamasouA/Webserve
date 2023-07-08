@@ -112,9 +112,11 @@ void Cgi::fix_up() {
     // PATH_TRANSLATED  QUERY_STRINGとかこの辺りはhttpreqで処理した方が良さそう？
     // REMOTE_ADDR [MUST] acceptの第２引数で取得できそう？
     // REMOTE_HOST(完全修飾ドメイン名) [SHOULD] 多分hostname
+	envs.erase("HTTP_HOST");
     // REMOTE_IDENT [MAY]
     // REMOTE_USER http認証をclientが求めている場合は[MUST]
     // REQUEST_METHOD [MUST] 文字大小区別
+	envs["REQUEST_METHOD"] = getMethod();
     // SCRIPT_NAME [MUST] CGIスクリプトを識別することができる(URL符号化されていない)URL path
     //  pahtがNULLの場合は値は省略可能だが変数はセットしなければならない PATH_INFO部はまったく含まれない
     //
@@ -126,14 +128,6 @@ void Cgi::fix_up() {
     // SERVER_SOFTWARE [MUST] CGIリクエストを行い、ゲートウェイを実行するサーバーソフトウェアの名前とバージョン clientに報告されたサーバーの説明があれば
     //  それと同じであるべき [SHOULD]
     //
-    // Protocol-Specific Meta-Variables [MUST] 名前がHTTP_で始まるメタ変数は使用されるプロトコルがHTTPであればclient request header filedから読んだ値
-    //  を含む
-    //  HTTPヘッダフィールド名は全て大文字に変換し、'-'は'_'に変換し、頭に"HTTP"を付けてメタ変数とする。同じ名前のヘッダフィールドが複数受信された場合、
-    //  サーバーは同じ意味の一つの値に書き換えなければならない [MUST] サーバーは必要であればデータ表現(文字集合など)をCGIメタ変数で適切なように変更
-    //  しなければならない [MUST]
-    //  サーバーは受信した全てのヘッダフィールドのメタ変数を作成する必要はない。特に認証情報を伝搬するもの(Authorizationなど)や他のメタ変数が
-    //  スクリプトから利用可能なもの(Content-Type、Content-Length)は削除すべき [SHOULD]
-    //  サーバーはConnectionヘッダフィールドなどのクライアントとの通信に関係するだけのヘッダフィールドを削除してもよい [MAY]
     //
     //
     // set sever info meta vars
@@ -156,12 +150,23 @@ void Cgi::set_env() {
     //
 	std::map<std::string, std::string>::iterator it = httpreq.begin();
 	char **env_ptr;
-	std::map<std::string, std::string> envs;
+	std::map<std::string, std::string> envs = httpreq.get_cgi_envs();;
 
+    // Protocol-Specific Meta-Variables [MUST] 名前がHTTP_で始まるメタ変数は使用されるプロトコルがHTTPであればclient request header filedから読んだ値
+    //  を含む
+    //  HTTPヘッダフィールド名は全て大文字に変換し、'-'は'_'に変換し、頭に"HTTP"を付けてメタ変数とする。同じ名前のヘッダフィールドが複数受信された場合、
+    //  サーバーは同じ意味の一つの値に書き換えなければならない [MUST] サーバーは必要であればデータ表現(文字集合など)をCGIメタ変数で適切なように変更
+    //  しなければならない [MUST]
+    //  サーバーは受信した全てのヘッダフィールドのメタ変数を作成する必要はない。特に認証情報を伝搬するもの(Authorizationなど)や他のメタ変数が
+    //  スクリプトから利用可能なもの(Content-Type、Content-Length)は削除すべき [SHOULD]
+    //  サーバーはConnectionヘッダフィールドなどのクライアントとの通信に関係するだけのヘッダフィールドを削除してもよい [MAY]
 	for (; it != httpreq.end(); it++) {
-	    if (check_meta_var(it->first, it->second) {
-		    envs[it->first] = it->second;
-        }
+		std::string envs_var = "HTTP_";
+		std::string http_req_field;
+		std::transform(it->first.begin(), it->first.end(), http_req_field.begin(), ::toupper);
+		std::replace(http_req_field.begin(), http_req_field.end(), '-', '_');
+		envs_var += http_req_field;
+		envs[envs_var] = it->second;
 	}
 
 	fix_up();

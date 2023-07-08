@@ -43,6 +43,7 @@ class httpReq {
         std::string args;
         std::string version;
         std::map<std::string, std::string> header_fields;
+        std::map<std::string, std::string> cgi_envs;
         std::string content_body;
 		bool parse_error;
         int keep_alive;
