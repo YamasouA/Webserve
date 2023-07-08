@@ -1,6 +1,8 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
+#include "httpReq.hpp"
+
 class Cgi {
     public:
         Cgi();
@@ -9,6 +11,7 @@ class Cgi {
         ~Cgi();
 
     prveate:
+        httpReq httpreq;
         std::map<std::string, std::string> meta_var; // or sep all var
 };
 

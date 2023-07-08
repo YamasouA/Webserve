@@ -58,15 +58,55 @@ std::string Cgi::encode_uri() {
 
 void Cgi::fix_up() {
     //if exist message-body, must set CONTENT_LENGTH value [MUST]
-	if (envs.count("content_length") == 0) {
+	if (envs.count("content_length") == 0 && httpreq.getContentBody()) {
 		throw new Error();
 	}
+    if (envs.count("content_type") == 0 && httpreq.getContentBody()) {
+        throw new Error();
+    }
+    if (envs.count("gateway_interface") == 0 && envs["gateway_interface"] == "CGI/1.1") {
+        throw new Error();
+    }
+    if (envs.count("path-info") == 0) {
+        throw new Error();
+    }
+    if (envs.count("path_translated") == 0) {
+        throw new Error();
+    }
+    if (envs.count("remote_addr") == 0) {
+        throw new Error();
+    }
+    if (envs.count("remote_host") == 0) {
+        throw new Error();
+    }
+    if (envs.count("request_method") == 0) {
+        throw new Error();
+    }
+    if (envs.count("request_name") == 0) {
+        throw new Error();
+    }
+    if (envs.count("script_name") == 0) {
+        throw new Error();
+    }
+    if (envs.count("server_name") == 0) {
+        throw new Error();
+    }
+    if (envs.count("server_port") == 0) {
+        throw new Error();
+    }
+    if (envs.count("server_protocol") == 0) {
+        throw new Error();
+    }
+    if (envs.count("server_software") == 0) {
+        throw new Error();
+    }
+
     //if exist message-body, must set CONTENT_TYPE value　セットされていない場合はスクリプトが受信したデータのmime型を決定しようと試みる可能性がある
     //  未知のままであれば、スクリプトは型を application/octet-stream とみなすかもしれないし、誤りとして拒絶するかもしれない
     //  リクエストにCONTENT_TYPEが存在した場合はsetしなければならない [MUST]
     //GATEWAY_INTERFACE is must set value [MUST] CGI/1.1
 
-	envs["gateway_interface"] = "CGI/1.1";
+	envs["gateway_interface"] = "CGI/1.1"; // move before cgi
 
     // PATH_INFO　文字大小保存 制限を課しても課さなくても良い
     // PATH_TRANSLATED  QUERY_STRINGとかこの辺りはhttpreqで処理した方が良さそう？
