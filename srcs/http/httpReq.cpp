@@ -434,10 +434,23 @@ void httpReq::set_meta_variables() {
 			cgi_envs["path_info"] = uri.substr(idx);
 		}
 	}
+<<<<<<< HEAD
     cgi_envs["paht_translated"] = //完全飾ドメイン名(プロトコルの後ろから最初の'/'まで);
     cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値; inet系使えないと無理では？
     cgi_envs["REMOTE_HOST"] = header_fields["host"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
 	envs["REQUEST_METHOD"] = getMethod();
+=======
+	// FQDNをセットする
+    cgi_envs["paht_translated"] = header_fields["host"];
+    //cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
+	struct addrinfo *listp, hints;
+	if (getaddrinfo(header_fields["host"], NULL, &hints, &listp) != 0) {
+		std::cout << "getaddrinfo error" << std::endl;
+		exit(1);
+	}
+    cgi_envs["REMOTE_HOST"] = 
+    //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
+>>>>>>> f0da304f03af394295368c08c323352200caf4b9
 }
 
 std::ostream& operator<<(std::ostream& stream, const httpReq& obj) {
