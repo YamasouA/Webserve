@@ -172,12 +172,23 @@ void Cgi::set_env() {
 	fix_up();
 }
 
-void Cgi::send_body() {
+void Cgi::send_body_to_child() {
 	write(1, httpreq.body.c_str(), body.length());
 }
 
 void Cgi::run_handler() {
-	execve(script_name, NULL, )
+	char **envs_ptr;
+
+	envs_ptr = new char *[envs.size() + 1];
+	std::map<std::string, std::string>::iterator it = envs.begin();
+	int i = 0;
+	for (; it != envs.end(); it++) {
+		std::string env_exp = it->first + "=" + it->second;
+		envs_ptr[i] = env_exp.c_str();
+		i++;
+	}
+	envs_ptr[envs.size()] = 0;
+	execve(script_name, NULL, envs)
 }
 
 void Cgi::fork_process() {
@@ -190,23 +201,23 @@ void Cgi::fork_process() {
 	reset_env();
 	set_env();
 
-	pid = xfork();
+	pid = fork();
 	// 子プロセス
 	if (pid == 0) {
 		set_signal_handler(SIGINT, SIG_DFL);
 		set_signal_handler(SIGQUIT, SIG_DFL);
-		xdup2(fd[1], 1);
+		dup2(fd[1], 1);
 
 		run_handler();
 
-		xclose(fd[1]);
-		xclose(fd[0]);
+		close(fd[1]);
+		close(fd[0]);
 		exit(1);
 	}
-	send_body();
-	xdup2(fd[0], 0);
-	xclose(fd[1]);
-	xclose(fd[0]);
+	send_body_to_child();
+	dup2(fd[0], 0);
+	close(fd[1]);
+	close(fd[0]);
 	return pid;
 }
 
@@ -214,11 +225,11 @@ void Cgi::run_cgi() {
 	int backup_stdin;
 	int backup_stdout;
 
-	xdup2(backup_stdin, STDIN_FILENO);
-	xdup2(backup_stdout, STDOUT_FILENO);
+	dup2(backup_stdin, STDIN_FILENO);
+	dup2(backup_stdout, STDOUT_FILENO);
 
 	fork_process();
 
-	xclose(backup_stdin);
-	xclose(backup_stdout);
+	close(backup_stdin);
+	close(backup_stdout);
 }

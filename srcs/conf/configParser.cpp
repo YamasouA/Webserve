@@ -231,7 +231,7 @@ Location configParser::parseLocation() {
 			location.set_error_pages(methodsSplit(pages, ' '));
 		} else if (directive == "cgi_ext") {
 			const std::string exts = getToken(';');
-			location.set_cgi_ext(methodSprlit(exts, ' '));
+			location.set_cgi_ext(methodsSplit(exts, ' '));
 		} else if (directive == "") {
             // comment out
             continue;

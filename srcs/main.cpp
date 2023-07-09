@@ -15,6 +15,23 @@
 #include <map>
 #include <utility>
 
+std::string inet_ntop4(struct in_addr *addr, char *buf, size_t len) {
+	std::string ip;
+	(void) buf;
+	(void) len;
+	// 1バイトずつアクセスできるようにする
+	const u_int8_t *ap = (const u_int8_t *)&addr->s_addr;
+    std::stringstream ss;
+    ss << ap[0] << "." << ap[1] << "." << ap[2] << "." << ap[3]; //もしint系とchar系ごっちゃに出来なかった場合は一つずつap[i]を変換
+	//ip += ap[0] + "." + ap[1] + "." + ap[2] + "." + ap[3];
+    ss >> ip;
+	return ip;
+}
+
+std::string my_inet_ntop(struct in_addr *addr, char *buf, size_t len) {
+	return inet_ntop4(addr, buf, len);
+}
+
 //std::map<int, virtualServer> initialize_fd(configParser conf, Kqueue kqueue) {
 void initialize_fd(configParser conf, Kqueue &kqueue, std::map<int, virtualServer>& fd_config_map) {
 	std::vector<virtualServer> server_confs = conf.get_serve_confs();
@@ -144,7 +161,7 @@ int main(int argc, char *argv[]) {
 				std::cout << "first register" << std::endl;
 				Client client;
                 struct sockaddr_in client_addr;
-                socklen_t scok_len = sizeof(client_addr);
+                socklen_t sock_len = sizeof(client_addr);
 				// ここのevent_fdはconfigで設定されてるserverのfd
 				acceptfd = accept(event_fd, (sockaddr *)&client_addr, &sock_len);
 //				acceptfd = accept(event_fd, NULL, NULL);
@@ -157,8 +174,8 @@ int main(int argc, char *argv[]) {
                 getsockname(event_fd, (struct sockaddr *)&sin, &addrlen);
                 int port_num = ntohs(sin.sin_port);
                 client.set_port(port_num);
-                std::string client_ip = my_inet_ntop(client_addr, NULL, 0);
-                clien.set_client_ip(client_ip); // or Have the one after adapting inet_ntoa
+                std::string client_ip = my_inet_ntop(&client_addr.sin_addr, NULL, 0);
+                client.set_client_ip(client_ip); // or Have the one after adapting inet_ntoa
 				//fcntl(acceptfd, F_SETFL, O_NONBLOCK);
 				//fd_client_map.insert(std::make_pair(acceptfd, client));
 				//std::cout << "sleep1" << std::endl;

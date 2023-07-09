@@ -435,21 +435,6 @@ void httpReq::parseRequest()
     fix_up();
 }
 
-std::string inet_ntop4(const struct in_addr *addr, char *buf, size_t len) {
-	std::string ip;
-	// 1バイトずつアクセスできるようにする
-	const u_int8_t *ap = (const u_int8_t *)&addr->s_addr;
-    std::stringstream ss;
-    ss << ap[0] << "." << ap[1] << "." << ap[2] << "." << ap[3]; //もしint系とchar系ごっちゃに出来なかった場合は一つずつap[i]を変換
-	//ip += ap[0] + "." + ap[1] + "." + ap[2] + "." + ap[3];
-    ss >> ip;
-	return ip;
-}
-
-std::string my_inet_ntop(const void *addr, char *buf, size_t len) {
-	return inet_ntop4(addr, buf, len);
-}
-
 void httpReq::set_meta_variables() {
     if (getContentLength()) {
         cgi_envs["content_length"] = getContentLength(); //　メタ変数名後で大文字にする
