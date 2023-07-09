@@ -434,9 +434,15 @@ void httpReq::set_meta_variables() {
 			cgi_envs["path_info"] = uri.substr(idx);
 		}
 	}
-    cgi_envs["paht_translated"] = getContentLength();
-    cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
-    cgi_envs["REMOTE_HOST"] = header_fields["host"];
+	// FQDNをセットする
+    cgi_envs["paht_translated"] = header_fields["host"];
+    //cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
+	struct addrinfo *listp, hints;
+	if (getaddrinfo(header_fields["host"], NULL, &hints, &listp) != 0) {
+		std::cout << "getaddrinfo error" << std::endl;
+		exit(1);
+	}
+    cgi_envs["REMOTE_HOST"] = 
     //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
 }
 
