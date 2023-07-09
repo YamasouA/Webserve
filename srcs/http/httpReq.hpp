@@ -17,12 +17,15 @@ class httpReq {
         ~httpReq();
 
 
+
+        void setClientIP(std::string client_ip);
         void setMethod(const std::string&);
         void setUri(const std::string&);
         void setVersion(const std::string&);
         void setContentBody(const std::string&);
 		void setHeaderField(const std::string& name, const std::string value);
 
+        std::string getClientIP() const;
         std::string getMethod() const;
         std::string getUri() const;
         std::string getVersion() const;
@@ -37,6 +40,7 @@ class httpReq {
     private:
         std::string buf;
         size_t idx;
+        std::string client_ip;
 
         std::string method;
         std::string uri;

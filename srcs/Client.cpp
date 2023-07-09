@@ -50,8 +50,8 @@ void Client::set_vServer(const virtualServer& vServer){
 	this->vServer = vServer;
 }
 
-void Client::set_client_addr(struct sockaddr_in client_addr) {
-    this->client_addr = client_addr;
+void Client::set_client_ip(std::string client_ip) {
+    this->client_ip = client_ip;
 }
 
 int Client::get_fd() const{
@@ -80,6 +80,6 @@ virtualServer Client::get_vServer() const{
 	return vServer;
 }
 
-struct sockaddr_in Client::get_client_addr() const {
-    return client_addr;
+std::string Client::get_client_ip() const {
+    return client_ip;
 }

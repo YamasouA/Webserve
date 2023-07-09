@@ -39,6 +39,10 @@ httpReq::~httpReq()
 {
 }
 
+void httpReq::setClientIP(std::string client_ip) {
+    this->client_ip = client_ip;
+}
+
 void httpReq::setMethod(const std::string& token)
 {
     this->method = token;
@@ -62,6 +66,10 @@ void httpReq::setContentBody(const std::string& token)
 void httpReq::setHeaderField(const std::string& name, const std::string value)
 {
     this->header_fields.insert(std::make_pair(name, value));
+}
+
+std::string httpReq::getClientIP() const {
+    return this->client_ip;
 }
 
 std::string httpReq::getMethod() const
@@ -449,21 +457,18 @@ void httpReq::set_meta_variables() {
 			cgi_envs["path_info"] = uri.substr(idx);
 		}
 	}
-    cgi_envs["paht_translated"] = //完全飾ドメイン名(プロトコルの後ろから最初の'/'まで);
-    struct sockaddr_in client_addr = get_client_addr();
-    std::string client_ip_str = my_inet_ntop(client_addr, NULL, 0); // httpReqにclientがもっているsockaddr_inをread_request内で渡す
-    cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値; inet系使えないと無理では？
-    cgi_envs["REMOTE_HOST"] = header_fields["host"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
+//    cgi_envs["paht_translated"] = //完全飾ドメイン名(プロトコルの後ろから最初の'/'まで);
+    cgi_envs["paht_translated"] = header_fields["host"]; // FQDNをセットする
+//    struct sockaddr_in client_addr = get_client_addr();
+//    std::string client_ip_str = my_inet_ntop(client_addr, NULL, 0); // httpReqにclientがもっているsockaddr_inをread_request内で渡す
+    cgi_envs["REMOTE_ADDR"] = getClientIP();//恐らくacceptの第二引数でとれる値; inet系使えないと無理では？
+    cgi_envs["REMOTE_HOST"] = cgi_envs["REMOTE_ADDR"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
+//    cgi_envs["REMOTE_HOST"] = header_fields["host"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
 	envs["REQUEST_METHOD"] = getMethod();
-	// FQDNをセットする
-    cgi_envs["paht_translated"] = header_fields["host"];
-    //cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
-	struct addrinfo *listp, hints;
-	if (getaddrinfo(header_fields["host"], NULL, &hints, &listp) != 0) {
-		std::cout << "getaddrinfo error" << std::endl;
-		exit(1);
-	}
-    cgi_envs["REMOTE_HOST"] =
+    envs["SERVER_NAME"] = header_fields["host"];
+    envs["SERVER_PORT"] = //port番号; urlからparse時にportを保存する
+    envs["SERVER_PROTOCOL"] = "HTTP/1.1";
+
     //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
 }
 

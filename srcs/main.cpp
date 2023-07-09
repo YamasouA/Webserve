@@ -74,6 +74,7 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     std::cout << "req: " << buf << std::endl;
     //httpParser httpparser(buf);
     httpReq httpreq(buf);
+    httpreq.setClientIP(client.get_client_ip());
     httpreq.parseRequest();
 	std::cout << "Here" << std::endl;
 	client.set_fd(fd);
@@ -150,7 +151,8 @@ int main(int argc, char *argv[]) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
 				}
-                clien.set_client_addr(); // or Have the one after adapting inet_ntoa
+                std::string client_ip = my_inet_ntop(client_addr, NULL, 0);
+                clien.set_client_ip(client_ip); // or Have the one after adapting inet_ntoa
 				//fcntl(acceptfd, F_SETFL, O_NONBLOCK);
 				//fd_client_map.insert(std::make_pair(acceptfd, client));
 				//std::cout << "sleep1" << std::endl;
