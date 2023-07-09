@@ -18,6 +18,7 @@ class Client {
 		virtualServer vServer;
 		int fd;
 		std::map<std::string, Location> uritolocation;
+        struct sockaddr_in client_addr;
 	public:
 		Client();
 		~Client();
@@ -32,6 +33,8 @@ class Client {
 		void set_httpRes(HttpRes source);
 		void set_vServer(const virtualServer& source);
 		void set_uritolocation(const std::map<std::string, Location> map);
+        void set_client_addr(struct scokaddr_in client_addr);
+
 		int get_fd() const;
 		//httpParser get_parsedReq() const;
 		httpReq get_httpReq() const;
@@ -39,7 +42,7 @@ class Client {
         HttpRes* get_httpResp() const;
 		virtualServer get_vServer() const;
 		std::map<std::string, Location> get_uritolocation() const;
-
+        struct sockaddr_in get_client_addr() const;
 };
 
 #endif

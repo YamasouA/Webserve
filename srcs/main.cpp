@@ -141,12 +141,16 @@ int main(int argc, char *argv[]) {
 			} else if (fd_config_map.count(event_fd) == 1) {
 				std::cout << "first register" << std::endl;
 				Client client;
+                struct sockaddr_in client_addr;
+                socklen_t scok_len = sizeof(client_addr);
 				// ここのevent_fdはconfigで設定されてるserverのfd
-				acceptfd = accept(event_fd, NULL, NULL);
+				acceptfd = accept(event_fd, (sockaddr *)&client_addr, &sock_len);
+//				acceptfd = accept(event_fd, NULL, NULL);
 				if (acceptfd == -1) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
 				}
+                clien.set_client_addr(); // or Have the one after adapting inet_ntoa
 				//fcntl(acceptfd, F_SETFL, O_NONBLOCK);
 				//fd_client_map.insert(std::make_pair(acceptfd, client));
 				//std::cout << "sleep1" << std::endl;

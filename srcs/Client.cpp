@@ -50,6 +50,10 @@ void Client::set_vServer(const virtualServer& vServer){
 	this->vServer = vServer;
 }
 
+void Client::set_client_addr(struct sockaddr_in client_addr) {
+    this->client_addr = client_addr;
+}
+
 int Client::get_fd() const{
 	return fd;
 }
@@ -74,4 +78,8 @@ HttpRes Client::get_httpRes() const {
 
 virtualServer Client::get_vServer() const{
 	return vServer;
+}
+
+struct sockaddr_in Client::get_client_addr() const {
+    return client_addr;
 }

@@ -419,8 +419,10 @@ std::string inet_ntop4(const struct in_addr *addr, char *buf, size_t len) {
 	std::string ip;
 	// 1バイトずつアクセスできるようにする
 	const u_int8_t *ap = (const u_int8_t *)&addr->s_addr;
-
-	ip += ap[0] + "." + ap[1] + "." + ap[2] + "." + ap[3];
+    std::stringstream ss;
+    ss << ap[0] << "." << ap[1] << "." << ap[2] << "." << ap[3]; //もしint系とchar系ごっちゃに出来なかった場合は一つずつap[i]を変換
+	//ip += ap[0] + "." + ap[1] + "." + ap[2] + "." + ap[3];
+    ss >> ip;
 	return ip;
 }
 
@@ -447,12 +449,12 @@ void httpReq::set_meta_variables() {
 			cgi_envs["path_info"] = uri.substr(idx);
 		}
 	}
-<<<<<<< HEAD
     cgi_envs["paht_translated"] = //完全飾ドメイン名(プロトコルの後ろから最初の'/'まで);
+    struct sockaddr_in client_addr = get_client_addr();
+    std::string client_ip_str = my_inet_ntop(client_addr, NULL, 0); // httpReqにclientがもっているsockaddr_inをread_request内で渡す
     cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値; inet系使えないと無理では？
     cgi_envs["REMOTE_HOST"] = header_fields["host"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
 	envs["REQUEST_METHOD"] = getMethod();
-=======
 	// FQDNをセットする
     cgi_envs["paht_translated"] = header_fields["host"];
     //cgi_envs["REMOTE_ADDR"] = //恐らくacceptの第二引数でとれる値;
@@ -461,9 +463,8 @@ void httpReq::set_meta_variables() {
 		std::cout << "getaddrinfo error" << std::endl;
 		exit(1);
 	}
-    cgi_envs["REMOTE_HOST"] = 
+    cgi_envs["REMOTE_HOST"] =
     //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
->>>>>>> f0da304f03af394295368c08c323352200caf4b9
 }
 
 std::ostream& operator<<(std::ostream& stream, const httpReq& obj) {
