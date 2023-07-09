@@ -468,6 +468,7 @@ void httpReq::set_meta_variables() {
     envs["SERVER_NAME"] = header_fields["host"];
     envs["SERVER_PORT"] = //port番号; urlからparse時にportを保存する
     envs["SERVER_PROTOCOL"] = "HTTP/1.1";
+    envs["SERVER_SOFTWARE"] = "WebServe";
 
     //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
 }
