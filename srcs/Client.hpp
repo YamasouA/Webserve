@@ -19,6 +19,7 @@ class Client {
 		int fd;
 		std::map<std::string, Location> uritolocation;
         std::string client_ip;
+        int port;
 	public:
 		Client();
 		~Client();
@@ -34,6 +35,7 @@ class Client {
 		void set_vServer(const virtualServer& source);
 		void set_uritolocation(const std::map<std::string, Location> map);
         void set_client_ip(std::string client_ip);
+        void set_port(int port);
 
 		int get_fd() const;
 		//httpParser get_parsedReq() const;
@@ -43,6 +45,7 @@ class Client {
 		virtualServer get_vServer() const;
 		std::map<std::string, Location> get_uritolocation() const;
         std::string get_client_ip() const;
+        int get_port() const;
 };
 
 #endif

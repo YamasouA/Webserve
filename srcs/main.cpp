@@ -75,6 +75,7 @@ void read_request(int fd, Client& client, configParser& conf, Kqueue kq) {
     //httpParser httpparser(buf);
     httpReq httpreq(buf);
     httpreq.setClientIP(client.get_client_ip());
+    httpreq.setPort(client.get_port());
     httpreq.parseRequest();
 	std::cout << "Here" << std::endl;
 	client.set_fd(fd);
@@ -151,6 +152,11 @@ int main(int argc, char *argv[]) {
 					std::cerr << "Accept socket error" << std::endl;
 					continue;
 				}
+                struct sockaddr_in sin;
+                socklen_t addrlen = sizeof(sin);
+                getsockname(event_fd, (struct sockaddr *)&sin, &addrlen);
+                int port_num = ntohs(sin.sin_port);
+                client.set_port(port_num);
                 std::string client_ip = my_inet_ntop(client_addr, NULL, 0);
                 clien.set_client_ip(client_ip); // or Have the one after adapting inet_ntoa
 				//fcntl(acceptfd, F_SETFL, O_NONBLOCK);

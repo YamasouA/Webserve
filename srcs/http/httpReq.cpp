@@ -10,7 +10,9 @@ httpReq::httpReq(const std::string& request_msg)
 {}
 
 httpReq::httpReq(const httpReq& src)
-:method(src.getMethod()),
+:client_ip(src.getClientIP()),
+    port(src.getPort()),
+    method(src.getMethod()),
     uri(src.getUri()),
     version(src.getVersion()),
     header_fields(src.getHeaderFields()),
@@ -26,6 +28,8 @@ httpReq& httpReq::operator=(const httpReq& rhs)
     if (this == &rhs) {
         return *this;
     }
+    this->client_ip = rhs.getClientIP();
+    this->port = rhs.getPort();
     this->method = rhs.getMethod();
     this->uri = rhs.getUri();
     this->version = rhs.getVersion();
@@ -41,6 +45,10 @@ httpReq::~httpReq()
 
 void httpReq::setClientIP(std::string client_ip) {
     this->client_ip = client_ip;
+}
+
+void httpReq::setPort(int port) {
+    this->port = port;
 }
 
 void httpReq::setMethod(const std::string& token)
@@ -70,6 +78,10 @@ void httpReq::setHeaderField(const std::string& name, const std::string value)
 
 std::string httpReq::getClientIP() const {
     return this->client_ip;
+}
+
+int httpReq::getPort() const {
+    return this->port;
 }
 
 std::string httpReq::getMethod() const
@@ -466,7 +478,11 @@ void httpReq::set_meta_variables() {
 //    cgi_envs["REMOTE_HOST"] = header_fields["host"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
 	envs["REQUEST_METHOD"] = getMethod();
     envs["SERVER_NAME"] = header_fields["host"];
-    envs["SERVER_PORT"] = //port番号; urlからparse時にportを保存する
+    std::stringstream ss;
+    std::string port_str;
+    ss << getPort();
+    ss >> port_str;
+    envs["SERVER_PORT"] = port_str;//port番号; urlからparse時にportを保存する<= ではなくhtonsなどでsocketから取得する？ or config fileから?(一つのserverに複数portあった時が厳しい)
     envs["SERVER_PROTOCOL"] = "HTTP/1.1";
     envs["SERVER_SOFTWARE"] = "WebServe";
 

@@ -16,9 +16,8 @@ class httpReq {
         httpReq& operator=(const httpReq& rhs);
         ~httpReq();
 
-
-
         void setClientIP(std::string client_ip);
+        void setPort(int port);
         void setMethod(const std::string&);
         void setUri(const std::string&);
         void setVersion(const std::string&);
@@ -26,6 +25,7 @@ class httpReq {
 		void setHeaderField(const std::string& name, const std::string value);
 
         std::string getClientIP() const;
+        int getPort() const;
         std::string getMethod() const;
         std::string getUri() const;
         std::string getVersion() const;
@@ -41,6 +41,7 @@ class httpReq {
         std::string buf;
         size_t idx;
         std::string client_ip;
+        int port;
 
         std::string method;
         std::string uri;
