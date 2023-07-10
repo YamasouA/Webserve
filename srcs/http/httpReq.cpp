@@ -454,11 +454,16 @@ void httpReq::set_meta_variables(Location loc) {
 	std::vector<std::string> ext = loc.get_cgi_ext();
 	for (std::vector<std::string>::iterator it = ext.begin(); it != ext.end(); it++) {
 		std::string::size_type idx = uri.find(*it);
+		std::cout << "uri: " << uri << std::endl;
+		std::cout << "ext: " << *it<< std::endl;
+		std::cout << "idx: " << idx << std::endl;
+		size_t len = (*it).size();
 		if (idx == std::string::npos)
 			continue;
-		if ((uri[idx + 1] == '\0' && uri[idx + 1] == '/') || uri[idx + 1] == '\0') {
-			cgi_envs["script_name"] = uri.substr(0, idx);
-			cgi_envs["path_info"] = uri.substr(idx);
+		if ((uri[idx + len] != '\0' && uri[idx + len] == '/') || uri[idx + len] == '\0') {
+			std::cout << "SET_SCRIPT_NAME" << std::endl;
+			cgi_envs["script_name"] = uri.substr(0, idx + len);
+			cgi_envs["path_info"] = uri.substr(idx + len);
 		}
 	}
 //    cgi_envs["paht_translated"] = //完全飾ドメイン名(プロトコルの後ろから最初の'/'まで);
