@@ -3,7 +3,13 @@
 Cgi::Cgi(const httpReq& request)
 :httpreq(request),
     envs(request.get_meta_variables())
-{}
+{
+    std::map<std::string, std::string>::iterator it = envs.begin();
+    std::cout << "envs: " << std::endl;
+    for (; it != envs.end(); ++it) {
+        std::cout << it->first << "=" << it->second << std::endl;;
+    }
+}
 
 Cgi::Cgi(const Cgi& src)
 {
@@ -196,7 +202,9 @@ void Cgi::run_handler() {
 		envs_ptr[i] = (char *)env_exp.c_str();
 		i++;
 	}
+    std::cerr << "envs: " << *envs_ptr << std::endl;
 	envs_ptr[envs.size()] = 0;
+    std::cerr << "SCRIPT_NAME: " << envs["SCRIPT_NAME"].c_str() << std::endl;
 	execve(envs["SCRIPT_NAME"].c_str(), NULL, envs_ptr);
 }
 
@@ -225,6 +233,12 @@ void Cgi::fork_process() {
 	dup2(fd[0], 0);
 	close(fd[1]);
 	close(fd[0]);
+//    waitpid(-1, NULL, 0);
+    char tmp_buf;
+    for (size_t i = 0; read(0, &tmp_buf, 1) > 0; ++i) {
+        buf[i] += tmp_buf;
+    }
+    std::cout << "cgi output: " << buf << std::endl;
 //	return pid;
 }
 

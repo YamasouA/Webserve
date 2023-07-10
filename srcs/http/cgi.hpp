@@ -12,6 +12,7 @@ class Cgi {
         ~Cgi();
 
         void run_cgi();
+        char buf[1024];
     private:
         void fork_process();
         void run_handler();

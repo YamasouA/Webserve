@@ -1210,19 +1210,26 @@ int HttpRes::auto_index_handler() {
 
 bool HttpRes::is_cgi() {
 	Location location = get_uri2location(httpreq.getUri()); //req uri?
-	if (location.get_cgi_path() != "") {
+    std::cout << "Location: " << location << std::endl;
+//    std::cout << "loc cgi: " << location.get_cgi_ext() << std::endl;
+//	if (location.get_cgi_path() != "") {
+    std::vector<std::string> vec = location.get_cgi_ext();
+	if (vec[0] != "") {
 		return true;
 	}
+    std::cout << "=== no cgi ===" << std::endl;
 	return false;
 }
 
 
 void HttpRes::runHandlers() {
 	if (is_cgi()) {
+        std::cout << "=== cgi ===" << std::endl;
 	    Location location = get_uri2location(httpreq.getUri()); //req uri?
         httpreq.set_meta_variables(location);
 		Cgi cgi(httpreq);
 		cgi.run_cgi();
+        std::cout << cgi.buf << std::endl;
 	} else {
 		int handler_status = 0;
 //  	  static int i = 0;

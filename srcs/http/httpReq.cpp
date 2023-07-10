@@ -477,7 +477,6 @@ void httpReq::set_meta_variables(Location loc) {
     cgi_envs["SERVER_PORT"] = port_str;//port番号; urlからparse時にportを保存する<= ではなくhtonsなどでsocketから取得する？ or config fileから?(一つのserverに複数portあった時が厳しい)
     cgi_envs["SERVER_PROTOCOL"] = "HTTP/1.1";
     cgi_envs["SERVER_SOFTWARE"] = "WebServe";
-
     //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
 }
 
