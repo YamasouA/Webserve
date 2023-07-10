@@ -7,6 +7,7 @@
 #include <iostream>
 #include <ostream>
 #include <sstream>
+#include "../conf/Location.hpp"
 
 class httpReq {
     public:
@@ -23,6 +24,7 @@ class httpReq {
         void setVersion(const std::string&);
         void setContentBody(const std::string&);
 		void setHeaderField(const std::string& name, const std::string value);
+        void set_meta_variables(Location loc);
 
         std::string getClientIP() const;
         int getPort() const;
@@ -33,6 +35,7 @@ class httpReq {
         int getContentLength() const;
         std::map<std::string, std::string> getHeaderFields() const;
         int getKeepAlive() const;
+        std::map<std::string, std::string> get_meta_variables() const;
 		void parseRequest();
         bool isSpace(char c);
 		std::string toLower(std::string str);

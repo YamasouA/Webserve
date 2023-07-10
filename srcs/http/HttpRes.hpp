@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include "../Kqueue.hpp"
+#include "cgi.hpp"
 
 enum server_state {
     OK = 0,

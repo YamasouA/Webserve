@@ -16,6 +16,7 @@ httpReq::httpReq(const httpReq& src)
     uri(src.getUri()),
     version(src.getVersion()),
     header_fields(src.getHeaderFields()),
+    cgi_envs(src.get_meta_variables()),
     content_body(src.getContentBody()),
 	parse_error(false),
     keep_alive(src.getKeepAlive())
@@ -36,6 +37,7 @@ httpReq& httpReq::operator=(const httpReq& rhs)
     this->header_fields = rhs.getHeaderFields();
     this->content_body = rhs.getContentBody();
     this->keep_alive = rhs.getKeepAlive();
+    this->cgi_envs = rhs.get_meta_variables();
     return *this;
 }
 
@@ -435,18 +437,23 @@ void httpReq::parseRequest()
     fix_up();
 }
 
-void httpReq::set_meta_variables() {
+std::map<std::string, std::string> httpReq::get_meta_variables() const {
+    return cgi_envs;
+}
+
+void httpReq::set_meta_variables(Location loc) {
+    std::map<std::string, std::string> header_fields = getHeaderFields();
     if (getContentLength()) {
         cgi_envs["content_length"] = getContentLength(); //　メタ変数名後で大文字にする
     }
-    if (getHeaderFields("content_type")) {
-        cgi_envs["contetn_type"] = getHeaderFields("content_type");
+    if (header_fields["content_type"].length() > 0) {
+        cgi_envs["contetn_type"] = header_fields["content_type"];
     }
     cgi_envs["getaway_interface"] = "CGI/1.1";
 	// Locationで取得したcgi拡張子とマッチするものがあるときにPATH_INFOを区切る
-	std::vectorstd::string> ext = loc.get_cgi_ext();
+	std::vector<std::string> ext = loc.get_cgi_ext();
 	for (std::vector<std::string>::iterator it = ext.begin(); it != ext.end(); it++) {
-		std::size_type idx = uri.find(it);
+		std::string::size_type idx = uri.find(*it);
 		if (idx == std::string::npos)
 			continue;
 		if ((uri[idx + 1] == '\0' && uri[idx + 1] == '/') || uri[idx + 1] == '\0') {
@@ -461,15 +468,15 @@ void httpReq::set_meta_variables() {
     cgi_envs["REMOTE_ADDR"] = getClientIP();//恐らくacceptの第二引数でとれる値; inet系使えないと無理では？
     cgi_envs["REMOTE_HOST"] = cgi_envs["REMOTE_ADDR"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
 //    cgi_envs["REMOTE_HOST"] = header_fields["host"]; //REMOTE_ADDRの値の方が良さそう(DNSに毎回問い合わせる重い処理をサーバー側でやらない方が良さげなので)
-	envs["REQUEST_METHOD"] = getMethod();
-    envs["SERVER_NAME"] = header_fields["host"];
+	cgi_envs["REQUEST_METHOD"] = getMethod();
+    cgi_envs["SERVER_NAME"] = header_fields["host"];
     std::stringstream ss;
     std::string port_str;
     ss << getPort();
     ss >> port_str;
-    envs["SERVER_PORT"] = port_str;//port番号; urlからparse時にportを保存する<= ではなくhtonsなどでsocketから取得する？ or config fileから?(一つのserverに複数portあった時が厳しい)
-    envs["SERVER_PROTOCOL"] = "HTTP/1.1";
-    envs["SERVER_SOFTWARE"] = "WebServe";
+    cgi_envs["SERVER_PORT"] = port_str;//port番号; urlからparse時にportを保存する<= ではなくhtonsなどでsocketから取得する？ or config fileから?(一つのserverに複数portあった時が厳しい)
+    cgi_envs["SERVER_PROTOCOL"] = "HTTP/1.1";
+    cgi_envs["SERVER_SOFTWARE"] = "WebServe";
 
     //cgi_envs["script_name"] = getUri(); //どうやってどこまでがscript_name(uri)でどこからがpath_infoなのかをみるか？
 }

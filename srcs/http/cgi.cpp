@@ -1,33 +1,42 @@
 #include "cgi.hpp"
 
-Cgi::Cgi(httpReq httpReq)
+Cgi::Cgi(const httpReq& request)
+:httpreq(request),
+    envs(request.get_meta_variables())
 {}
 
-Cgi::Cgi(const &Cgi src)
-{}
+Cgi::Cgi(const Cgi& src)
+{
+    (void)src;
+}
 
-Cgi& Cgi::operator=(const &Cgi rhs)
-{}
+Cgi& Cgi::operator=(const Cgi& rhs)
+{
+    if (this == &rhs) {
+        return *this;
+    }
+    return *this;
+}
 
 Cgi::~Cgi()
 {}
 
-void Cgi::reset_env() {
-}
+//void Cgi::reset_env() {
+//}
 
-bool Cgi::is_meta_var() {
-	std::map<std::string, std::string> envs;
-
-	for (; it != httpreq.end(); it++) {
-		if
-	}
-}
+//bool Cgi::is_meta_var() {
+//	std::map<std::string, std::string> envs;
+//
+//	for (; it != httpreq.end(); it++) {
+//		if
+//	}
+//}
 
 bool Cgi::check_meta_var(std::string var1, std::string var2) {
 	// 必須の箇所にデータが入ってるか
 	// フォーマットがあるやつはそれを確認
 
-	if (var1 == "auth_type" || var1 ==  "content_length" || var1 ==  "content_type"
+	if (var1 == "auth_type" || var1 ==  "content_length" || var1 ==  "content_type" ||
 		var1 == "gateway_interface" || var1 ==  "path_info" || var1 ==  "path_translated" ||
 		var1 == "query_string" ||  var1 == "remote_addr" ||  var1 == "remote_host" ||
 		var1 == "remote_ident" || var1 == "remote_user" || var1 ==  "request_method" ||
@@ -40,65 +49,65 @@ bool Cgi::check_meta_var(std::string var1, std::string var2) {
 	return false;
 }
 
-std::string Cgi::encode_uri() {
-	std::ostringstream rets;
-	for(size_t n = 0; n < url.size(); n++) {
-	  unsigned char c = (unsigned char)url[n];
-	  if (isalnum(c) || c == '_' || c == '.' || c == '/' )
-	    rets << c;
-	  else {
-	    char buf[8];
-	    sprintf(buf, "%02x", (int)c);
-	    rets << '%' << buf[0] << buf[1];
-	  }
-	}
-	return rets.str();
-}
+//std::string Cgi::encode_uri() {
+//	std::ostringstream rets;
+//	for(size_t n = 0; n < url.size(); n++) {
+//	  unsigned char c = (unsigned char)url[n];
+//	  if (isalnum(c) || c == '_' || c == '.' || c == '/' )
+//	    rets << c;
+//	  else {
+//	    char buf[8];
+//	    sprintf(buf, "%02x", (int)c);
+//	    rets << '%' << buf[0] << buf[1];
+//	  }
+//	}
+//	return rets.str();
+//}
 
 
 void Cgi::fix_up() {
     //if exist message-body, must set CONTENT_LENGTH value [MUST]
-	if (envs.count("content_length") == 0 && httpreq.getContentBody()) {
-		throw new Error();
+	if (envs.count("content_length") == 0 && httpreq.getContentBody().length() > 0) {
+//		throw new Error();
 	}
-    if (envs.count("content_type") == 0 && httpreq.getContentBody()) {
-        throw new Error();
+    if (envs.count("content_type") == 0 && httpreq.getContentBody().length() > 0) {
+//        throw new Error();
     }
     if (envs.count("gateway_interface") == 0 && envs["gateway_interface"] == "CGI/1.1") {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("path-info") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("path_translated") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("remote_addr") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("remote_host") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("request_method") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("request_name") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("script_name") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("server_name") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("server_port") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("server_protocol") == 0) {
-        throw new Error();
+//        throw new Error();
     }
     if (envs.count("server_software") == 0) {
-        throw new Error();
+//        throw new Error();
     }
 
     //if exist message-body, must set CONTENT_TYPE value　セットされていない場合はスクリプトが受信したデータのmime型を決定しようと試みる可能性がある
@@ -106,7 +115,7 @@ void Cgi::fix_up() {
     //  リクエストにCONTENT_TYPEが存在した場合はsetしなければならない [MUST]
     //GATEWAY_INTERFACE is must set value [MUST] CGI/1.1
 
-	envs["gateway_interface"] = "CGI/1.1"; // move before cgi
+	//envs["gateway_interface"] = "CGI/1.1"; // move before cgi
 
     // PATH_INFO　文字大小保存 制限を課しても課さなくても良い
     // PATH_TRANSLATED  QUERY_STRINGとかこの辺りはhttpreqで処理した方が良さそう？
@@ -116,7 +125,7 @@ void Cgi::fix_up() {
     // REMOTE_IDENT [MAY]
     // REMOTE_USER http認証をclientが求めている場合は[MUST]
     // REQUEST_METHOD [MUST] 文字大小区別
-	envs["REQUEST_METHOD"] = getMethod();
+	//envs["REQUEST_METHOD"] = getMethod();
     // SCRIPT_NAME [MUST] CGIスクリプトを識別することができる(URL符号化されていない)URL path
     //  pahtがNULLの場合は値は省略可能だが変数はセットしなければならない PATH_INFO部はまったく含まれない
     //
@@ -147,10 +156,10 @@ void Cgi::fix_up() {
 
 void Cgi::set_env() {
     // httpreq will have meta var info with map<std::string, std::string>
-    //
-	std::map<std::string, std::string>::iterator it = httpreq.begin();
-	char **env_ptr;
-	std::map<std::string, std::string> envs = httpreq.get_cgi_envs();;
+    std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
+	std::map<std::string, std::string>::iterator it = header_fields.begin();
+//	char **env_ptr;
+	std::map<std::string, std::string> envs = httpreq.get_meta_variables();;
 
     // Protocol-Specific Meta-Variables [MUST] 名前がHTTP_で始まるメタ変数は使用されるプロトコルがHTTPであればclient request header filedから読んだ値
     //  を含む
@@ -160,7 +169,7 @@ void Cgi::set_env() {
     //  サーバーは受信した全てのヘッダフィールドのメタ変数を作成する必要はない。特に認証情報を伝搬するもの(Authorizationなど)や他のメタ変数が
     //  スクリプトから利用可能なもの(Content-Type、Content-Length)は削除すべき [SHOULD]
     //  サーバーはConnectionヘッダフィールドなどのクライアントとの通信に関係するだけのヘッダフィールドを削除してもよい [MAY]
-	for (; it != httpreq.end(); it++) {
+	for (; it != header_fields.end(); it++) {
 		std::string envs_var = "HTTP_";
 		std::string http_req_field;
 		std::transform(it->first.begin(), it->first.end(), http_req_field.begin(), ::toupper);
@@ -173,7 +182,7 @@ void Cgi::set_env() {
 }
 
 void Cgi::send_body_to_child() {
-	write(1, httpreq.body.c_str(), body.length());
+	write(1, httpreq.getContentBody().c_str(), httpreq.getContentBody().length());
 }
 
 void Cgi::run_handler() {
@@ -184,28 +193,26 @@ void Cgi::run_handler() {
 	int i = 0;
 	for (; it != envs.end(); it++) {
 		std::string env_exp = it->first + "=" + it->second;
-		envs_ptr[i] = env_exp.c_str();
+		envs_ptr[i] = (char *)env_exp.c_str();
 		i++;
 	}
 	envs_ptr[envs.size()] = 0;
-	execve(script_name, NULL, envs)
+	execve(envs["SCRIPT_NAME"].c_str(), NULL, envs_ptr);
 }
 
 void Cgi::fork_process() {
 	pid_t pid;
 	int fd[2];
 
-	xpipe(fd);
-	backup_stdin = xdup(STDIN_FILENO);
-	backup_stdout = xdup(STDOUT_FILENO);
-	reset_env();
+	pipe(fd);
+//	reset_env();
 	set_env();
 
 	pid = fork();
 	// 子プロセス
 	if (pid == 0) {
-		set_signal_handler(SIGINT, SIG_DFL);
-		set_signal_handler(SIGQUIT, SIG_DFL);
+//		set_signal_handler(SIGINT, SIG_DFL);
+//		set_signal_handler(SIGQUIT, SIG_DFL);
 		dup2(fd[1], 1);
 
 		run_handler();
@@ -218,18 +225,17 @@ void Cgi::fork_process() {
 	dup2(fd[0], 0);
 	close(fd[1]);
 	close(fd[0]);
-	return pid;
+//	return pid;
 }
 
 void Cgi::run_cgi() {
-	int backup_stdin;
-	int backup_stdout;
-
-	dup2(backup_stdin, STDIN_FILENO);
-	dup2(backup_stdout, STDOUT_FILENO);
+	int backup_stdin = dup(STDIN_FILENO);
+	int backup_stdout = dup(STDOUT_FILENO);
 
 	fork_process();
 
+	dup2(backup_stdin, STDIN_FILENO);
+	dup2(backup_stdout, STDOUT_FILENO);
 	close(backup_stdin);
 	close(backup_stdout);
 }

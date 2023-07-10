@@ -1209,7 +1209,7 @@ int HttpRes::auto_index_handler() {
 }
 
 bool HttpRes::is_cgi() {
-	Location location = get_uri2location(uri);
+	Location location = get_uri2location(httpreq.getUri()); //req uri?
 	if (location.get_cgi_path() != "") {
 		return true;
 	}
@@ -1219,7 +1219,8 @@ bool HttpRes::is_cgi() {
 
 void HttpRes::runHandlers() {
 	if (is_cgi()) {
-        httpreq.set_meta_var();
+	    Location location = get_uri2location(httpreq.getUri()); //req uri?
+        httpreq.set_meta_variables(location);
 		Cgi cgi(httpreq);
 		cgi.run_cgi();
 	} else {
