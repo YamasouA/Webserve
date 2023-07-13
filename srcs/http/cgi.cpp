@@ -1,7 +1,8 @@
 #include "cgi.hpp"
 
-Cgi::Cgi(const httpReq& request)
+Cgi::Cgi(const httpReq& request, Location location)
 :httpreq(request),
+    target(location),
     envs(request.get_meta_variables())
 {
     std::map<std::string, std::string>::iterator it = envs.begin();
@@ -26,6 +27,47 @@ Cgi& Cgi::operator=(const Cgi& rhs)
 
 Cgi::~Cgi()
 {}
+
+
+//std::string Cgi::join_path(std::string& script_name) {
+std::string Cgi::join_path() {
+    std::cerr << "===== join_path =====" << std::endl;
+	std::string path_root = target.get_root();
+	std::string config_path  = target.get_uri();
+    std::string script_name = envs["SCRIPT_NAME"];
+    std::cerr << "script_name: " << script_name << std::endl;
+//	std::string file_path = script_name;
+	/*
+						|            request uri       |
+		/User/root/path/ /config/location/ /file_path.html
+		path_root         config_path     file_path
+	*/
+	std::cerr << "root: " << path_root << std::endl;
+	std::cerr << "config: " << config_path << std::endl;
+    std::cerr << "ok" << std::endl;
+	std::cerr << "cgi file: " << script_name << std::endl;
+	std::string alias;
+	if ((alias = target.get_alias()) != "") {
+		config_path = alias;
+	}
+    //std::cout << "not auto index" << std::endl;
+    //std::cout << "file_path(in join_path): " << file_path << std::endl;
+	if ((path_root.size() && path_root[path_root.length() - 1] == '/') || path_root.size() == 0) {
+		if (config_path.size() >= 1)
+			config_path = config_path.substr(1);
+	}
+	if (config_path == "" || config_path[config_path.length() - 1] == '/') {
+		//file_path = file_path.substr(1);
+		if (script_name.size() >= 1) { //
+			script_name = script_name.substr(1);
+        }
+	}
+	//std::cout << "path: " << path_root + config_path + file_path << std::endl;
+	std::cerr << "join_path: " << path_root + config_path + script_name << std::endl;
+    std::cerr << "===== End join_path =====" << std::endl;
+	return path_root + config_path + script_name;
+}
+
 
 //void Cgi::reset_env() {
 //}
@@ -73,46 +115,46 @@ bool Cgi::check_meta_var(std::string var1, std::string var2) {
 
 void Cgi::fix_up() {
     //if exist message-body, must set CONTENT_LENGTH value [MUST]
-	if (envs.count("content_length") == 0 && httpreq.getContentBody().length() > 0) {
+	if (envs.count("CONTENT_LENGTH") == 0 && httpreq.getContentBody().length() > 0) {
 //		throw new Error();
 	}
-    if (envs.count("content_type") == 0 && httpreq.getContentBody().length() > 0) {
+    if (envs.count("CONTENT_TYPE") == 0 && httpreq.getContentBody().length() > 0) {
 //        throw new Error();
     }
-    if (envs.count("gateway_interface") == 0 && envs["gateway_interface"] == "CGI/1.1") {
+    if (envs.count("GETAWAY_INTERFACE") == 0 && envs["gateway_interface"] == "CGI/1.1") {
 //        throw new Error();
     }
-    if (envs.count("path-info") == 0) {
+    if (envs.count("PATH_INFO") == 0) {
 //        throw new Error();
     }
-    if (envs.count("path_translated") == 0) {
+    if (envs.count("PATH_TRASLATED") == 0) {
 //        throw new Error();
     }
-    if (envs.count("remote_addr") == 0) {
+    if (envs.count("REMOTE_ADDR") == 0) {
 //        throw new Error();
     }
-    if (envs.count("remote_host") == 0) {
+    if (envs.count("REMOTE_HOST") == 0) {
 //        throw new Error();
     }
-    if (envs.count("request_method") == 0) {
+    if (envs.count("REQUEST_METHOD") == 0) {
 //        throw new Error();
     }
-    if (envs.count("request_name") == 0) {
+    if (envs.count("REQUEST_NAME") == 0) {
 //        throw new Error();
     }
-    if (envs.count("script_name") == 0) {
+    if (envs.count("SCRIPT_NAME") == 0) {
 //        throw new Error();
     }
-    if (envs.count("server_name") == 0) {
+    if (envs.count("SERVER_NAME") == 0) {
 //        throw new Error();
     }
-    if (envs.count("server_port") == 0) {
+    if (envs.count("SERVER_PORT") == 0) {
 //        throw new Error();
     }
-    if (envs.count("server_protocol") == 0) {
+    if (envs.count("SERVER_PROTOCOL") == 0) {
 //        throw new Error();
     }
-    if (envs.count("server_software") == 0) {
+    if (envs.count("SERVER_SOFTWARE") == 0) {
 //        throw new Error();
     }
 
@@ -165,7 +207,7 @@ void Cgi::set_env() {
     std::map<std::string, std::string> header_fields = httpreq.getHeaderFields();
 	std::map<std::string, std::string>::iterator it = header_fields.begin();
 //	char **env_ptr;
-	std::map<std::string, std::string> envs = httpreq.get_meta_variables();;
+//	std::map<std::string, std::string> envs = httpreq.get_meta_variables();;
 
     // Protocol-Specific Meta-Variables [MUST] 名前がHTTP_で始まるメタ変数は使用されるプロトコルがHTTPであればclient request header filedから読んだ値
     //  を含む
@@ -188,24 +230,48 @@ void Cgi::set_env() {
 }
 
 void Cgi::send_body_to_child() {
-	write(1, httpreq.getContentBody().c_str(), httpreq.getContentBody().length());
+    if (httpreq.getContentBody().length() > 0) {
+	    write(1, httpreq.getContentBody().c_str(), httpreq.getContentBody().length());
+    }
 }
 
 void Cgi::run_handler() {
 	char **envs_ptr;
+    std::map<std::string, std::string>::iterator its = envs.begin();
+    std::cerr << "run_handler envs: " << std::endl;
+    for (; its != envs.end(); ++its) {
+        std::cerr << its->first << "=" << its->second << std::endl;;
+    }
 
 	envs_ptr = new char *[envs.size() + 1];
 	std::map<std::string, std::string>::iterator it = envs.begin();
+    std::vector<std::string> tmp_vec;
 	int i = 0;
-	for (; it != envs.end(); it++) {
+	for (; it != envs.end(); ++it) {
 		std::string env_exp = it->first + "=" + it->second;
-		envs_ptr[i] = (char *)env_exp.c_str();
+        tmp_vec.push_back(env_exp);
+//        tmp_vec.push_back(it->first + "=" + it->second);
+        envs_ptr[i] = (char *)tmp_vec.back().c_str();
+//        std::cerr << "env_exp: " << env_exp << std::endl;
+//        envs_ptr[i] = new char[env_exp.length() + 1];
+//		envs_ptr[i] = (char *)env_exp.c_str();
+        std::cerr << "envs_ptr[i]: " << envs_ptr[i] << std::endl;
+        std::cerr << "i: " << i << std::endl;
 		i++;
 	}
-    std::cerr << "envs: " << *envs_ptr << std::endl;
 	envs_ptr[envs.size()] = 0;
-    std::cerr << "SCRIPT_NAME: " << envs["SCRIPT_NAME"].c_str() << std::endl;
-	execve(envs["SCRIPT_NAME"].c_str(), NULL, envs_ptr);
+    for (size_t j = 0; envs_ptr[j]; ++j) {
+        std::cerr << "j:" << j << std::endl;
+        std::cerr << "envs_ptr: " << envs_ptr[j] << std::endl;
+    }
+    std::cerr << "SCRIPT_NAME: " << envs["SCRIPT_NAME"] << std::endl;
+//    std::string tmp_script_name = envs["SCRIPT_NAME"];
+//    std::string path = join_path(tmp_script_name);
+    std::string path = join_path();
+    std::cerr << "SCRIPT_NAME after join: " << path.c_str() << std::endl;
+	if (execve(path.c_str(), NULL, envs_ptr) < 0) {
+        std::cerr << "failed exec errno: " << errno << std::endl;
+    }
 }
 
 void Cgi::fork_process() {
@@ -214,7 +280,7 @@ void Cgi::fork_process() {
 
 	pipe(fd);
 //	reset_env();
-	set_env();
+//	set_env();
 
 	pid = fork();
 	// 子プロセス
@@ -223,22 +289,18 @@ void Cgi::fork_process() {
 //		set_signal_handler(SIGQUIT, SIG_DFL);
 		dup2(fd[1], 1);
 
-		run_handler();
+
+//        return;
 
 		close(fd[1]);
 		close(fd[0]);
+		run_handler();
 		exit(1);
 	}
 	send_body_to_child();
 	dup2(fd[0], 0);
 	close(fd[1]);
 	close(fd[0]);
-//    waitpid(-1, NULL, 0);
-    char tmp_buf;
-    for (size_t i = 0; read(0, &tmp_buf, 1) > 0; ++i) {
-        buf[i] += tmp_buf;
-    }
-    std::cout << "cgi output: " << buf << std::endl;
 //	return pid;
 }
 
@@ -246,10 +308,24 @@ void Cgi::run_cgi() {
 	int backup_stdin = dup(STDIN_FILENO);
 	int backup_stdout = dup(STDOUT_FILENO);
 
+    std::map<std::string, std::string>::iterator it = envs.begin();
+    std::cout << "run cgi envs: " << std::endl;
+    for (; it != envs.end(); ++it) {
+        std::cout << it->first << "=" << it->second << std::endl;;
+    }
+
 	fork_process();
+    char tmp_buf;
+//    waitpid(-1, NULL, 0);
+
+    for (size_t i = 0; read(0, &tmp_buf, 1) > 0; ++i) {
+        buf[i] = tmp_buf;
+    }
+    std::cout << "cgi output: " << buf << std::endl;
 
 	dup2(backup_stdin, STDIN_FILENO);
 	dup2(backup_stdout, STDOUT_FILENO);
 	close(backup_stdin);
 	close(backup_stdout);
+    //parse cgi_response
 }

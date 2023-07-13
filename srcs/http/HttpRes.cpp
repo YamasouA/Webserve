@@ -1227,9 +1227,9 @@ void HttpRes::runHandlers() {
         std::cout << "=== cgi ===" << std::endl;
 	    Location location = get_uri2location(httpreq.getUri()); //req uri?
         httpreq.set_meta_variables(location);
-		Cgi cgi(httpreq);
+		Cgi cgi(httpreq ,location);
 		cgi.run_cgi();
-        std::cout << cgi.buf << std::endl;
+//        std::cout << cgi.buf << std::endl;
 	} else {
 		int handler_status = 0;
 //  	  static int i = 0;
